@@ -348,30 +348,38 @@
 </footer>
 
 <!-- PANEL DEL CARRITO -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoPanel">
-  <div class="offcanvas-header border-bottom">
-    <h5 class="offcanvas-title fw-bold"><i class="bi bi-cart3 me-2"></i>Tu carrito</h5>
+<div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="carritoTitulo"><i class="bi bi-cart3"></i>Mi carrito</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
   </div>
-  <div class="offcanvas-body d-flex flex-column">
-    <div id="carritoItems" class="flex-grow-1"></div>
-    <div class="border-top pt-3">
-      <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
-        <span>Total</span><span id="carritoTotal">S/ 0.00</span>
+  <div class="offcanvas-body">
+    <div id="carritoItems" class="cart-items"></div>
+    <div class="cart-footer" id="carritoPie">
+      <div class="cart-subtotal"><span>Subtotal</span><span id="carritoTotal">S/ 0.00</span></div>
+      <div class="cart-actions">
+        <button type="button" class="cart-link" id="btnIrCarrito">Ir a mi carrito</button>
+        <button type="button" class="cart-buy" id="btnPagar">Comprar ahora</button>
       </div>
-      <button type="button" class="btn btn-primary w-100 rounded-pill mb-2" id="btnPagar">Continuar con la compra</button>
-      <button type="button" class="btn btn-link w-100 text-muted small" id="btnVaciar">Vaciar carrito</button>
     </div>
   </div>
 </div>
 
 <!-- AVISO (toast) -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:2000">
-  <div id="toastAviso" class="toast align-items-center text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body" id="toastTexto"></div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+<div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
+  <div id="toastAviso" class="toast toast-farma border-0" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-body" id="toastTexto"></div>
+  </div>
+</div>
+
+<!-- AVISO EN LA ESQUINA (al quitar un producto desde una tarjeta) -->
+<div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index:2000">
+  <div id="toastEsquina" class="toast toast-esquina" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-esquina-cuerpo">
+      <span class="toast-esquina-ico"><i class="bi bi-check-lg"></i></span>
+      <span id="toastEsquinaTexto"></span>
     </div>
+    <div class="text-end"><button type="button" class="toast-esquina-ok" data-bs-dismiss="toast">Ok</button></div>
   </div>
 </div>
 

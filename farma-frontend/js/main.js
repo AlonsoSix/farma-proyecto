@@ -40,7 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
   track.addEventListener('click', (e) => {
     const add = e.target.closest('.btn-add');
     const fav = e.target.closest('.btn-fav');
+    const qty = e.target.closest('.qty-pill button');
     if (add) agregarAlCarrito(Number(add.dataset.id));
+    if (qty) {
+      const id = Number(qty.closest('.pcard').dataset.id);
+      if (qty.dataset.accion === 'mas') agregarAlCarrito(id);
+      else if ((carrito[id]?.cantidad ?? 0) <= 1) eliminarDelCarrito(id, true);
+      else cambiarCantidad(id, -1);
+    }
     if (fav) fav.classList.toggle('activo');
   });
 
@@ -48,12 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('carritoItems').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
-    cambiarCantidad(Number(btn.dataset.id), btn.dataset.accion === 'mas' ? 1 : -1);
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.accion === 'eliminar') eliminarDelCarrito(id);
+    else cambiarCantidad(id, btn.dataset.accion === 'mas' ? 1 : -1);
   });
-  document.getElementById('btnVaciar').addEventListener('click', () => {
-    carrito = {};
-    guardarCarrito();
-    actualizarCarritoUI();
+  // "Ir a mi carrito": todavía sin página propia, solo muestra un aviso
+  document.getElementById('btnIrCarrito').addEventListener('click', () => {
+    mostrarAviso('La página de tu carrito estará disponible próximamente.');
   });
   document.getElementById('btnPagar').addEventListener('click', () => {
     mostrarAviso('El pago en línea estará disponible próximamente.');
@@ -79,6 +87,11 @@ function rutaImagen(url) {
 function mostrarAviso(texto) {
   document.getElementById('toastTexto').textContent = texto;
   bootstrap.Toast.getOrCreateInstance(document.getElementById('toastAviso'), { delay: 2500 }).show();
+}
+
+function mostrarAvisoEsquina(texto) {
+  document.getElementById('toastEsquinaTexto').textContent = texto;
+  bootstrap.Toast.getOrCreateInstance(document.getElementById('toastEsquina'), { delay: 3500 }).show();
 }
 
 /* ---------- Productos ---------- */
@@ -121,7 +134,7 @@ function renderProductos(filtro) {
         : '<span class="chip chip-ok"><i class="bi bi-check-circle"></i>Disponible</span>';
 
     return `
-      <article class="pcard">
+      <article class="pcard" data-id="${p.id}">
         <div class="pcard-img">
           <img src="${esc(rutaImagen(p.imagenUrl))}" alt="${esc(p.nombre)}" loading="lazy"
                onerror="this.onerror=null;this.src='${IMG_VACIA}'">
@@ -137,10 +150,33 @@ function renderProductos(filtro) {
           <button type="button" class="btn-add" data-id="${p.id}" ${stock <= 0 ? 'disabled' : ''}>
             ${stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
           </button>
+          <div class="qty-pill" role="group" aria-label="Cantidad en el carrito">
+            <button type="button" data-accion="menos"></button>
+            <span class="qty-num">1</span>
+            <button type="button" data-accion="mas" aria-label="Agregar uno"><i class="bi bi-plus-lg"></i></button>
+          </div>
           <button type="button" class="btn-fav" aria-label="Favorito"><i class="bi bi-heart"></i></button>
         </div>
       </article>`;
   }).join('');
+  sincronizarTarjetas();
+}
+
+// Muestra en cada tarjeta si el producto ya está en el carrito (selector de cantidad) o no (botón "Agregar")
+function sincronizarTarjetas() {
+  document.querySelectorAll('#productos-container .pcard').forEach(card => {
+    const id = Number(card.dataset.id);
+    const cant = carrito[id]?.cantidad ?? 0;
+    card.classList.toggle('en-carrito', cant > 0);
+    if (!cant) return;
+    const p = productos.find(x => x.id === id);
+    const menos = card.querySelector('[data-accion="menos"]');
+    const mas = card.querySelector('[data-accion="mas"]');
+    card.querySelector('.qty-num').textContent = cant;
+    menos.innerHTML = cant <= 1 ? '<i class="bi bi-trash3"></i>' : '<i class="bi bi-dash-lg"></i>';
+    menos.setAttribute('aria-label', cant <= 1 ? 'Quitar del carrito' : 'Quitar uno');
+    mas.disabled = !!p && cant >= p.stock;
+  });
 }
 
 /* ---------- Carrito ---------- */
@@ -160,11 +196,10 @@ function agregarAlCarrito(id) {
     mostrarAviso('No hay más unidades disponibles de este producto.');
     return;
   }
-  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: rutaImagen(p.imagenUrl), cantidad: 0 };
+  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: rutaImagen(p.imagenUrl), categoria: p.categoria || '', cantidad: 0 };
   carrito[id].cantidad++;
   guardarCarrito();
   actualizarCarritoUI();
-  mostrarAviso(`${p.nombre} agregado al carrito`);
 }
 
 function cambiarCantidad(id, delta) {
@@ -177,32 +212,63 @@ function cambiarCantidad(id, delta) {
   actualizarCarritoUI();
 }
 
+let temporizadorAtenuado;
+function atenuarCarrito(ms) {
+  const cuerpo = document.querySelector('#carritoPanel .offcanvas-body');
+  cuerpo.classList.add('cart-atenuado');
+  clearTimeout(temporizadorAtenuado);
+  temporizadorAtenuado = setTimeout(() => cuerpo.classList.remove('cart-atenuado'), ms);
+}
+
+function eliminarDelCarrito(id, desdeTarjeta = false) {
+  const item = carrito[id];
+  if (!item) return;
+  delete carrito[id];
+  guardarCarrito();
+  actualizarCarritoUI();
+  if (desdeTarjeta) {  // desde la tarjeta del producto: aviso en la esquina, sin atenuar el panel
+    mostrarAvisoEsquina('Has eliminado este producto de tu carrito');
+    return;
+  }
+  if (Object.keys(carrito).length) atenuarCarrito(1200);  // solo se atenúa si quedan productos en el carrito
+  mostrarAviso('Has eliminado un producto de tu carrito');
+}
+
 function actualizarCarritoUI() {
   const items = Object.values(carrito);
   const totalUnidades = items.reduce((s, i) => s + i.cantidad, 0);
   const totalPrecio = items.reduce((s, i) => s + i.cantidad * i.precio, 0);
 
   document.getElementById('cartCount').textContent = totalUnidades;
+  sincronizarTarjetas();
   document.getElementById('carritoTotal').textContent = soles(totalPrecio);
   document.getElementById('btnPagar').disabled = !items.length;
-  document.getElementById('btnVaciar').classList.toggle('d-none', !items.length);
+  document.getElementById('carritoPie').classList.toggle('d-none', !items.length);
 
   document.getElementById('carritoItems').innerHTML = items.length
-    ? items.map(i => `
+    ? `<div class="cart-store">Farmacia Farma (${totalUnidades})</div>` + items.map(i => `
         <div class="cart-row">
           <img src="${esc(rutaImagen(i.imagen))}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
-          <div class="flex-grow-1">
-            <div class="small fw-semibold">${esc(i.nombre)}</div>
-            <div class="small text-muted">${soles(i.precio)} c/u</div>
-            <div class="qty d-flex align-items-center gap-2 mt-1">
-              <button type="button" data-accion="menos" data-id="${i.id}" aria-label="Quitar uno">−</button>
-              <span class="small">${i.cantidad}</span>
+          <div class="cart-info">
+            <div class="cart-name">${esc(i.nombre)}</div>
+            ${i.categoria ? `<div class="cart-cat">${esc(i.categoria)}</div>` : ''}
+            <div class="cart-qty">
+              <span>Cantidad:</span>
+              <button type="button" data-accion="menos" data-id="${i.id}" aria-label="Quitar uno" ${i.cantidad <= 1 ? 'disabled' : ''}>−</button>
+              <span>${i.cantidad}</span>
               <button type="button" data-accion="mas" data-id="${i.id}" aria-label="Agregar uno">+</button>
             </div>
           </div>
-          <div class="fw-semibold">${soles(i.cantidad * i.precio)}</div>
+          <div class="cart-side">
+            <div class="cart-price">${soles(i.cantidad * i.precio)}</div>
+            <button type="button" class="cart-del" data-accion="eliminar" data-id="${i.id}">Eliminar</button>
+          </div>
         </div>`).join('')
-    : '<p class="text-center text-muted mt-5">Tu carrito está vacío.</p>';
+    : `<div class="cart-empty">
+        <div class="cart-empty-icon"><i class="bi bi-cart3"></i><span class="cart-empty-badge"><i class="bi bi-info-lg"></i></span></div>
+        <h6>Tu carrito está vacío</h6>
+        <p>Agrega productos y da el primer paso para iniciar tu compra.</p>
+      </div>`;
 }
 
 /* ---------- Login / Registro ---------- */
