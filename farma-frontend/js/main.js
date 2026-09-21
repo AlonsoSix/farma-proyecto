@@ -1,0 +1,252 @@
+const API_URL = 'http://localhost:8081/api';
+const MAX_MAS_VENDIDOS = 12;
+const IMG_VACIA = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="240" viewBox="0 0 300 240">' +
+  '<rect width="300" height="240" fill="#eef3f8"/>' +
+  '<g fill="none" stroke="#9fb3c8" stroke-width="8" stroke-linecap="round">' +
+  '<rect x="105" y="70" width="90" height="110" rx="14"/><path d="M125 70v-16h50v16M150 105v50M125 130h50"/></g></svg>'
+);
+
+let productos = [];   // todos los productos que devuelve el backend
+let carrito = {};     // { id: { id, nombre, precio, imagen, cantidad } }
+
+document.addEventListener('DOMContentLoaded', () => {
+  cargarCarrito();
+  actualizarCarritoUI();
+  cargarProductos();
+
+  document.getElementById('loginForm').addEventListener('submit', manejarLogin);
+  document.getElementById('registroForm').addEventListener('submit', manejarRegistro);
+
+  // Buscador: solo visual, sin funcionalidad. Se evita que al presionar Enter la página se recargue.
+  document.getElementById('buscadorForm').addEventListener('submit', (e) => e.preventDefault());
+
+  // Flechas del carrusel de productos
+  const track = document.getElementById('productos-container');
+  const btnPrev = document.getElementById('prodPrev');
+  const btnNext = document.getElementById('prodNext');
+  const paso = () => track.clientWidth + parseFloat(getComputedStyle(track).columnGap || 0); // una "página" de tarjetas
+  const estadoFlechas = () => {
+    btnPrev.disabled = track.scrollLeft <= 4;
+    btnNext.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+  };
+  btnPrev.addEventListener('click', () => track.scrollBy({ left: -paso(), behavior: 'smooth' }));
+  btnNext.addEventListener('click', () => track.scrollBy({ left: paso(), behavior: 'smooth' }));
+  track.addEventListener('scroll', estadoFlechas, { passive: true });
+  window.addEventListener('resize', estadoFlechas);
+  new MutationObserver(estadoFlechas).observe(track, { childList: true });
+
+  // Botones dentro de las tarjetas (agregar / favorito)
+  track.addEventListener('click', (e) => {
+    const add = e.target.closest('.btn-add');
+    const fav = e.target.closest('.btn-fav');
+    if (add) agregarAlCarrito(Number(add.dataset.id));
+    if (fav) fav.classList.toggle('activo');
+  });
+
+  // Carrito
+  document.getElementById('carritoItems').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    cambiarCantidad(Number(btn.dataset.id), btn.dataset.accion === 'mas' ? 1 : -1);
+  });
+  document.getElementById('btnVaciar').addEventListener('click', () => {
+    carrito = {};
+    guardarCarrito();
+    actualizarCarritoUI();
+  });
+  document.getElementById('btnPagar').addEventListener('click', () => {
+    mostrarAviso('El pago en línea estará disponible próximamente.');
+  });
+});
+
+/* ---------- Utilidades ---------- */
+function esc(texto) {
+  return String(texto ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+function soles(n) { return 'S/ ' + Number(n).toFixed(2); }
+
+function mostrarAviso(texto) {
+  document.getElementById('toastTexto').textContent = texto;
+  bootstrap.Toast.getOrCreateInstance(document.getElementById('toastAviso'), { delay: 2500 }).show();
+}
+
+/* ---------- Productos ---------- */
+async function cargarProductos() {
+  const contenedor = document.getElementById('productos-container');
+  try {
+    const res = await fetch(`${API_URL}/productos`);
+    if (!res.ok) throw new Error('Respuesta inválida');
+    productos = await res.json();
+    renderProductos('');
+  } catch (err) {
+    contenedor.innerHTML = `<div class="w-100 text-center text-danger py-5">
+      No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.
+    </div>`;
+  }
+}
+
+function renderProductos(filtro) {
+  const contenedor = document.getElementById('productos-container');
+  const q = (filtro || '').trim().toLowerCase();
+
+  // Sin búsqueda: se muestran los primeros. Con búsqueda: se filtra todo el catálogo.
+  let lista = q
+    ? productos.filter(p => `${p.nombre} ${p.categoria ?? ''} ${p.descripcion ?? ''}`.toLowerCase().includes(q))
+    : productos.slice(0, MAX_MAS_VENDIDOS);
+
+  if (!lista.length) {
+    contenedor.innerHTML = `<div class="w-100 text-center text-muted py-5">
+      ${q ? 'No encontramos productos con esa búsqueda.' : 'Aún no hay productos registrados.'}
+    </div>`;
+    return;
+  }
+
+  contenedor.innerHTML = lista.map(p => {
+    const stock = Number(p.stock ?? 0);
+    const chipStock = stock <= 0
+      ? '<span class="chip chip-out"><i class="bi bi-x-circle"></i>Agotado</span>'
+      : stock <= 5
+        ? `<span class="chip chip-warn"><i class="bi bi-exclamation-circle"></i>Últimas ${stock} unidades</span>`
+        : '<span class="chip chip-ok"><i class="bi bi-check-circle"></i>Disponible</span>';
+
+    return `
+      <article class="pcard">
+        <div class="pcard-img">
+          <img src="${esc(p.imagenUrl || IMG_VACIA)}" alt="${esc(p.nombre)}" loading="lazy"
+               onerror="this.onerror=null;this.src='${IMG_VACIA}'">
+        </div>
+        <span class="pcard-cat">${esc(p.categoria || 'Farmacia')}</span>
+        <h3 class="pcard-name">${esc(p.nombre)}</h3>
+        <p class="pcard-desc">${esc(p.descripcion)}</p>
+        <div class="pcard-status">${chipStock}</div>
+        <div class="pcard-price">
+          <span class="price">${soles(p.precio)}</span><small>Precio online</small>
+        </div>
+        <div class="pcard-actions">
+          <button type="button" class="btn-add" data-id="${p.id}" ${stock <= 0 ? 'disabled' : ''}>
+            ${stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+          </button>
+          <button type="button" class="btn-fav" aria-label="Favorito"><i class="bi bi-heart"></i></button>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+/* ---------- Carrito ---------- */
+function cargarCarrito() {
+  try { carrito = JSON.parse(localStorage.getItem('farma_carrito')) || {}; }
+  catch (e) { carrito = {}; }
+}
+function guardarCarrito() {
+  try { localStorage.setItem('farma_carrito', JSON.stringify(carrito)); } catch (e) { /* sin almacenamiento */ }
+}
+
+function agregarAlCarrito(id) {
+  const p = productos.find(x => x.id === id);
+  if (!p) return;
+  const enCarrito = carrito[id]?.cantidad ?? 0;
+  if (enCarrito >= p.stock) {
+    mostrarAviso('No hay más unidades disponibles de este producto.');
+    return;
+  }
+  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: p.imagenUrl || IMG_VACIA, cantidad: 0 };
+  carrito[id].cantidad++;
+  guardarCarrito();
+  actualizarCarritoUI();
+  mostrarAviso(`${p.nombre} agregado al carrito`);
+}
+
+function cambiarCantidad(id, delta) {
+  if (!carrito[id]) return;
+  const p = productos.find(x => x.id === id);
+  const nueva = carrito[id].cantidad + delta;
+  if (p && nueva > p.stock) { mostrarAviso('No hay más unidades disponibles.'); return; }
+  if (nueva <= 0) delete carrito[id]; else carrito[id].cantidad = nueva;
+  guardarCarrito();
+  actualizarCarritoUI();
+}
+
+function actualizarCarritoUI() {
+  const items = Object.values(carrito);
+  const totalUnidades = items.reduce((s, i) => s + i.cantidad, 0);
+  const totalPrecio = items.reduce((s, i) => s + i.cantidad * i.precio, 0);
+
+  document.getElementById('cartCount').textContent = totalUnidades;
+  document.getElementById('carritoTotal').textContent = soles(totalPrecio);
+  document.getElementById('btnPagar').disabled = !items.length;
+  document.getElementById('btnVaciar').classList.toggle('d-none', !items.length);
+
+  document.getElementById('carritoItems').innerHTML = items.length
+    ? items.map(i => `
+        <div class="cart-row">
+          <img src="${esc(i.imagen)}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
+          <div class="flex-grow-1">
+            <div class="small fw-semibold">${esc(i.nombre)}</div>
+            <div class="small text-muted">${soles(i.precio)} c/u</div>
+            <div class="qty d-flex align-items-center gap-2 mt-1">
+              <button type="button" data-accion="menos" data-id="${i.id}" aria-label="Quitar uno">−</button>
+              <span class="small">${i.cantidad}</span>
+              <button type="button" data-accion="mas" data-id="${i.id}" aria-label="Agregar uno">+</button>
+            </div>
+          </div>
+          <div class="fw-semibold">${soles(i.cantidad * i.precio)}</div>
+        </div>`).join('')
+    : '<p class="text-center text-muted mt-5">Tu carrito está vacío.</p>';
+}
+
+/* ---------- Login / Registro ---------- */
+async function manejarLogin(e) {
+  e.preventDefault();
+  const correo = document.getElementById('loginCorreo').value;
+  const contrasena = document.getElementById('loginContrasena').value;
+  const errorBox = document.getElementById('loginError');
+  errorBox.classList.add('d-none');
+
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo, contrasena })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión');
+
+    alert(data.mensaje);
+    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
+    e.target.reset();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.classList.remove('d-none');
+  }
+}
+
+async function manejarRegistro(e) {
+  e.preventDefault();
+  const nombre = document.getElementById('regNombre').value;
+  const apellido = document.getElementById('regApellido').value;
+  const correo = document.getElementById('regCorreo').value;
+  const contrasena = document.getElementById('regContrasena').value;
+  const telefono = document.getElementById('regTelefono').value;
+  const errorBox = document.getElementById('registroError');
+  errorBox.classList.add('d-none');
+
+  try {
+    const res = await fetch(`${API_URL}/auth/registro`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, apellido, correo, contrasena, telefono })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al registrarse');
+
+    alert('¡Cuenta creada correctamente! Ahora puedes iniciar sesión.');
+    bootstrap.Modal.getInstance(document.getElementById('registroModal')).hide();
+    e.target.reset();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.classList.remove('d-none');
+  }
+}

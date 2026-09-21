@@ -1,0 +1,18 @@
+# Configuración local con la contraseña de MySQL (cada quien tiene la suya)
+farma-backend/src/main/resources/application.properties
+
+# Archivos que genera Maven al compilar
+farma-backend/target/
+
+# Archivos ajenos al proyecto que quedaron en la carpeta del backend
+farma-backend/Claude outputs/
+
+# Copias de respaldo del frontend
+farma-frontend/_respaldo/
+
+# Editores y sistema
+.idea/
+.vscode/
+.sts4/
+*.iml
+Thumbs.db
