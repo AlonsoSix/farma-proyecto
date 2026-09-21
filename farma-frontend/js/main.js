@@ -68,6 +68,14 @@ function esc(texto) {
 }
 function soles(n) { return 'S/ ' + Number(n).toFixed(2); }
 
+// La base de datos puede guardar la ruta como '/img/...' o 'img/...'. Una ruta que empieza con '/'
+// apunta a la raíz del disco (o del servidor) y no encuentra la imagen al abrir index.html;
+// por eso se le quita esa barra inicial. Las URL completas (http, https, data) no se tocan.
+function rutaImagen(url) {
+  if (!url) return IMG_VACIA;
+  return /^(https?:|data:)/i.test(url) ? url : String(url).trim().replace(/^\/+/, '');
+}
+
 function mostrarAviso(texto) {
   document.getElementById('toastTexto').textContent = texto;
   bootstrap.Toast.getOrCreateInstance(document.getElementById('toastAviso'), { delay: 2500 }).show();
@@ -115,7 +123,7 @@ function renderProductos(filtro) {
     return `
       <article class="pcard">
         <div class="pcard-img">
-          <img src="${esc(p.imagenUrl || IMG_VACIA)}" alt="${esc(p.nombre)}" loading="lazy"
+          <img src="${esc(rutaImagen(p.imagenUrl))}" alt="${esc(p.nombre)}" loading="lazy"
                onerror="this.onerror=null;this.src='${IMG_VACIA}'">
         </div>
         <span class="pcard-cat">${esc(p.categoria || 'Farmacia')}</span>
@@ -152,7 +160,7 @@ function agregarAlCarrito(id) {
     mostrarAviso('No hay más unidades disponibles de este producto.');
     return;
   }
-  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: p.imagenUrl || IMG_VACIA, cantidad: 0 };
+  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: rutaImagen(p.imagenUrl), cantidad: 0 };
   carrito[id].cantidad++;
   guardarCarrito();
   actualizarCarritoUI();
@@ -182,7 +190,7 @@ function actualizarCarritoUI() {
   document.getElementById('carritoItems').innerHTML = items.length
     ? items.map(i => `
         <div class="cart-row">
-          <img src="${esc(i.imagen)}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
+          <img src="${esc(rutaImagen(i.imagen))}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
           <div class="flex-grow-1">
             <div class="small fw-semibold">${esc(i.nombre)}</div>
             <div class="small text-muted">${soles(i.precio)} c/u</div>
