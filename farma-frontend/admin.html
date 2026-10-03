@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Farmacia Farma</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+
+  <!-- Fuentes e Iconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <img src="img/logo-farma.webp" alt="Farma">
+      <div>
+        <div class="sidebar-brand-title">Farma</div>
+        <div class="sidebar-brand-sub">Panel de Control</div>
+      </div>
+    </a>
+
+    <!-- Info del Administrador -->
+    <div class="sidebar-user">
+      <div class="user-avatar" id="adminAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="adminNombre">Administrador</div>
+        <span class="user-role-badge" id="adminRol">ADMIN</span>
+      </div>
+    </div>
+
+    <!-- Navegación -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Principal</div>
+      <a class="sidebar-nav-link active" data-tab="dashboard">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-section-title">Mantenimiento</div>
+      <a class="sidebar-nav-link" data-tab="productos">
+        <i class="bi bi-capsule"></i>
+        <span>Productos</span>
+      </a>
+      <a class="sidebar-nav-link" data-tab="servicios">
+        <i class="bi bi-heart-pulse"></i>
+        <span>Servicios</span>
+      </a>
+      <a class="sidebar-nav-link" data-tab="usuarios">
+        <i class="bi bi-people"></i>
+        <span>Usuarios</span>
+      </a>
+    </nav>
+
+    <!-- Footer Sidebar -->
+    <div class="sidebar-footer">
+      <a href="index.html" class="sidebar-nav-link text-white-50">
+        <i class="bi bi-shop"></i>
+        <span>Ir a la Tienda</span>
+      </a>
+      <a id="btnCerrarSesionAdmin" class="sidebar-nav-link text-danger">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Cerrar Sesión</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="admin-main">
+
+    <!-- HEADER SUPERIOR -->
+    <header class="admin-header">
+      <div class="header-title-box">
+        <h1 id="seccionTitulo">Dashboard</h1>
+        <p id="seccionSubtitulo">Resumen general y estadísticas del sistema</p>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Ver Tienda
+        </a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- ================= PESTAÑA: DASHBOARD ================= -->
+      <section id="tab-dashboard" class="tab-pane-content">
+        <!-- Tarjetas de Estadísticas -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <div class="stat-label">Total Productos</div>
+              <div class="stat-value" id="statTotalProductos">0</div>
+            </div>
+            <div class="stat-icon primary">
+              <i class="bi bi-capsule"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <div class="stat-label">Stock Crítico (≤ 5)</div>
+              <div class="stat-value text-danger" id="statStockBajo">0</div>
+            </div>
+            <div class="stat-icon warning">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <div class="stat-label">Servicios Activos</div>
+              <div class="stat-value" id="statTotalServicios">0</div>
+            </div>
+            <div class="stat-icon success">
+              <i class="bi bi-heart-pulse"></i>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <div class="stat-label">Usuarios Registrados</div>
+              <div class="stat-value" id="statTotalUsuarios">0</div>
+            </div>
+            <div class="stat-icon purple">
+              <i class="bi bi-people"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accesos Rápidos y Resumen -->
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <h3><i class="bi bi-capsule text-primary"></i> Últimos Productos Registrados</h3>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="cambiarTab('productos')">
+                  Ver todos <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </div>
+              <div class="admin-table-container">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th>Categoría</th>
+                      <th>Precio</th>
+                      <th>Stock</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardRecentProducts">
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Cargando datos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="admin-card">
+              <div class="admin-card-header">
+                <h3><i class="bi bi-lightning-charge text-warning"></i> Acciones Rápidas</h3>
+              </div>
+              <div class="admin-card-body d-flex flex-column gap-3">
+                <button class="btn btn-primary rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalProducto()">
+                  <i class="bi bi-plus-circle"></i> Nuevo Producto
+                </button>
+                <button class="btn btn-outline-primary rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalServicio()">
+                  <i class="bi bi-plus-circle"></i> Nuevo Servicio
+                </button>
+                <button class="btn btn-outline-dark rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalUsuario()">
+                  <i class="bi bi-person-plus"></i> Nuevo Usuario
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PESTAÑA: PRODUCTOS ================= -->
+      <section id="tab-productos" class="tab-pane-content d-none">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="bi bi-capsule text-primary"></i> Catálogo de Productos</h3>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="filtroProdNombre" class="form-control border-start-0" placeholder="Buscar producto...">
+              </div>
+              <select id="filtroProdCategoria" class="form-select form-select-sm" style="width: auto;">
+                <option value="">Todas las categorías</option>
+              </select>
+              <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalProducto()">
+                <i class="bi bi-plus-lg me-1"></i> Agregar Producto
+              </button>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 70px;">Img</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th class="text-end" style="width: 100px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaProductosBody">
+                <tr><td colspan="8" class="text-center py-4 text-muted">Cargando productos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PESTAÑA: SERVICIOS ================= -->
+      <section id="tab-servicios" class="tab-pane-content d-none">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="bi bi-heart-pulse text-primary"></i> Servicios Farmacéuticos</h3>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalServicio()">
+              <i class="bi bi-plus-lg me-1"></i> Agregar Servicio
+            </button>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 70px;">Ícono</th>
+                  <th>Título</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th class="text-end" style="width: 120px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaServiciosBody">
+                <tr><td colspan="6" class="text-center py-4 text-muted">Cargando servicios...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PESTAÑA: USUARIOS ================= -->
+      <section id="tab-usuarios" class="tab-pane-content d-none">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="bi bi-people text-primary"></i> Gestión de Usuarios</h3>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <div class="input-group input-group-sm" style="max-width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="filtroUsuarioNombre" class="form-control border-start-0" placeholder="Buscar por nombre o correo...">
+              </div>
+              <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalUsuario()">
+                <i class="bi bi-person-plus me-1"></i> Nuevo Usuario
+              </button>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th>Nombre Completo</th>
+                  <th>Correo Electrónico</th>
+                  <th>Teléfono</th>
+                  <th>Rol</th>
+                  <th>Fecha Registro</th>
+                  <th class="text-end" style="width: 100px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaUsuariosBody">
+                <tr><td colspan="7" class="text-center py-4 text-muted">Cargando usuarios...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ================= MODAL PRODUCTO (CREAR / EDITAR) ================= -->
+  <div class="modal fade" id="modalProducto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalProductoTitulo">Nuevo Producto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formProducto">
+          <div class="modal-body">
+            <input type="hidden" id="prodId">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nombre del Producto *</label>
+              <input type="text" class="form-control" id="prodNombre" required placeholder="Ej: Paracetamol 500mg">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Precio (S/) *</label>
+                <input type="number" step="0.10" min="0" class="form-control" id="prodPrecio" required placeholder="0.00">
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Stock *</label>
+                <input type="number" min="0" class="form-control" id="prodStock" required placeholder="0">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Categoría</label>
+              <input type="text" class="form-control" id="prodCategoria" list="listaCategorias" placeholder="Medicamentos, Suplementos, etc.">
+              <datalist id="listaCategorias">
+                <option value="Medicamentos">
+                <option value="Suplementos">
+                <option value="Cuidado Personal">
+                <option value="Equipos Médicos">
+                <option value="Primeros Auxilios">
+              </datalist>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea class="form-control" id="prodDescripcion" rows="2" placeholder="Detalles, indicaciones o dosificación..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">URL de la Imagen</label>
+              <input type="text" class="form-control" id="prodImagenUrl" placeholder="/img/productos/paracetamol.jpg o URL web">
+              <div class="image-preview-box mt-2" id="prodImgPreviewBox">
+                <span class="text-muted small">Vista previa de imagen</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarProducto">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL SERVICIO (CREAR / EDITAR) ================= -->
+  <div class="modal fade" id="modalServicio" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalServicioTitulo">Nuevo Servicio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formServicio">
+          <div class="modal-body">
+            <input type="hidden" id="servId">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Título del Servicio *</label>
+              <input type="text" class="form-control" id="servTitulo" required placeholder="Ej: Control de presión arterial">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Ícono (Bootstrap Icons) *</label>
+              <div class="input-group">
+                <span class="input-group-text" id="servIconoPreview"><i class="bi bi-heart-pulse"></i></span>
+                <input type="text" class="form-control" id="servIcono" required value="bi-heart-pulse" placeholder="bi-truck, bi-whatsapp, bi-activity, etc.">
+              </div>
+              <small class="text-muted">Ejemplos: bi-truck, bi-whatsapp, bi-heart-pulse, bi-activity, bi-bandaid, bi-building, bi-capsule</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Descripción *</label>
+              <textarea class="form-control" id="servDescripcion" rows="3" required placeholder="Detalle del servicio que se brinda..."></textarea>
+            </div>
+            <div class="form-check form-switch mb-2">
+              <input class="form-check-input" type="checkbox" id="servActivo" checked>
+              <label class="form-check-label fw-semibold" for="servActivo">Servicio Activo (visible en la tienda)</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarServicio">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL USUARIO (CREAR / EDITAR) ================= -->
+  <div class="modal fade" id="modalUsuario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalUsuarioTitulo">Nuevo Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formUsuario">
+          <div class="modal-body">
+            <input type="hidden" id="usuId">
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Nombre *</label>
+                <input type="text" class="form-control" id="usuNombre" required placeholder="Nombre">
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Apellido *</label>
+                <input type="text" class="form-control" id="usuApellido" required placeholder="Apellido">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Correo Electrónico *</label>
+              <input type="email" class="form-control" id="usuCorreo" required placeholder="correo@ejemplo.com">
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-semibold">Teléfono</label>
+                <input type="text" class="form-control" id="usuTelefono" placeholder="987654321">
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-semibold">Rol *</label>
+                <select class="form-select" id="usuRol" required>
+                  <option value="CLIENTE">CLIENTE</option>
+                  <option value="ADMIN">ADMIN (Administrador)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold" id="labelUsuContrasena">Contraseña *</label>
+              <input type="password" class="form-control" id="usuContrasena" placeholder="Mínimo 6 caracteres">
+              <small class="text-muted d-none" id="usuContrasenaHelp">Dejar en blanco si no deseas cambiar la contraseña actual.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarUsuario">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL CONFIRMACIÓN DE ELIMINACIÓN ================= -->
+  <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content text-center p-3">
+        <div class="modal-body">
+          <div class="mb-3 text-danger fs-1">
+            <i class="bi bi-trash3"></i>
+          </div>
+          <h5 class="fw-bold mb-2" id="eliminarTitulo">¿Eliminar registro?</h5>
+          <p class="text-muted small mb-4" id="eliminarMensaje">Esta acción no se puede deshacer.</p>
+          <div class="d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-light rounded-pill px-3 w-50" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger rounded-pill px-3 w-50" id="btnConfirmarEliminar">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICACIONES ================= -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2050;">
+    <div id="adminToast" class="toast align-items-center text-white bg-dark border-0 rounded-4 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2" id="adminToastBody">
+          <i class="bi bi-info-circle fs-5" id="adminToastIcon"></i>
+          <span id="adminToastMsg">Mensaje de notificación</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -11,9 +11,11 @@ let productos = [];   // todos los productos que devuelve el backend
 let carrito = {};     // { id: { id, nombre, precio, imagen, cantidad } }
 
 document.addEventListener('DOMContentLoaded', () => {
+  actualizarNavbarUsuario();
   cargarCarrito();
   actualizarCarritoUI();
   cargarProductos();
+  cargarServicios();
 
   document.getElementById('loginForm').addEventListener('submit', manejarLogin);
   document.getElementById('registroForm').addEventListener('submit', manejarRegistro);
@@ -106,6 +108,32 @@ async function cargarProductos() {
     contenedor.innerHTML = `<div class="w-100 text-center text-danger py-5">
       No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.
     </div>`;
+  }
+}
+
+/* ---------- Servicios (Dinámicos) ---------- */
+async function cargarServicios() {
+  const contenedor = document.getElementById('servicios-container');
+  if (!contenedor) return;
+
+  try {
+    const res = await fetch(`${API_URL}/servicios`);
+    if (!res.ok) throw new Error('Respuesta inválida');
+    const servicios = await res.json();
+    if (!servicios || !servicios.length) return; // Mantiene los estáticos de respaldo
+
+    contenedor.innerHTML = servicios.map(s => `
+      <div class="col-md-6 col-lg-4">
+        <div class="service-card">
+          <div class="service-icon"><i class="bi ${esc(s.icono || 'bi-heart-pulse')}"></i></div>
+          <h3>${esc(s.titulo)}</h3>
+          <p>${esc(s.descripcion)}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    // Si no conecta, se conservan los servicios estáticos definidos en el HTML
+    console.warn('Cargando servicios por defecto:', err);
   }
 }
 
@@ -271,7 +299,60 @@ function actualizarCarritoUI() {
       </div>`;
 }
 
-/* ---------- Login / Registro ---------- */
+/* ---------- Login / Registro y Sesión ---------- */
+function actualizarNavbarUsuario() {
+  const navContainer = document.getElementById('navAuthContainer');
+  if (!navContainer) return;
+
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('farma_user') || 'null');
+  } catch (e) {
+    user = null;
+  }
+
+  if (!user) {
+    navContainer.innerHTML = `
+      <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar sesión</button>
+      <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#registroModal">Registrarse</button>
+    `;
+    return;
+  }
+
+  const esAdmin = user.rol === 'ADMIN';
+  const botonAdmin = esAdmin
+    ? `<a href="admin.html" class="btn btn-warning rounded-pill px-3 fw-semibold text-dark shadow-sm d-flex align-items-center gap-1">
+         <i class="bi bi-shield-lock-fill text-dark"></i> Panel Admin
+       </a>`
+    : '';
+
+  navContainer.innerHTML = `
+    ${botonAdmin}
+    <div class="dropdown">
+      <button class="btn btn-light rounded-pill px-3 dropdown-toggle d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle text-primary fs-5"></i>
+        <span class="fw-semibold">${esc(user.nombre || 'Mi Cuenta')}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0 mt-2">
+        <li class="px-3 py-1 text-muted small border-bottom mb-1">
+          <div><strong>${esc(user.nombre)} ${esc(user.apellido || '')}</strong></div>
+          <span class="badge ${esAdmin ? 'bg-primary' : 'bg-secondary'} mt-1">${user.rol}</span>
+        </li>
+        ${esAdmin ? '<li><a class="dropdown-item py-2" href="admin.html"><i class="bi bi-speedometer2 me-2 text-primary"></i>Ir al Panel Admin</a></li>' : ''}
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item py-2 text-danger" href="#" onclick="cerrarSesionUsuario(event)"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</a></li>
+      </ul>
+    </div>
+  `;
+}
+
+function cerrarSesionUsuario(e) {
+  if (e) e.preventDefault();
+  localStorage.removeItem('farma_user');
+  actualizarNavbarUsuario();
+  mostrarAviso('Has cerrado sesión correctamente.');
+}
+
 async function manejarLogin(e) {
   e.preventDefault();
   const correo = document.getElementById('loginCorreo').value;
@@ -288,9 +369,18 @@ async function manejarLogin(e) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión');
 
-    alert(data.mensaje);
+    // Guardar sesión de usuario
+    localStorage.setItem('farma_user', JSON.stringify(data));
+
     bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
     e.target.reset();
+    actualizarNavbarUsuario();
+
+    if (data.rol === 'ADMIN') {
+      mostrarAviso(`¡Bienvenido Administrador ${data.nombre}! Ahora tienes acceso al Panel Admin.`);
+    } else {
+      mostrarAviso(`¡Bienvenido ${data.nombre}!`);
+    }
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.classList.remove('d-none');

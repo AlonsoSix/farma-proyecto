@@ -74,8 +74,37 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'Felipe','Suarez','felipe@test.com','$2a$10$Q3oQV9XRGs1mVh33AcoC/.Z4.GCmSee9bINeB7ycgx97UJZGCQfka','987654321','CLIENTE','2026-09-19 12:34:43');
+INSERT INTO `usuarios` VALUES (1,'Felipe','Suarez','felipe@test.com','$2a$10$Q3oQV9XRGs1mVh33AcoC/.Z4.GCmSee9bINeB7ycgx97UJZGCQfka','987654321','ADMIN','2026-09-19 12:34:43');
+INSERT INTO `usuarios` VALUES (2,'Administrador','Farma','admin@farma.com','$2a$10$Q3oQV9XRGs1mVh33AcoC/.Z4.GCmSee9bINeB7ycgx97UJZGCQfka','987654321','ADMIN','2026-09-19 12:34:43');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `servicios`
+--
+
+DROP TABLE IF EXISTS `servicios`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `servicios` (
+  `id_servicio` int NOT NULL AUTO_INCREMENT,
+  `titulo` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `icono` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'bi-heart-pulse',
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_servicio`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `servicios`
+--
+
+LOCK TABLES `servicios` WRITE;
+/*!40000 ALTER TABLE `servicios` DISABLE KEYS */;
+INSERT INTO `servicios` VALUES (1,'Delivery a domicilio','Llevamos tus medicamentos y productos hasta la puerta de tu casa, de forma rápida y segura.','bi-truck',1,'2026-09-19 12:00:00'),(2,'Atención farmacéutica','Un químico farmacéutico te orienta sobre el uso correcto de tus medicamentos y sus dosis.','bi-heart-pulse',1,'2026-09-19 12:00:00'),(3,'Pedidos por WhatsApp','Envíanos tu lista o tu receta por WhatsApp y te confirmamos disponibilidad y precio al instante.','bi-whatsapp',1,'2026-09-19 12:00:00'),(4,'Control de presión arterial','Toma de presión gratuita en tienda para que cuides tu salud con controles periódicos.','bi-activity',1,'2026-09-19 12:00:00'),(5,'Inyectables','Aplicación de inyectables por personal capacitado, con material descartable y a tu comodidad.','bi-bandaid',1,'2026-09-19 12:00:00'),(6,'Convenios con empresas','Atendemos a clínicas, centros médicos y empresas con precios preferenciales y abastecimiento continuo.','bi-building',1,'2026-09-19 12:00:00');
+/*!40000 ALTER TABLE `servicios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
