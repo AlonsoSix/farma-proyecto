@@ -29,10 +29,16 @@ public class Producto {
     private String imagenUrl;
 
     @Column(nullable = false)
-    private Integer stock = 0;
+    private Integer stock;
 
     @Column(name = "fecha_creacion", nullable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private LocalDateTime fechaCreacion;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.stock == null) this.stock = 0;
+        if (this.fechaCreacion == null) this.fechaCreacion = LocalDateTime.now();
+    }
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
