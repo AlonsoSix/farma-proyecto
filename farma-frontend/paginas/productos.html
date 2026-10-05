@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Productos - Farmacia Farma</title>
+  <link rel="icon" type="image/png" href="../img/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/productos.css">
+</head>
+
+<body class="bg-light">
+
+  <!-- FRANJA SUPERIOR -->
+  <div class="topbar">
+    <div class="container d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la zona</span>
+      <span class="d-none d-md-inline"><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654 321</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg bg-white sticky-top main-nav shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html" aria-label="Farmacia Farma - volver al inicio">
+        <img src="../img/logo-farma.webp" alt="Farmacia Farma" class="brand-logo">
+      </a>
+
+      <div class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0">
+        <button class="btn-cart" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel"
+          aria-label="Ver carrito">
+          <i class="bi bi-cart3"></i>
+          <span id="cartCount" class="cart-count">0</span>
+        </button>
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+          data-bs-target="#navMenu" aria-label="Menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
+        <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría"
+          autocomplete="off">
+        <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
+      </form>
+
+      <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
+        <div class="d-flex align-items-center gap-2 py-3 py-lg-0" id="navAuthContainer">
+          <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal"
+            data-bs-target="#loginModal">Iniciar sesión</button>
+          <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal"
+            data-bs-target="#registroModal">Registrarse</button>
+        </div>
+      </div>
+    </div>
+    <div class="subnav border-top">
+      <div class="container">
+        <a href="../index.html#inicio">Inicio</a>
+        <a href="productos.html" class="fw-bold text-primary">Productos</a>
+        <a href="../index.html#servicios">Servicios</a>
+        <a href="../index.html#nosotros">Nosotros</a>
+        <a href="../index.html#clientes">Clientes</a>
+        <a href="../index.html#rubros">Rubros</a>
+        <a href="../index.html#contacto">Contacto</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB (Miga de pan) -->
+  <div class="bg-white py-3 border-bottom mb-4">
+    <div class="container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="../index.html" class="text-decoration-none">Inicio</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Catálogo de Productos</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- SECCIÓN PRINCIPAL DEL CATÁLOGO -->
+  <section class="pb-5">
+    <div class="container">
+      <div class="row">
+        
+        <!-- BARRA LATERAL (Filtros y Categorías) -->
+        <aside class="col-lg-3 mb-4 mb-lg-0">
+          <div class="bg-white p-4 rounded-4 shadow-sm border">
+            <h5 class="fw-bold mb-3">Categorías</h5>
+            <ul class="list-group list-group-flush mb-4">
+              <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+                <a href="#" class="text-decoration-none text-dark fw-medium">Todas</a>
+                <span class="badge bg-primary rounded-pill">120</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+                <a href="#" class="text-decoration-none text-muted">Medicamentos</a>
+                <span class="badge bg-light text-dark rounded-pill">45</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+                <a href="#" class="text-decoration-none text-muted">Cuidado Personal</a>
+                <span class="badge bg-light text-dark rounded-pill">32</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+                <a href="#" class="text-decoration-none text-muted">Vitaminas y Suplementos</a>
+                <span class="badge bg-light text-dark rounded-pill">18</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 py-2">
+                <a href="#" class="text-decoration-none text-muted">Equipos Médicos</a>
+                <span class="badge bg-light text-dark rounded-pill">25</span>
+              </li>
+            </ul>
+
+            <h5 class="fw-bold mb-3 mt-4">Rango de Precio</h5>
+            <div class="d-flex align-items-center gap-2">
+              <input type="number" class="form-control form-control-sm" placeholder="Mín" min="0">
+              <span>-</span>
+              <input type="number" class="form-control form-control-sm" placeholder="Máx" min="0">
+            </div>
+            <button class="btn btn-outline-primary btn-sm w-100 mt-3 rounded-pill">Aplicar filtro</button>
+          </div>
+        </aside>
+
+        <!-- CUADRÍCULA DE PRODUCTOS -->
+        <main class="col-lg-9">
+          
+          <!-- Cabecera de la grilla (Ordenamiento) -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center bg-white p-3 rounded-4 shadow-sm border mb-4">
+            <p class="mb-0 text-muted small">Mostrando catálogo completo</p>
+            <div class="d-flex align-items-center gap-2">
+              <label class="text-muted small mb-0 d-none d-sm-block">Ordenar por:</label>
+              <select class="form-select form-select-sm border-0 bg-light rounded-pill px-3" style="width: auto;">
+                <option selected>Destacados</option>
+                <option value="asc">Precio: Menor a Mayor</option>
+                <option value="desc">Precio: Mayor a Menor</option>
+                <option value="az">Nombre: A - Z</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Contenedor donde JS inyectará las tarjetas -->
+          <!-- Se usa la clase "row" y "row-cols" para que se acomoden en grilla automáticamente -->
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="catalogo-productos">
+            <div class="col-12 text-center text-muted py-5 w-100">
+              <div class="spinner-border text-primary mb-3" role="status"></div>
+              <p>Cargando productos desde el servidor...</p>
+            </div>
+          </div>
+
+          <!-- Paginación -->
+          <nav aria-label="Navegación de páginas" class="mt-5">
+            <ul class="pagination justify-content-center">
+              <li class="page-item disabled">
+                <a class="page-link rounded-start-pill px-3" href="#" tabindex="-1">Anterior</a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item">
+                <a class="page-link rounded-end-pill px-3" href="#">Siguiente</a>
+              </li>
+            </ul>
+          </nav>
+
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="text-center text-md-start">
+          <h5 class="fw-bold mb-3">Redes Sociales</h5>
+          <div class="d-flex justify-content-center justify-content-md-start gap-3">
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
+            <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+          </div>
+          <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para noticias y ofertas.</p>
+        </div>
+
+        <div class="text-center">
+          <a href="https://www.utp.edu.pe/" target="_blank" rel="noreferrer" class="d-inline-block">
+            <div class="bg-white footer-logo-box">
+              <img src="../img/logo-utp.webp" alt="Universidad Tecnológica del Perú" class="footer-logo">
+            </div>
+          </a>
+        </div>
+
+        <div class="text-center text-md-end">
+          <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
+          <p class="mb-0 fw-semibold">Nombre de los Responsables</p>
+          <p class="small text-secondary mb-2">Montañez Pumalla Fabrizio Andre</p>
+          <p class="small text-secondary mb-2">Tunqui Puelles Jose Armando</p>
+          <p class="mb-1"><a href="mailto:contacto@farmacia-farma.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@farmacia-farma.com</a></p>
+          <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
+        </div>
+
+      </div>
+
+      <hr class="border-secondary mt-4">
+      <p class="text-center small text-secondary mb-0">© 2026 Farmacia Farma - Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- PANEL DEL CARRITO -->
+  <div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-bold" id="carritoTitulo"><i class="bi bi-cart3 me-2"></i>Mi carrito</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div id="carritoItems" class="cart-items"></div>
+      <div class="cart-footer bg-white border-top pt-3" id="carritoPie">
+        <div class="cart-subtotal d-flex justify-content-between mb-3 fw-bold fs-5">
+          <span>Subtotal</span>
+          <span id="carritoTotal" class="text-primary">S/ 0.00</span>
+        </div>
+        <div class="cart-actions d-flex flex-column gap-2">
+          <button type="button" class="btn btn-outline-primary rounded-pill py-2 fw-semibold" id="btnIrCarrito">Ver detalle de compra</button>
+          <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btnPagar">Proceder al pago</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVISOS (Toasts) -->
+  <div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
+    <div id="toastAviso" class="toast toast-farma border-0 shadow-lg" role="status" aria-live="polite" aria-atomic="true">
+      <div class="toast-body d-flex align-items-center fw-medium" id="toastTexto"></div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index:2000">
+    <div id="toastEsquina" class="toast toast-esquina shadow" role="status" aria-live="polite" aria-atomic="true">
+      <div class="toast-esquina-cuerpo">
+        <span class="toast-esquina-ico"><i class="bi bi-check-circle-fill text-success"></i></span>
+        <span id="toastEsquinaTexto" class="fw-medium ms-2"></span>
+      </div>
+      <div class="text-end"><button type="button" class="btn btn-sm btn-light fw-bold" data-bs-dismiss="toast">Cerrar</button></div>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg p-2">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold fs-4">Bienvenido de nuevo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="loginError" class="alert alert-danger d-none rounded-3 small"></div>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label text-muted small fw-semibold mb-1">Correo electrónico</label>
+              <input type="email" class="form-control form-control-lg bg-light border-0" id="loginCorreo" placeholder="ejemplo@correo.com" required>
+            </div>
+            <div class="mb-4">
+              <label class="form-label text-muted small fw-semibold mb-1">Contraseña</label>
+              <input type="password" class="form-control form-control-lg bg-light border-0" id="loginContrasena" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold">Ingresar</button>
+          </form>
+          <p class="text-center small mt-4 mb-0 text-muted">
+            ¿No tienes cuenta?
+            <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal" class="text-primary fw-semibold text-decoration-none">Regístrate aquí</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL REGISTRO -->
+  <div class="modal fade" id="registroModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg p-2">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold fs-4">Crear Cuenta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="registroError" class="alert alert-danger d-none rounded-3 small"></div>
+          <form id="registroForm">
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label text-muted small fw-semibold mb-1">Nombre</label>
+                <input type="text" class="form-control bg-light border-0" id="regNombre" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label text-muted small fw-semibold mb-1">Apellido</label>
+                <input type="text" class="form-control bg-light border-0" id="regApellido" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-muted small fw-semibold mb-1">Correo electrónico</label>
+              <input type="email" class="form-control bg-light border-0" id="regCorreo" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-muted small fw-semibold mb-1">Teléfono</label>
+              <input type="text" class="form-control bg-light border-0" id="regTelefono">
+            </div>
+            <div class="mb-4">
+              <label class="form-label text-muted small fw-semibold mb-1">Contraseña</label>
+              <input type="password" class="form-control bg-light border-0" id="regContrasena" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold">Crear Cuenta</button>
+          </form>
+          <p class="text-center small mt-4 mb-0 text-muted">
+            ¿Ya tienes cuenta?
+            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal" class="text-primary fw-semibold text-decoration-none">Inicia sesión</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Script principal referenciado con ../ ya que el HTML está en paginas/ -->
+  <script src="../js/productos.js"></script>
+</body>
+
+</html>

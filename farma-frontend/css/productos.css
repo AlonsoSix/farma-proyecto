@@ -1,0 +1,1354 @@
+/* =========================================================
+   FARMACIA FARMA
+   ESTILOS DE LA PÁGINA DE PRODUCTOS
+========================================================= */
+
+
+/* =========================================================
+   1. CONFIGURACIÓN DE LA PÁGINA
+========================================================= */
+
+body {
+    font-family: 'Poppins', sans-serif;
+    color: #333333;
+    background: var(--farma-bg, #f4f6fa);
+}
+
+
+/* =========================================================
+   2. BUSCADOR DEL CATÁLOGO
+========================================================= */
+
+.search-box {
+    position: relative;
+    flex: 0 0 100%;
+}
+
+.search-box .form-control {
+    width: 100%;
+
+    padding: 0.65rem 3.2rem 0.65rem 1.2rem;
+
+    border: 1px solid #d5dbe3;
+    border-radius: 50rem;
+
+    background: #f7f9fc;
+
+    color: #333333;
+
+    font-size: 0.9rem;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.search-box .form-control:focus {
+    border-color: var(--farma-primary, #0b72b3);
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 0.2rem rgba(11, 114, 179, 0.14);
+
+    outline: none;
+}
+
+.search-box .form-control::placeholder {
+    color: #8a96a3;
+}
+
+.search-box button {
+    position: absolute;
+
+    top: 50%;
+    right: 6px;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: var(--farma-primary, #0b72b3);
+    color: #ffffff;
+
+    transform: translateY(-50%);
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.search-box button:hover {
+    background: var(--farma-primary-dark, #08548a);
+
+    transform: translateY(-50%) scale(1.04);
+}
+
+@media (min-width: 992px) {
+    .search-box {
+        flex: 1;
+        max-width: 560px;
+    }
+}
+
+
+/* =========================================================
+   3. SUBMENÚ DEL CATÁLOGO
+========================================================= */
+
+.subnav {
+    margin-top: 0.75rem;
+
+    border-top: 1px solid #edf0f4;
+
+    overflow-x: auto;
+    white-space: nowrap;
+
+    scrollbar-width: none;
+}
+
+.subnav::-webkit-scrollbar {
+    display: none;
+}
+
+.subnav .container {
+    display: flex;
+
+    gap: 0.2rem;
+}
+
+.subnav a {
+    position: relative;
+
+    display: inline-block;
+
+    padding: 0.65rem 1rem;
+
+    color: var(--farma-dark, #0b2a45);
+
+    text-decoration: none;
+
+    font-size: 0.86rem;
+    font-weight: 500;
+
+    border-bottom: 3px solid transparent;
+
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.subnav a:hover {
+    color: var(--farma-primary, #0b72b3);
+
+    border-bottom-color: var(--farma-primary, #0b72b3);
+}
+
+.subnav a.fw-bold {
+    color: var(--farma-primary, #0b72b3) !important;
+
+    border-bottom-color: var(--farma-primary, #0b72b3);
+}
+
+
+/* =========================================================
+   4. BOTÓN DEL CARRITO
+========================================================= */
+
+.btn-cart {
+    position: relative;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: var(--farma-primary-soft, #e6f2fa);
+    color: var(--farma-primary-dark, #08548a);
+
+    font-size: 1.25rem;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn-cart:hover {
+    background: #d7ebf8;
+
+    color: var(--farma-primary);
+
+    transform: translateY(-1px);
+}
+
+.cart-count {
+    position: absolute;
+
+    top: -6px;
+    right: -6px;
+
+    min-width: 20px;
+    height: 20px;
+
+    padding: 0 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50rem;
+
+    background: var(--farma-accent-dark, #d24309);
+    color: #ffffff;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   5. BREADCRUMB
+========================================================= */
+
+.breadcrumb {
+    font-size: 0.84rem;
+}
+
+.breadcrumb-item a {
+    color: var(--farma-primary, #0b72b3);
+}
+
+.breadcrumb-item.active {
+    color: #788592;
+}
+
+
+/* =========================================================
+   6. CONTENEDOR DE FILTROS
+========================================================= */
+
+aside {
+    position: relative;
+}
+
+aside > .bg-white {
+    border-color: #e3eaf0 !important;
+
+    box-shadow:
+        0 5px 18px rgba(11, 42, 69, 0.04) !important;
+}
+
+aside h5 {
+    color: var(--farma-dark, #0b2a45);
+
+    font-size: 1rem;
+}
+
+aside .list-group-item {
+    background: transparent;
+}
+
+aside .list-group-item a {
+    color: #4e5c69;
+
+    transition:
+        color 0.2s ease;
+}
+
+aside .list-group-item a:hover,
+aside .list-group-item a.categoria-activa {
+    color: var(--farma-primary, #0b72b3) !important;
+}
+
+aside .list-group-item a.categoria-activa {
+    font-weight: 600 !important;
+}
+
+aside .list-group-item .badge {
+    min-width: 28px;
+
+    padding: 0.35rem 0.55rem;
+
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+aside .form-control {
+    min-height: 36px;
+
+    border-color: #dce5ed;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    font-size: 0.78rem;
+}
+
+aside .form-control:focus {
+    border-color: var(--farma-primary, #0b72b3);
+
+    box-shadow:
+        0 0 0 0.2rem rgba(11, 114, 179, 0.12);
+}
+
+aside .btn-outline-primary {
+    min-height: 38px;
+
+    font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   7. CABECERA DE LA GRILLA
+========================================================= */
+
+main > .d-flex.flex-wrap {
+    border-color: #e3eaf0 !important;
+
+    box-shadow:
+        0 5px 18px rgba(11, 42, 69, 0.04) !important;
+}
+
+main > .d-flex.flex-wrap p {
+    color: #788592 !important;
+}
+
+main .form-select {
+    min-height: 36px;
+
+    color: #4b5967;
+
+    font-size: 0.78rem;
+
+    cursor: pointer;
+}
+
+main .form-select:focus {
+    border-color: var(--farma-primary, #0b72b3);
+
+    box-shadow:
+        0 0 0 0.2rem rgba(11, 114, 179, 0.12);
+}
+
+
+/* =========================================================
+   8. CUADRÍCULA
+========================================================= */
+
+#catalogo-productos {
+    align-items: stretch;
+}
+
+#catalogo-productos > .col {
+    display: flex;
+
+    min-width: 0;
+}
+
+
+/* =========================================================
+   9. TARJETAS DE PRODUCTOS
+========================================================= */
+
+.product-card {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e1e8f0;
+    border-radius: 18px;
+
+    box-shadow:
+        0 3px 12px rgba(11, 42, 69, 0.025);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+
+    border-color: var(--farma-border, #cfe3f5);
+
+    box-shadow:
+        0 14px 30px rgba(11, 42, 69, 0.10);
+}
+
+
+/* =========================================================
+   10. IMAGEN DEL PRODUCTO
+========================================================= */
+
+.product-card-img-container {
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #f0f3f6;
+}
+
+.product-card-img-container img {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 1.25rem;
+
+    object-fit: contain;
+
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-card-img-container img {
+    transform: scale(1.05);
+}
+
+
+/* =========================================================
+   11. CUERPO DE LA TARJETA
+========================================================= */
+
+.product-card-body {
+    display: flex;
+    flex-direction: column;
+
+    flex-grow: 1;
+
+    padding: 1.1rem;
+}
+
+.product-category {
+    margin-bottom: 0.45rem;
+
+    color: #788693;
+
+    font-size: 0.7rem;
+    font-weight: 700;
+
+    letter-spacing: 0.05em;
+
+    text-transform: uppercase;
+}
+
+.product-title {
+    min-height: 2.7em;
+
+    margin: 0 0 0.55rem;
+
+    color: var(--farma-dark, #0b2a45);
+
+    font-size: 0.98rem;
+    font-weight: 600;
+
+    line-height: 1.35;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+.product-description {
+    min-height: 2.8em;
+
+    margin: 0 0 0.75rem;
+
+    color: #7a8794;
+
+    font-size: 0.78rem;
+
+    line-height: 1.4;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   12. STOCK
+========================================================= */
+
+.product-stock {
+    min-height: 1.6rem;
+
+    margin-bottom: 0.35rem;
+}
+
+.product-stock .badge {
+    padding: 0.35rem 0.6rem;
+
+    border-radius: 50rem;
+
+    font-size: 0.67rem;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   13. PRECIO
+========================================================= */
+
+.product-price {
+    margin-top: auto;
+
+    margin-bottom: 0.95rem;
+
+    color: var(--farma-dark, #0b2a45);
+
+    font-size: 1.3rem;
+    font-weight: 700;
+
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   14. BOTÓN AGREGAR AL CARRITO
+========================================================= */
+
+.btn-add-cart {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding: 0.62rem 0.8rem;
+
+    border: 0;
+    border-radius: 50rem;
+
+    background: var(--farma-accent-dark, #d24309);
+
+    color: #ffffff;
+
+    font-size: 0.82rem;
+    font-weight: 600;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.btn-add-cart:hover:not(:disabled) {
+    background: var(--farma-accent-darker, #b53a08);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 12px rgba(210, 67, 9, 0.16);
+}
+
+.btn-add-cart:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-add-cart:disabled {
+    background: #c5cdd6;
+
+    color: #ffffff;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   15. PAGINACIÓN
+========================================================= */
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.pagination .page-link {
+    min-width: 38px;
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 0.15rem;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #495766;
+
+    font-size: 0.82rem;
+    font-weight: 500;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--farma-primary, #0b72b3);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 4px 10px rgba(11, 114, 179, 0.20);
+}
+
+.pagination .page-link:hover {
+    background: var(--farma-primary-soft, #e6f2fa);
+
+    color: var(--farma-primary-dark, #08548a);
+
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #aab3bd;
+
+    background: transparent;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   16. SPINNER DE CARGA
+========================================================= */
+
+#catalogo-productos .spinner-border {
+    width: 3rem;
+    height: 3rem;
+
+    border-width: 0.25em;
+
+    color: var(--farma-primary) !important;
+}
+
+
+/* =========================================================
+   17. CARRITO LATERAL
+========================================================= */
+
+.cart-panel {
+    --bs-offcanvas-width: 440px;
+    --bs-offcanvas-padding-x: 1.75rem;
+}
+
+.cart-panel .offcanvas-header {
+    padding-top: 0.95rem;
+    padding-bottom: 0.95rem;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.cart-panel .offcanvas-title {
+    display: flex;
+    align-items: center;
+
+    gap: 0.7rem;
+
+    color: var(--farma-dark, #0b2a45);
+
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.cart-panel .offcanvas-title i {
+    color: var(--farma-primary);
+
+    font-size: 1.45rem;
+}
+
+.cart-panel .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 0;
+
+    background: #ffffff;
+}
+
+
+/* =========================================================
+   18. LISTA DEL CARRITO
+========================================================= */
+
+.cart-items {
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    scrollbar-gutter: stable;
+
+    margin-inline:
+        calc(var(--bs-offcanvas-padding-x) * -1);
+
+    padding-left:
+        var(--bs-offcanvas-padding-x);
+
+    padding-right:
+        calc(var(--bs-offcanvas-padding-x) - 8px);
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.cart-items::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cart-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+    background: #b9c4d2;
+
+    border-radius: 8px;
+}
+
+.cart-items::-webkit-scrollbar-thumb:hover {
+    background: #9aa9bb;
+}
+
+.cart-items > * {
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   19. CABECERA DEL CARRITO
+========================================================= */
+
+.cart-store {
+    padding: 0.95rem 0 0.75rem;
+
+    color: var(--farma-dark);
+
+    font-size: 1rem;
+    font-weight: 600;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+/* =========================================================
+   20. FILA DEL PRODUCTO EN CARRITO
+========================================================= */
+
+.cart-row {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 1rem;
+
+    padding: 0.85rem 0;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.cart-row img {
+    width: 64px;
+    height: 64px;
+
+    flex: 0 0 64px;
+
+    object-fit: contain;
+}
+
+.cart-info {
+    flex: 1 1 auto;
+
+    min-width: 0;
+}
+
+.cart-name {
+    color: var(--farma-dark);
+
+    font-size: 0.88rem;
+
+    line-height: 1.35;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+.cart-cat {
+    margin-top: 0.2rem;
+
+    color: #6b7b93;
+
+    font-size: 0.68rem;
+    font-weight: 700;
+
+    letter-spacing: 0.02em;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   21. CANTIDAD EN CARRITO
+========================================================= */
+
+.cart-qty {
+    display: flex;
+    align-items: center;
+
+    gap: 0.4rem;
+
+    margin-top: 0.45rem;
+
+    color: var(--farma-dark);
+
+    font-size: 0.82rem;
+}
+
+.cart-qty button {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #cfd8e3;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+    color: var(--farma-dark);
+
+    line-height: 1;
+
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.cart-qty button:hover:not(:disabled) {
+    border-color: var(--farma-primary);
+
+    background: var(--farma-primary-soft);
+
+    color: var(--farma-primary);
+}
+
+.cart-qty button:disabled {
+    opacity: 0.4;
+
+    cursor: not-allowed;
+}
+
+.cart-qty span {
+    min-width: 1.2rem;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   22. PRECIO Y ELIMINAR
+========================================================= */
+
+.cart-side {
+    flex: 0 0 auto;
+
+    text-align: right;
+}
+
+.cart-price {
+    color: #5b6b82;
+
+    font-size: 0.88rem;
+
+    white-space: nowrap;
+}
+
+.cart-del {
+    margin-top: 0.55rem;
+
+    padding: 0;
+
+    border: 0;
+
+    background: none;
+
+    color: var(--farma-accent-dark);
+
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    transition: color 0.2s ease;
+}
+
+.cart-del:hover {
+    color: var(--farma-accent-darker);
+}
+
+
+/* =========================================================
+   23. CARRITO VACÍO
+========================================================= */
+
+.cart-empty {
+    margin: auto;
+
+    padding: 2rem 1rem;
+
+    text-align: center;
+}
+
+.cart-empty-icon {
+    position: relative;
+
+    width: 125px;
+    height: 112px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 1.4rem;
+
+    background: var(--farma-primary-soft);
+
+    clip-path:
+        polygon(
+            25% 0,
+            75% 0,
+            100% 50%,
+            75% 100%,
+            25% 100%,
+            0 50%
+        );
+}
+
+.cart-empty-icon > i {
+    color: var(--farma-primary);
+
+    font-size: 2.9rem;
+}
+
+.cart-empty-badge {
+    position: absolute;
+
+    top: 20px;
+    right: 31px;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--farma-accent-dark);
+    color: #ffffff;
+
+    font-size: 0.85rem;
+}
+
+.cart-empty h6 {
+    margin-bottom: 0.8rem;
+
+    color: var(--farma-dark);
+
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.cart-empty p {
+    max-width: 250px;
+
+    margin: 0 auto;
+
+    color: #58687a;
+
+    font-size: 0.9rem;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   24. PIE DEL CARRITO
+========================================================= */
+
+.cart-footer {
+    padding: 0.85rem 0 1.1rem;
+
+    border-top: 1px solid #edf0f4;
+}
+
+.cart-subtotal {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 0.8rem;
+
+    color: var(--farma-dark);
+
+    font-weight: 700;
+}
+
+.cart-subtotal span:last-child {
+    color: var(--farma-primary);
+}
+
+.cart-actions {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.6rem;
+}
+
+.cart-link,
+.cart-buy {
+    width: 100%;
+
+    min-height: 43px;
+
+    border-radius: 50rem;
+
+    font-size: 0.83rem;
+    font-weight: 600;
+}
+
+.cart-link {
+    border: 1px solid var(--farma-primary);
+
+    background: #ffffff;
+
+    color: var(--farma-primary);
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.cart-link:hover {
+    background: var(--farma-primary-soft);
+
+    color: var(--farma-primary-dark);
+}
+
+.cart-buy {
+    border: 0;
+
+    background: var(--farma-primary);
+
+    color: #ffffff;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.cart-buy:hover:not(:disabled) {
+    background: var(--farma-primary-dark);
+
+    transform: translateY(-1px);
+}
+
+.cart-buy:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   25. ATENUAR CARRITO
+========================================================= */
+
+.cart-panel .offcanvas-body {
+    transition: opacity 0.25s ease;
+}
+
+.cart-panel .offcanvas-body.cart-atenuado {
+    opacity: 0.45;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   26. TOAST DE AVISO
+========================================================= */
+
+.toast-aviso {
+    z-index: 2000;
+}
+
+.toast-farma {
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+
+    background: var(--farma-dark);
+
+    color: #ffffff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 9px 26px rgba(4, 30, 55, 0.28);
+
+    font-size: 0.9rem;
+}
+
+.toast-farma .toast-body {
+    min-height: 45px;
+
+    padding: 0.8rem 1.2rem;
+}
+
+
+/* =========================================================
+   27. TOAST DE ESQUINA
+========================================================= */
+
+.toast-esquina {
+    --bs-toast-bg: #ffffff;
+    --bs-toast-border-width: 0;
+
+    width: 410px;
+
+    max-width: calc(100vw - 2rem);
+
+    padding: 1rem 1.25rem 0.5rem;
+
+    border-top: 4px solid var(--farma-primary);
+
+    border-radius: 12px;
+
+    color: var(--farma-dark);
+
+    box-shadow:
+        0 8px 28px rgba(11, 42, 69, 0.18);
+}
+
+.toast-esquina-cuerpo {
+    display: flex;
+    align-items: center;
+
+    gap: 0.85rem;
+
+    font-size: 0.9rem;
+}
+
+.toast-esquina-ico {
+    flex: 0 0 30px;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--farma-primary-soft);
+
+    color: var(--farma-primary);
+}
+
+.toast-esquina .btn {
+    font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   28. MODALES DE LOGIN Y REGISTRO
+========================================================= */
+
+.modal-content {
+    border: 0 !important;
+
+    border-radius: 20px !important;
+
+    box-shadow:
+        0 20px 55px rgba(11, 42, 69, 0.18) !important;
+}
+
+.modal .form-control:focus {
+    border-color: var(--farma-primary);
+
+    box-shadow:
+        0 0 0 0.2rem rgba(11, 114, 179, 0.12);
+}
+
+
+/* =========================================================
+   29. RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .main-nav {
+        padding-top: 0.65rem;
+    }
+
+    .search-box {
+        margin-top: 0.8rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .subnav {
+        margin-top: 0.5rem;
+    }
+
+    .subnav a {
+        padding-left: 0.8rem;
+        padding-right: 0.8rem;
+    }
+
+    .cart-panel {
+        --bs-offcanvas-width: 420px;
+    }
+}
+
+
+/* =========================================================
+   30. RESPONSIVE - CELULAR
+========================================================= */
+
+@media (max-width: 575.98px) {
+
+    body {
+        background: var(--farma-bg, #f4f6fa);
+    }
+
+    .topbar {
+        font-size: 0.69rem;
+    }
+
+    .brand-logo {
+        height: 43px;
+    }
+
+    .search-box .form-control {
+        font-size: 0.82rem;
+    }
+
+    .subnav a {
+        padding: 0.6rem 0.75rem;
+
+        font-size: 0.78rem;
+    }
+
+    .breadcrumb {
+        font-size: 0.76rem;
+    }
+
+    main > .d-flex.flex-wrap {
+        align-items: stretch !important;
+    }
+
+    main > .d-flex.flex-wrap > div {
+        width: 100%;
+    }
+
+    main > .d-flex.flex-wrap .form-select {
+        width: 100% !important;
+    }
+
+    .product-card-body {
+        padding: 0.9rem;
+    }
+
+    .product-title {
+        font-size: 0.94rem;
+    }
+
+    .product-description {
+        font-size: 0.76rem;
+    }
+
+    .product-price {
+        font-size: 1.18rem;
+    }
+
+    .btn-add-cart {
+        font-size: 0.78rem;
+    }
+
+    .cart-panel {
+        --bs-offcanvas-width: 100%;
+        --bs-offcanvas-padding-x: 1.25rem;
+    }
+
+    .cart-row {
+        gap: 0.75rem;
+    }
+
+    .cart-row img {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+    }
+
+    .toast-esquina {
+        width: calc(100vw - 2rem);
+    }
+}
