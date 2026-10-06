@@ -1,102 +1,177 @@
-════════════════════════════
-PASO 0: PROGRAMAS NECESARIOS
-════════════════════════════
-Instalen esto (si ya lo tienen, pasen al paso 1):
-- Git: git-scm.com
-- Java 21 (JDK): para comprobar, abran una terminal y escriban
-  java -version   (debe decir 21)
-- MySQL Server y MySQL Workbench (deben estar corriendo)
+# Farma
 
-Solo la primera vez, configuren Git con su nombre y correo de GitHub:
-  git config --global user.name "SuNombre"
-  git config --global user.email "sucorreo@ejemplo.com"
+Sistema de gestión para farmacia desarrollado con **Spring Boot**, **MySQL** y **JavaScript**.
 
-═══════════════════
-PASO 1: CLONAR
-═══════════════════
-En una terminal, ubíquense en la carpeta donde quieran guardar el proyecto
-(por ejemplo el Escritorio) y ejecuten:
-  git clone https://github.com/AlonsoSix/farma-proyecto.git
-Se creará la carpeta "farma-proyecto" con 3 carpetas adentro:
-database, farma-backend y farma-frontend.
+## 📋 Requisitos
 
-═══════════════════════════════
-PASO 2: CREAR LA BASE DE DATOS
-═══════════════════════════════
-1. Abran MySQL Workbench y conéctense a su servidor local.
-2. Menú Server > Data Import.
-3. Elijan "Import from Self-Contained File" y busquen:
+Antes de comenzar, asegúrate de tener instalado:
+
+* [Git](https://git-scm.com/)
+* **Java JDK 21**
+* **MySQL Server**
+* **MySQL Workbench**
+
+### Verificar Java
+
+Abre una terminal y ejecuta:
+
+```bash
+java -version
+```
+
+Debe aparecer una versión **21**.
+
+### Configurar Git
+
+Solo necesitas hacerlo una vez por computadora:
+
+```bash
+git config --global user.name "SuNombre"
+git config --global user.email "sucorreo@ejemplo.com"
+```
+
+Utiliza el mismo nombre y correo que tienes asociados a tu cuenta de GitHub.
+
+---
+
+# 🚀 Instalación
+
+## Paso 1: Clonar el proyecto
+
+Ubícate en la carpeta donde quieras guardar el proyecto y ejecuta:
+
+```bash
+git clone https://github.com/AlonsoSix/farma-proyecto.git
+```
+
+Luego entra a la carpeta:
+
+```bash
+cd farma-proyecto
+```
+
+La estructura principal del proyecto es:
+
+```text
+farma-proyecto/
+├── database/
+├── farma-backend/
+└── farma-frontend/
+```
+
+---
+
+## Paso 2: Crear la base de datos
+
+La base de datos se encuentra en:
+
+```text
+database/Dump20260921.sql
+```
+
+### Importar desde MySQL Workbench
+
+1. Abre **MySQL Workbench**.
+
+2. Conéctate a tu servidor local de MySQL.
+
+3. Ve a:
+
+   **Server → Data Import**
+
+4. Selecciona:
+
+   **Import from Self-Contained File**
+
+5. Busca el archivo:
+
+   ```text
    farma-proyecto/database/Dump20260921.sql
-4. No hace falta elegir nada en "Default Target Schema".
-5. Clic en "Start Import" (NO es necesario darle al rayito).
-6. Al terminar, en la pestaña "Import Progress" debe decir "Import completed".
-7. En el panel izquierdo (Schemas), clic en el botón de refrescar. Debe
-   aparecer "farma_db" con las tablas "productos" y "usuarios".
+   ```
 
-Nota: si ya tenían una base llamada farma_db, se reemplaza por esta.
+6. No es necesario seleccionar nada en **Default Target Schema**.
 
-═══════════════════════════════════════
-PASO 3: CREAR SU ARCHIVO DE CONFIGURACIÓN
-═══════════════════════════════════════
-Cada uno tiene su propia contraseña de MySQL, por eso este archivo no se sube
-a GitHub y cada uno debe crear el suyo.
+7. Haz clic en **Start Import**.
 
-1. Entren a: farma-proyecto/farma-backend/src/main/resources/
-2. Ahí hay un archivo "application.properties.example".
-   Hagan una COPIA (clic derecho > Copiar, y luego Pegar).
-3. Renombren la COPIA para que se llame: application.properties
-   (sin el ".example"). Tienen que quedar los DOS archivos.
-   NO borren ni modifiquen el archivo ".example".
-4. Abran su "application.properties" y cambien esta línea por SU contraseña
-   de MySQL:
-     spring.datasource.password=TU_CONTRASEÑA_DE_MYSQL
-   Si su usuario de MySQL no es "root", cambien también la línea
-   spring.datasource.username=root
+8. Espera hasta que en **Import Progress** aparezca:
 
-Si no ven las extensiones de archivo en Windows, activen en el Explorador:
-Ver > Mostrar > Extensiones de nombre de archivo.
+   ```text
+   Import completed
+   ```
 
-══════════════════════════
-PASO 4: EJECUTAR EL BACKEND
-══════════════════════════
-En una terminal, dentro de farma-proyecto/farma-backend:
-  .\mvnw spring-boot:run
-La primera vez tarda porque descarga dependencias. Cuando esté listo, verán en
-la terminal un mensaje que dice "Started FarmaBackendApplication".
-No cierren esa terminal mientras usen la página.
+9. En el panel **Schemas**, actualiza la lista.
 
-═══════════════════════════
-PASO 5: VER LA PÁGINA
-═══════════════════════════
-Abran en el navegador el archivo:
-  farma-proyecto/farma-frontend/index.html
-Si aparecen los productos en "Productos más vendidos", todo funciona.
+Deberías poder encontrar la base:
 
-═══════════════════════════════
-SI ALGO FALLA
-═══════════════════════════════
-- "Access denied for user 'root'": la contraseña de su
-  application.properties está mal.
-- "Communications link failure" o "Connection refused": MySQL no está
-  encendido.
-- "Unknown database 'farma_db'": no hicieron bien el paso 2.
-- "Port 8081 was already in use": ya tienen otro backend corriendo. Ciérrenlo.
-- Error de versión de Java: instalen Java 21.
-- En la página sale "No se pudo conectar con el servidor": el backend del
-  paso 4 no está corriendo.
+```text
+farma_db
+```
 
-═════════════════════════════
-PARA TRABAJAR EN EQUIPO
-═════════════════════════════
-Primero acepten la invitación de colaborador que les llegará al correo de
-GitHub (si no, no podrán hacer git push).
+con sus tablas correspondientes, incluyendo:
 
-- Antes de empezar a trabajar:   git pull
-- Al terminar sus cambios:       git add .
-                                 git commit -m "lo que cambiaron"
-                                 git push
-- Repártanse las partes (uno el frontend, otro el backend) para no editar el
-  mismo archivo al mismo tiempo.
-- Antes de hacer commit, revisen "git status". Si sale
-  "application.properties.example" como borrado, no lo suban; recupérenlo con:
-  git restore farma-backend/src/main/resources/application.properties.example
+```text
+productos
+usuarios
+```
+
+> **Nota:** Si ya tienes una base de datos `farma_db`, revisa el contenido del dump antes de importarlo, ya que puede modificar o reemplazar la información existente.
+
+---
+
+## Paso 3: Crear el archivo de configuración
+
+Cada integrante tiene su propia contraseña de MySQL. Por seguridad, el archivo `application.properties` **no debe subirse a GitHub**.
+
+El proyecto incluye una plantilla:
+
+```text
+farma-backend/
+└── src/
+    └── main/
+        └── resources/
+            └── application.properties.example
+```
+
+### Crear `application.properties`
+
+1. Entra a:
+
+   ```text
+   farma-backend/src/main/resources/
+   ```
+
+2. Haz una copia de:
+
+   ```text
+   application.properties.example
+   ```
+
+3. Renombra la copia como:
+
+   ```text
+   application.properties
+   ```
+
+Al final deben existir **los dos archivos**:
+
+```text
+application.properties
+application.properties.example
+```
+
+> **Importante:** No borres ni modifiques `application.properties.example`.
+
+### Configurar MySQL
+
+Abre:
+
+```text
+application.properties
+```
+
+y coloca tu contraseña de MySQL:
+
+```properties
+spring.datasource.username=root
+spring.datasource.password=TU_CO_
+```
