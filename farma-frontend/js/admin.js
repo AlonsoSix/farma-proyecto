@@ -1,11 +1,12 @@
-const API_URL = 'http://localhost:8081/api';
+/**
+ * FARMACIA FARMA - Panel de Administración (admin.js)
+ * Aplica principios SOLID delegando operaciones CRUD y utilidades en servicios especializados.
+ */
 
-// Estados locales
 let adminUser = null;
 let listaProductos = [];
 let listaServicios = [];
 let listaUsuarios = [];
-
 let itemAEliminar = null; // { tipo: 'producto'|'servicio'|'usuario', id, nombre }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,57 +19,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ================= 1. VERIFICACIÓN DE SESIÓN ================= */
 function verificarAccesoAdmin() {
-  try {
-    const raw = localStorage.getItem('farma_user');
-    if (!raw) throw new Error('No hay sesión iniciada.');
-    adminUser = JSON.parse(raw);
-    if (!adminUser || adminUser.rol !== 'ADMIN') {
-      throw new Error('Tu cuenta no tiene privilegios de administrador.');
-    }
-
-    // Configurar información de usuario en sidebar
-    const nombreCompleto = `${adminUser.nombre || 'Admin'} ${adminUser.apellido || ''}`.trim();
-    document.getElementById('adminNombre').textContent = nombreCompleto;
-    document.getElementById('adminAvatar').textContent = (adminUser.nombre || 'A').charAt(0).toUpperCase();
-    document.getElementById('adminRol').textContent = adminUser.rol;
-
-    document.getElementById('btnCerrarSesionAdmin').addEventListener('click', () => {
-      if (confirm('¿Deseas cerrar tu sesión de administrador?')) {
-        localStorage.removeItem('farma_user');
-        window.location.href = 'index.html';
-      }
-    });
-
-  } catch (err) {
-    alert(err.message + '\nRedirigiendo a la tienda...');
+  const authService = window.FarmaAuthService;
+  if (!authService || !authService.isAdmin()) {
+    alert('Acceso denegado. Tu cuenta no tiene privilegios de administrador.\nRedirigiendo a la tienda...');
     window.location.href = 'index.html';
+    return;
   }
+
+  adminUser = authService.getCurrentUser();
+  const nombreCompleto = `${adminUser.nombre || 'Admin'} ${adminUser.apellido || ''}`.trim();
+  document.getElementById('adminNombre').textContent = nombreCompleto;
+  document.getElementById('adminAvatar').textContent = (adminUser.nombre || 'A').charAt(0).toUpperCase();
+  document.getElementById('adminRol').textContent = adminUser.rol;
+
+  document.getElementById('btnCerrarSesionAdmin')?.addEventListener('click', () => {
+    if (confirm('¿Deseas cerrar tu sesión de administrador?')) {
+      authService.logout();
+      window.location.href = 'index.html';
+    }
+  });
 }
 
-/* ================= 2. NAVEGACIÓN ENTRE PESTAÑAS ================= */
+/* ================= 2. NAVEGACIÓN ================= */
 function inicializarNavegacion() {
-  const tabs = document.querySelectorAll('.sidebar-nav-link[data-tab]');
-  tabs.forEach(link => {
+  document.querySelectorAll('.sidebar-nav-link[data-tab]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      const targetTab = link.getAttribute('data-tab');
-      cambiarTab(targetTab);
+      cambiarTab(link.getAttribute('data-tab'));
     });
   });
 }
 
 function cambiarTab(tabName) {
-  // Cambiar estilos de sidebar
   document.querySelectorAll('.sidebar-nav-link[data-tab]').forEach(l => {
     l.classList.toggle('active', l.getAttribute('data-tab') === tabName);
   });
 
-  // Ocultar todos los paneles y mostrar el seleccionado
   document.querySelectorAll('.tab-pane-content').forEach(p => p.classList.add('d-none'));
   const targetPane = document.getElementById(`tab-${tabName}`);
   if (targetPane) targetPane.classList.remove('d-none');
 
-  // Actualizar encabezado
   const titulos = {
     dashboard: { t: 'Dashboard', s: 'Resumen general y estadísticas del sistema' },
     productos: { t: 'Gestión de Productos', s: 'Catálogo de medicamentos, precios y control de inventario' },
@@ -78,8 +68,6 @@ function cambiarTab(tabName) {
   const info = titulos[tabName] || { t: 'Panel de Administración', s: '' };
   document.getElementById('seccionTitulo').textContent = info.t;
   document.getElementById('seccionSubtitulo').textContent = info.s;
-
-  // Scroll arriba
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -101,12 +89,16 @@ function actualizarEstadisticas() {
 
   const serviciosActivos = listaServicios.filter(s => s.activo === true).length;
   document.getElementById('statTotalServicios').textContent = serviciosActivos;
-
   document.getElementById('statTotalUsuarios').textContent = listaUsuarios.length;
 }
 
 function renderDashboardRecientes() {
   const tbody = document.getElementById('dashboardRecentProducts');
+  if (!tbody) return;
+
+  const esc = window.FarmaFormatters.escapeHtml;
+  const resolveImg = window.FarmaFormatters.resolveImageUrl;
+
   if (!listaProductos.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay productos registrados aún.</td></tr>';
     return;
@@ -124,34 +116,36 @@ function renderDashboardRecientes() {
       <tr>
         <td>
           <div class="d-flex align-items-center gap-2">
-            <img src="${formatearRutaImg(p.imagenUrl)}" class="table-img-thumb" alt="" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' fill=\'%23ccc\' viewBox=\'0 0 16 16\'><rect width=\'16\' height=\'16\' fill=\'%23f0f4f8\'/></svg>'">
-            <span class="fw-semibold">${escapeHtml(p.nombre)}</span>
+            <img src="${resolveImg(p.imagenUrl, false)}" class="table-img-thumb" alt=""
+                 onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
+            <span class="fw-semibold">${esc(p.nombre)}</span>
           </div>
         </td>
-        <td><span class="text-secondary small">${escapeHtml(p.categoria || 'Sin categoría')}</span></td>
+        <td><span class="text-secondary small">${esc(p.categoria || 'Sin categoría')}</span></td>
         <td class="fw-bold">S/ ${Number(p.precio).toFixed(2)}</td>
         <td>${stock} unid.</td>
         <td>${chipStock}</td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
 /* ================= 4. CRUD PRODUCTOS ================= */
 async function cargarProductos() {
   try {
-    const res = await fetch(`${API_URL}/productos`);
-    if (!res.ok) throw new Error('Error al obtener productos.');
-    listaProductos = await res.json();
+    listaProductos = await window.FarmaProductoService.getAll();
     renderTablaProductos();
     actualizarCategoriasFiltro();
   } catch (err) {
-    mostrarToast('No se pudieron cargar los productos: ' + err.message, 'error');
+    window.FarmaFormatters.showToast('No se pudieron cargar los productos: ' + err.message, 'error');
   }
 }
 
 function renderTablaProductos() {
   const tbody = document.getElementById('tablaProductosBody');
+  if (!tbody) return;
+
+  const esc = window.FarmaFormatters.escapeHtml;
+  const resolveImg = window.FarmaFormatters.resolveImageUrl;
   const filtroTexto = (document.getElementById('filtroProdNombre').value || '').trim().toLowerCase();
   const filtroCat = document.getElementById('filtroProdCategoria').value;
 
@@ -172,20 +166,20 @@ function renderTablaProductos() {
       ? '<span class="badge bg-danger">Agotado</span>'
       : stock <= 5
         ? `<span class="badge bg-warning text-dark">Últimas ${stock}</span>`
-        : `<span class="badge bg-success">Disponible</span>`;
+        : '<span class="badge bg-success">Disponible</span>';
 
     return `
       <tr>
         <td class="text-muted fw-bold">#${p.id}</td>
         <td>
-          <img src="${formatearRutaImg(p.imagenUrl)}" class="table-img-thumb" alt="${escapeHtml(p.nombre)}"
-               onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' fill=\'%23ccc\' viewBox=\'0 0 16 16\'><rect width=\'16\' height=\'16\' fill=\'%23f0f4f8\'/></svg>'">
+          <img src="${resolveImg(p.imagenUrl, false)}" class="table-img-thumb" alt="${esc(p.nombre)}"
+               onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
         </td>
         <td>
-          <div class="fw-semibold">${escapeHtml(p.nombre)}</div>
-          <div class="small text-muted text-truncate" style="max-width: 250px;">${escapeHtml(p.descripcion || '')}</div>
+          <div class="fw-semibold">${esc(p.nombre)}</div>
+          <div class="small text-muted text-truncate" style="max-width: 250px;">${esc(p.descripcion || '')}</div>
         </td>
-        <td><span class="badge bg-light text-dark border">${escapeHtml(p.categoria || 'Sin categoría')}</span></td>
+        <td><span class="badge bg-light text-dark border">${esc(p.categoria || 'Sin categoría')}</span></td>
         <td class="fw-bold text-primary">S/ ${Number(p.precio).toFixed(2)}</td>
         <td><span class="fw-semibold">${stock}</span></td>
         <td>${chipStock}</td>
@@ -194,21 +188,22 @@ function renderTablaProductos() {
             <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalProducto(${p.id})">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('producto', ${p.id}, '${escapeHtml(p.nombre)}')">
+            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('producto', ${p.id}, '${esc(p.nombre)}')">
               <i class="bi bi-trash3"></i>
             </button>
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
 function actualizarCategoriasFiltro() {
   const select = document.getElementById('filtroProdCategoria');
+  if (!select) return;
+  const esc = window.FarmaFormatters.escapeHtml;
   const categorias = Array.from(new Set(listaProductos.map(p => p.categoria).filter(Boolean))).sort();
   select.innerHTML = '<option value="">Todas las categorías</option>' +
-    categorias.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
 function abrirModalProducto(id = null) {
@@ -241,8 +236,10 @@ function abrirModalProducto(id = null) {
 
 function actualizarVistaPreviaProducto(url) {
   const box = document.getElementById('prodImgPreviewBox');
+  if (!box) return;
+  const resolveImg = window.FarmaFormatters.resolveImageUrl;
   if (url && url.trim()) {
-    box.innerHTML = `<img src="${formatearRutaImg(url)}" alt="Preview" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\\'text-danger small\\\'>No se pudo cargar la imagen</span>'">`;
+    box.innerHTML = `<img src="${resolveImg(url, false)}" alt="Preview" onerror="this.parentElement.innerHTML='<span class=\\\'text-danger small\\\'>No se pudo cargar la imagen</span>'">`;
   } else {
     box.innerHTML = '<span class="text-muted small">Vista previa de imagen</span>';
   }
@@ -260,28 +257,23 @@ async function guardarProducto(e) {
 
   const payload = { nombre, precio, stock, categoria, descripcion, imagenUrl };
   const esEdicion = !!id;
-  const url = esEdicion ? `${API_URL}/productos/${id}` : `${API_URL}/productos`;
-  const metodo = esEdicion ? 'PUT' : 'POST';
-
   const btn = document.getElementById('btnGuardarProducto');
   btn.disabled = true;
 
   try {
-    const res = await fetch(url, {
-      method: metodo,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al guardar producto.');
+    if (esEdicion) {
+      await window.FarmaProductoService.update(id, payload);
+    } else {
+      await window.FarmaProductoService.create(payload);
+    }
 
-    mostrarToast(`Producto ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
+    window.FarmaFormatters.showToast(`Producto ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
     bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
     await cargarProductos();
     actualizarEstadisticas();
     renderDashboardRecientes();
   } catch (err) {
-    mostrarToast(err.message, 'error');
+    window.FarmaFormatters.showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
   }
@@ -290,17 +282,18 @@ async function guardarProducto(e) {
 /* ================= 5. CRUD SERVICIOS ================= */
 async function cargarServicios() {
   try {
-    const res = await fetch(`${API_URL}/servicios?todos=true`);
-    if (!res.ok) throw new Error('Error al obtener servicios.');
-    listaServicios = await res.json();
+    listaServicios = await window.FarmaServicioService.getAll(true);
     renderTablaServicios();
   } catch (err) {
-    mostrarToast('No se pudieron cargar los servicios: ' + err.message, 'error');
+    window.FarmaFormatters.showToast('No se pudieron cargar los servicios: ' + err.message, 'error');
   }
 }
 
 function renderTablaServicios() {
   const tbody = document.getElementById('tablaServiciosBody');
+  if (!tbody) return;
+  const esc = window.FarmaFormatters.escapeHtml;
+
   if (!listaServicios.length) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aún no hay servicios registrados.</td></tr>';
     return;
@@ -316,15 +309,11 @@ function renderTablaServicios() {
         <td class="text-muted fw-bold">#${s.id}</td>
         <td>
           <div class="service-icon-box">
-            <i class="bi ${escapeHtml(s.icono || 'bi-heart-pulse')}"></i>
+            <i class="bi ${esc(s.icono || 'bi-heart-pulse')}"></i>
           </div>
         </td>
-        <td>
-          <div class="fw-semibold text-dark">${escapeHtml(s.titulo)}</div>
-        </td>
-        <td>
-          <div class="small text-muted" style="max-width: 320px;">${escapeHtml(s.descripcion)}</div>
-        </td>
+        <td><div class="fw-semibold text-dark">${esc(s.titulo)}</div></td>
+        <td><div class="small text-muted" style="max-width: 320px;">${esc(s.descripcion)}</div></td>
         <td>
           <button class="btn btn-sm p-0 border-0" onclick="toggleEstadoServicio(${s.id}, ${!s.activo})" title="Cambiar estado">
             ${badgeActivo}
@@ -335,13 +324,12 @@ function renderTablaServicios() {
             <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalServicio(${s.id})">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('servicio', ${s.id}, '${escapeHtml(s.titulo)}')">
+            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('servicio', ${s.id}, '${esc(s.titulo)}')">
               <i class="bi bi-trash3"></i>
             </button>
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
@@ -385,27 +373,22 @@ async function guardarServicio(e) {
 
   const payload = { titulo, icono, descripcion, activo };
   const esEdicion = !!id;
-  const url = esEdicion ? `${API_URL}/servicios/${id}` : `${API_URL}/servicios`;
-  const metodo = esEdicion ? 'PUT' : 'POST';
-
   const btn = document.getElementById('btnGuardarServicio');
   btn.disabled = true;
 
   try {
-    const res = await fetch(url, {
-      method: metodo,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al guardar servicio.');
+    if (esEdicion) {
+      await window.FarmaServicioService.update(id, payload);
+    } else {
+      await window.FarmaServicioService.create(payload);
+    }
 
-    mostrarToast(`Servicio ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
+    window.FarmaFormatters.showToast(`Servicio ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
     bootstrap.Modal.getInstance(document.getElementById('modalServicio')).hide();
     await cargarServicios();
     actualizarEstadisticas();
   } catch (err) {
-    mostrarToast(err.message, 'error');
+    window.FarmaFormatters.showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
   }
@@ -413,34 +396,29 @@ async function guardarServicio(e) {
 
 async function toggleEstadoServicio(id, nuevoEstado) {
   try {
-    const res = await fetch(`${API_URL}/servicios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ activo: nuevoEstado })
-    });
-    if (!res.ok) throw new Error('No se pudo cambiar el estado del servicio.');
-    mostrarToast('Estado del servicio actualizado.', 'info');
+    await window.FarmaServicioService.toggleActive(id, nuevoEstado);
+    window.FarmaFormatters.showToast('Estado del servicio actualizado.', 'info');
     await cargarServicios();
     actualizarEstadisticas();
   } catch (err) {
-    mostrarToast(err.message, 'error');
+    window.FarmaFormatters.showToast(err.message, 'error');
   }
 }
 
 /* ================= 6. CRUD USUARIOS ================= */
 async function cargarUsuarios() {
   try {
-    const res = await fetch(`${API_URL}/usuarios`);
-    if (!res.ok) throw new Error('Error al obtener usuarios.');
-    listaUsuarios = await res.json();
+    listaUsuarios = await window.FarmaUsuarioService.getAll();
     renderTablaUsuarios();
   } catch (err) {
-    mostrarToast('No se pudieron cargar los usuarios: ' + err.message, 'error');
+    window.FarmaFormatters.showToast('No se pudieron cargar los usuarios: ' + err.message, 'error');
   }
 }
 
 function renderTablaUsuarios() {
   const tbody = document.getElementById('tablaUsuariosBody');
+  if (!tbody) return;
+  const esc = window.FarmaFormatters.escapeHtml;
   const filtro = (document.getElementById('filtroUsuarioNombre').value || '').trim().toLowerCase();
 
   const filtrados = listaUsuarios.filter(u => {
@@ -465,11 +443,9 @@ function renderTablaUsuarios() {
     return `
       <tr>
         <td class="text-muted fw-bold">#${u.id}</td>
-        <td>
-          <div class="fw-semibold text-dark">${escapeHtml(u.nombre)} ${escapeHtml(u.apellido || '')}</div>
-        </td>
-        <td><span class="text-secondary">${escapeHtml(u.correo)}</span></td>
-        <td>${escapeHtml(u.telefono || '—')}</td>
+        <td><div class="fw-semibold text-dark">${esc(u.nombre)} ${esc(u.apellido || '')}</div></td>
+        <td><span class="text-secondary">${esc(u.correo)}</span></td>
+        <td>${esc(u.telefono || '—')}</td>
         <td>${badgeRol}</td>
         <td><small class="text-muted">${fecha}</small></td>
         <td class="text-end">
@@ -477,13 +453,12 @@ function renderTablaUsuarios() {
             <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalUsuario(${u.id})">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('usuario', ${u.id}, '${escapeHtml(u.nombre)}')">
+            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('usuario', ${u.id}, '${esc(u.nombre)}')">
               <i class="bi bi-trash3"></i>
             </button>
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
@@ -535,32 +510,25 @@ async function guardarUsuario(e) {
   const contrasena = document.getElementById('usuContrasena').value.trim();
 
   const payload = { nombre, apellido, correo, telefono, rol };
-  if (contrasena) {
-    payload.contrasena = contrasena;
-  }
+  if (contrasena) payload.contrasena = contrasena;
 
   const esEdicion = !!id;
-  const url = esEdicion ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`;
-  const metodo = esEdicion ? 'PUT' : 'POST';
-
   const btn = document.getElementById('btnGuardarUsuario');
   btn.disabled = true;
 
   try {
-    const res = await fetch(url, {
-      method: metodo,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al guardar usuario.');
+    if (esEdicion) {
+      await window.FarmaUsuarioService.update(id, payload);
+    } else {
+      await window.FarmaUsuarioService.create(payload);
+    }
 
-    mostrarToast(`Usuario ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
+    window.FarmaFormatters.showToast(`Usuario ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
     bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
     await cargarUsuarios();
     actualizarEstadisticas();
   } catch (err) {
-    mostrarToast(err.message, 'error');
+    window.FarmaFormatters.showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
   }
@@ -590,17 +558,15 @@ function confirmarEliminar(tipo, id, nombre) {
 async function ejecutarEliminar() {
   if (!itemAEliminar) return;
   const { tipo, id } = itemAEliminar;
-  const endpoint = tipo === 'producto' ? 'productos' : (tipo === 'servicio' ? 'servicios' : 'usuarios');
-
   const btn = document.getElementById('btnConfirmarEliminar');
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${API_URL}/${endpoint}/${id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al eliminar.');
+    if (tipo === 'producto') await window.FarmaProductoService.delete(id);
+    else if (tipo === 'servicio') await window.FarmaServicioService.delete(id);
+    else if (tipo === 'usuario') await window.FarmaUsuarioService.delete(id);
 
-    mostrarToast(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} eliminado correctamente.`, 'success');
+    window.FarmaFormatters.showToast(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} eliminado correctamente.`, 'success');
     bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar')).hide();
 
     if (tipo === 'producto') await cargarProductos();
@@ -610,26 +576,23 @@ async function ejecutarEliminar() {
     actualizarEstadisticas();
     renderDashboardRecientes();
   } catch (err) {
-    mostrarToast(err.message, 'error');
+    window.FarmaFormatters.showToast(err.message, 'error');
   } finally {
     btn.disabled = false;
     itemAEliminar = null;
   }
 }
 
-/* ================= 8. INICIALIZACIÓN DE FORMULARIOS Y EVENTOS ================= */
+/* ================= 8. INICIALIZACIÓN ================= */
 function inicializarFormularios() {
   document.getElementById('formProducto').addEventListener('submit', guardarProducto);
   document.getElementById('formServicio').addEventListener('submit', guardarServicio);
   document.getElementById('formUsuario').addEventListener('submit', guardarUsuario);
-
   document.getElementById('btnConfirmarEliminar').addEventListener('click', ejecutarEliminar);
 
-  // Previsualizaciones reactivas
   document.getElementById('prodImagenUrl').addEventListener('input', (e) => {
     actualizarVistaPreviaProducto(e.target.value);
   });
-
   document.getElementById('servIcono').addEventListener('input', actualizarIconoPreview);
 }
 
@@ -637,42 +600,4 @@ function inicializarFiltros() {
   document.getElementById('filtroProdNombre').addEventListener('input', renderTablaProductos);
   document.getElementById('filtroProdCategoria').addEventListener('change', renderTablaProductos);
   document.getElementById('filtroUsuarioNombre').addEventListener('input', renderTablaUsuarios);
-}
-
-/* ================= 9. UTILIDADES Y TOASTS ================= */
-function mostrarToast(mensaje, tipo = 'info') {
-  const toastEl = document.getElementById('adminToast');
-  const toastMsg = document.getElementById('adminToastMsg');
-  const toastIcon = document.getElementById('adminToastIcon');
-
-  toastMsg.textContent = mensaje;
-
-  toastEl.classList.remove('bg-dark', 'bg-success', 'bg-danger', 'bg-warning', 'text-dark');
-
-  if (tipo === 'success') {
-    toastEl.classList.add('bg-success');
-    toastIcon.className = 'bi bi-check-circle fs-5';
-  } else if (tipo === 'error') {
-    toastEl.classList.add('bg-danger');
-    toastIcon.className = 'bi bi-exclamation-octagon fs-5';
-  } else if (tipo === 'warning') {
-    toastEl.classList.add('bg-warning', 'text-dark');
-    toastIcon.className = 'bi bi-exclamation-triangle fs-5';
-  } else {
-    toastEl.classList.add('bg-dark');
-    toastIcon.className = 'bi bi-info-circle fs-5';
-  }
-
-  bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3500 }).show();
-}
-
-function escapeHtml(texto) {
-  return String(texto ?? '').replace(/[&<>"']/g, c => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
-}
-
-function formatearRutaImg(url) {
-  if (!url) return '';
-  return /^(https?:|data:)/i.test(url) ? url : String(url).trim().replace(/^\/+/, '');
 }

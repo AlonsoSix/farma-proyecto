@@ -8,31 +8,36 @@
   <link rel="icon" type="image/png" href="../img/favicon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/productos.css">
+
+  <!-- Guard de sesión -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('farma_user');
+        var user = raw ? JSON.parse(raw) : null;
+        if (!user || !user.id) window.location.replace('../login.html');
+      } catch (e) {
+        window.location.replace('../login.html');
+      }
+    })();
+  </script>
 </head>
 
 <body class="bg-light">
 
-  <!-- FRANJA SUPERIOR -->
-  <div class="topbar">
-    <div class="container d-flex justify-content-between align-items-center">
-      <span><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la zona</span>
-      <span class="d-none d-md-inline"><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654 321</span>
-    </div>
-  </div>
-
   <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg bg-white sticky-top main-nav shadow-sm">
+  <nav class="navbar navbar-expand-lg main-nav">
     <div class="container">
       <a class="navbar-brand" href="../index.html" aria-label="Farmacia Farma - volver al inicio">
         <img src="../img/logo-farma.webp" alt="Farmacia Farma" class="brand-logo">
       </a>
 
-      <div class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0">
+      <div class="d-flex align-items-center gap-2 order-2 order-lg-3 ms-auto ms-lg-0">
         <button class="btn-cart" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel"
           aria-label="Ver carrito">
           <i class="bi bi-cart3"></i>
@@ -44,36 +49,26 @@
         </button>
       </div>
 
-      <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
-        <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría"
-          autocomplete="off">
-        <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
-      </form>
+      <div class="collapse navbar-collapse order-3 order-lg-2" id="navMenu">
+        <ul class="navbar-nav main-menu">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link active" href="productos.html">Productos</a></li>
+          <li class="nav-item"><a class="nav-link" href="servicios.html">Servicios</a></li>
+          <li class="nav-item"><a class="nav-link" href="nosotros.html">Nosotros</a></li>
+          <li class="nav-item"><a class="nav-link" href="clientes.html">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="aliados.html">Aliados</a></li>
+          <li class="nav-item"><a class="nav-link" href="contacto.html">Contacto</a></li>
+        </ul>
 
-      <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
-        <div class="d-flex align-items-center gap-2 py-3 py-lg-0" id="navAuthContainer">
-          <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal"
-            data-bs-target="#loginModal">Iniciar sesión</button>
-          <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal"
-            data-bs-target="#registroModal">Registrarse</button>
+        <div id="navAuthContainer" class="d-flex align-items-center gap-2">
+          <a href="../login.html" class="btn btn-primary rounded-pill px-3">Iniciar sesión</a>
         </div>
-      </div>
-    </div>
-    <div class="subnav border-top">
-      <div class="container">
-        <a href="../index.html#inicio">Inicio</a>
-        <a href="productos.html" class="fw-bold text-primary">Productos</a>
-        <a href="../index.html#servicios">Servicios</a>
-        <a href="../index.html#nosotros">Nosotros</a>
-        <a href="../index.html#clientes">Clientes</a>
-        <a href="../index.html#rubros">Rubros</a>
-        <a href="../index.html#contacto">Contacto</a>
       </div>
     </div>
   </nav>
 
   <!-- BREADCRUMB (Miga de pan) -->
-  <div class="bg-white py-3 border-bottom mb-4">
+  <div class="crumb-bar">
     <div class="container">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
@@ -128,7 +123,14 @@
 
         <!-- CUADRÍCULA DE PRODUCTOS -->
         <main class="col-lg-9">
-          
+
+          <!-- Buscador de productos -->
+          <form class="search-box mb-3" id="buscadorForm" role="search">
+            <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría"
+              autocomplete="off">
+            <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
+          </form>
+
           <!-- Cabecera de la grilla (Ordenamiento) -->
           <div class="d-flex flex-wrap justify-content-between align-items-center bg-white p-3 rounded-4 shadow-sm border mb-4">
             <p class="mb-0 text-muted small">Mostrando catálogo completo</p>
@@ -196,9 +198,8 @@
         </div>
 
         <div class="text-center text-md-end">
-          <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
-          <p class="mb-0 fw-semibold">Nombre de los Responsables</p>
-          <p class="small text-secondary mb-2">Montañez Pumalla Fabrizio Andre</p>
+          <h5 class="fw-bold mb-2">Contacto</h5>
+          <p class="small text-secondary mb-1">Montañez Pumalla Fabrizio Andre</p>
           <p class="small text-secondary mb-2">Tunqui Puelles Jose Armando</p>
           <p class="mb-1"><a href="mailto:contacto@farmacia-farma.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@farmacia-farma.com</a></p>
           <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
@@ -324,8 +325,12 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Script principal referenciado con ../ ya que el HTML está en paginas/ -->
+  <script src="../js/services/config.js"></script>
+  <script src="../js/utils/formatters.js"></script>
+  <script src="../js/services/api-client.js"></script>
+  <script src="../js/services/auth-service.js"></script>
+  <script src="../js/services/cart-service.js"></script>
+  <script src="../js/services/producto-service.js"></script>
   <script src="../js/productos.js"></script>
 </body>
-
 </html>
