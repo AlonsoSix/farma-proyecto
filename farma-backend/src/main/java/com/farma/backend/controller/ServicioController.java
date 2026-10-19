@@ -1,13 +1,13 @@
 package com.farma.backend.controller;
 
+import com.farma.backend.dto.ServicioRequest;
 import com.farma.backend.model.Servicio;
-import com.farma.backend.repository.ServicioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.farma.backend.service.ServicioService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -16,72 +16,37 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class ServicioController {
 
-    @Autowired
-    private ServicioRepository servicioRepository;
+    private final ServicioService servicioService;
+
+    public ServicioController(ServicioService servicioService) {
+        this.servicioService = servicioService;
+    }
 
     @GetMapping
-    public List<Servicio> listar(@RequestParam(value = "todos", defaultValue = "false") boolean todos) {
-        if (todos) {
-            return servicioRepository.findAll();
-        }
-        return servicioRepository.findByActivoTrue();
+    public ResponseEntity<List<Servicio>> listar(@RequestParam(value = "todos", defaultValue = "false") boolean todos) {
+        return ResponseEntity.ok(servicioService.listar(todos));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerPorId(@PathVariable Integer id) {
-        return servicioRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    public ResponseEntity<Servicio> obtenerPorId(@PathVariable Integer id) {
+        return ResponseEntity.ok(servicioService.obtenerPorId(id));
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Servicio servicio) {
-        if (servicio.getTitulo() == null || servicio.getTitulo().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El título del servicio es obligatorio."));
-        }
-        if (servicio.getDescripcion() == null || servicio.getDescripcion().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "La descripción es obligatoria."));
-        }
-        if (servicio.getIcono() == null || servicio.getIcono().trim().isEmpty()) {
-            servicio.setIcono("bi-heart-pulse");
-        }
-        if (servicio.getActivo() == null) {
-            servicio.setActivo(true);
-        }
-        servicio.setFechaCreacion(LocalDateTime.now());
-        Servicio guardado = servicioRepository.save(servicio);
-        return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
+    public ResponseEntity<Servicio> crear(@Valid @RequestBody ServicioRequest request) {
+        Servicio creado = servicioService.crear(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable Integer id, @RequestBody Servicio datos) {
-        return servicioRepository.findById(id)
-                .map(servicio -> {
-                    if (datos.getTitulo() != null && !datos.getTitulo().trim().isEmpty()) {
-                        servicio.setTitulo(datos.getTitulo().trim());
-                    }
-                    if (datos.getDescripcion() != null && !datos.getDescripcion().trim().isEmpty()) {
-                        servicio.setDescripcion(datos.getDescripcion().trim());
-                    }
-                    if (datos.getIcono() != null && !datos.getIcono().trim().isEmpty()) {
-                        servicio.setIcono(datos.getIcono().trim());
-                    }
-                    if (datos.getActivo() != null) {
-                        servicio.setActivo(datos.getActivo());
-                    }
-                    Servicio actualizado = servicioRepository.save(servicio);
-                    return ResponseEntity.ok(actualizado);
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    public ResponseEntity<Servicio> actualizar(@PathVariable Integer id, @RequestBody ServicioRequest request) {
+        Servicio actualizado = servicioService.actualizar(id, request);
+        return ResponseEntity.ok(actualizado);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
-        return servicioRepository.findById(id)
-                .map(servicio -> {
-                    servicioRepository.delete(servicio);
-                    return ResponseEntity.ok(Map.of("mensaje", "Servicio eliminado correctamente.", "id", id));
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    public ResponseEntity<Map<String, Object>> eliminar(@PathVariable Integer id) {
+        servicioService.eliminar(id);
+        return ResponseEntity.ok(Map.of("mensaje", "Servicio eliminado correctamente.", "id", id));
     }
 }

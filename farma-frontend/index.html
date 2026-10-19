@@ -11,7 +11,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
@@ -26,34 +26,27 @@
     />
 
     <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Guard de sesión: si no hay usuario logueado, redirige al login -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('farma_user');
+          var user = raw ? JSON.parse(raw) : null;
+          if (!user || !user.id) {
+            window.location.replace('login.html');
+          }
+        } catch (e) {
+          window.location.replace('login.html');
+        }
+      })();
+    </script>
   </head>
 
   <body>
-    <!-- =========================================
-     FRANJA SUPERIOR
-========================================== -->
-
-    <div class="topbar">
-      <div class="container d-flex justify-content-between align-items-center">
-        <span>
-          <i class="bi bi-truck me-2"></i>
-          Delivery a domicilio en toda la zona
-        </span>
-
-        <span class="d-none d-md-inline">
-          <i class="bi bi-whatsapp me-2"></i>
-          Pedidos por WhatsApp: +51 987 654 321
-        </span>
-      </div>
-    </div>
-
-    <!-- =========================================
-     NAVBAR
-========================================== -->
-
-    <nav class="navbar navbar-expand-lg bg-white sticky-top main-nav">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg main-nav">
       <div class="container">
-        <!-- LOGO -->
         <a
           class="navbar-brand"
           href="index.html"
@@ -66,130 +59,71 @@
           />
         </a>
 
-        <!-- BOTÓN MENÚ MÓVIL -->
-        <button
-          class="navbar-toggler border-0 shadow-none"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navMenu"
-          aria-label="Menú"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="d-flex align-items-center gap-2 order-2 order-lg-3 ms-auto ms-lg-0">
+          <button
+            class="btn-cart"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#carritoPanel"
+            aria-label="Ver carrito"
+          >
+            <i class="bi bi-cart3"></i>
+            <span id="cartCount" class="cart-count">0</span>
+          </button>
+          <button
+            class="navbar-toggler border-0 shadow-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navMenu"
+            aria-label="Menú"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
 
-        <!-- MENÚ -->
-        <div class="collapse navbar-collapse" id="navMenu">
-          <div class="d-flex align-items-center gap-3 ms-auto">
-            <a href="#inicio" class="text-decoration-none text-dark">
-              Inicio
-            </a>
+        <div class="collapse navbar-collapse order-3 order-lg-2" id="navMenu">
+          <ul class="navbar-nav main-menu">
+            <li class="nav-item"><a class="nav-link active" href="index.html">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/productos.html">Productos</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/servicios.html">Servicios</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/nosotros.html">Nosotros</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/clientes.html">Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/aliados.html">Aliados</a></li>
+            <li class="nav-item"><a class="nav-link" href="paginas/contacto.html">Contacto</a></li>
+          </ul>
 
-            <a
-              href="paginas/productos.html"
-              class="text-decoration-none text-dark"
-            >
-              Productos
-            </a>
-
-            <a href="#servicios" class="text-decoration-none text-dark">
-              Servicios
-            </a>
-
-            <a href="#nosotros" class="text-decoration-none text-dark">
-              Nosotros
-            </a>
-
-            <a href="#clientes" class="text-decoration-none text-dark">
-              Clientes
-            </a>
-
-            <a href="#aliados" class="text-decoration-none text-dark">
-              Aliados
-            </a>
-
-            <a href="#contacto" class="text-decoration-none text-dark">
-              Contacto
-            </a>
-
-            <!-- AUTENTICACIÓN -->
-
-            <div id="navAuthContainer" class="d-flex align-items-center gap-2">
-              <button
-                class="btn btn-outline-primary rounded-pill px-3"
-                data-bs-toggle="modal"
-                data-bs-target="#loginModal"
-              >
-                Iniciar sesión
-              </button>
-
-              <button
-                class="btn btn-primary rounded-pill px-3"
-                data-bs-toggle="modal"
-                data-bs-target="#registroModal"
-              >
-                Registrarse
-              </button>
-            </div>
-          </div>
+          <div id="navAuthContainer" class="d-flex align-items-center gap-2"></div>
         </div>
       </div>
     </nav>
 
-    <!-- =========================================
-     1. SLIDER PRINCIPAL
-========================================== -->
-
+    <!-- HERO -->
     <header id="inicio">
       <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-indicators">
-          <button
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to="0"
-            class="active"
-          ></button>
-
-          <button
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to="1"
-          ></button>
-
-          <button
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to="2"
-          ></button>
-
-          <button
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to="3"
-          ></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="3"></button>
         </div>
 
         <div class="carousel-inner">
           <!-- SLIDE 1 -->
-
           <div class="carousel-item active">
             <div class="hero-slide hero-1">
               <div class="container">
                 <span class="hero-tag"> Farmacia de confianza </span>
-
                 <h1>
                   Tu
                   <span class="hero-resalte"> salud </span>
                   es nuestra prioridad
                 </h1>
-
                 <p>Medicamentos y productos de calidad al mejor precio.</p>
-
                 <a
                   href="paginas/productos.html"
                   class="btn btn-lg rounded-pill px-4 fw-semibold hero-cta"
                 >
                   Ver productos
-
                   <i class="bi bi-arrow-right ms-1"></i>
                 </a>
               </div>
@@ -197,26 +131,21 @@
           </div>
 
           <!-- SLIDE 2 -->
-
           <div class="carousel-item">
             <div class="hero-slide hero-2">
               <div class="container">
                 <span class="hero-tag"> Ofertas </span>
-
                 <h1>
                   Ofertas
                   <span class="hero-resalte"> exclusivas </span>
                   cada semana
                 </h1>
-
                 <p>Descuentos especiales en medicamentos y cuidado personal.</p>
-
                 <a
                   href="paginas/productos.html"
                   class="btn btn-lg rounded-pill px-4 fw-semibold hero-cta hero-cta-claro"
                 >
                   Aprovechar ahora
-
                   <i class="bi bi-arrow-right ms-1"></i>
                 </a>
               </div>
@@ -224,26 +153,21 @@
           </div>
 
           <!-- SLIDE 3 -->
-
           <div class="carousel-item">
             <div class="hero-slide hero-3">
               <div class="container">
                 <span class="hero-tag"> Atención farmacéutica </span>
-
                 <h1>
                   Asesoría
                   <span class="hero-resalte"> profesional </span>
                   en cada compra
                 </h1>
-
                 <p>Personal capacitado para orientarte y resolver tus dudas.</p>
-
                 <a
-                  href="#servicios"
+                  href="paginas/servicios.html"
                   class="btn btn-lg rounded-pill px-4 fw-semibold hero-cta"
                 >
                   Conocer servicios
-
                   <i class="bi bi-arrow-right ms-1"></i>
                 </a>
               </div>
@@ -251,22 +175,18 @@
           </div>
 
           <!-- SLIDE 4 -->
-
           <div class="carousel-item">
             <div class="hero-slide hero-4">
               <div class="container">
                 <span class="hero-tag"> Delivery </span>
-
                 <h1>
                   Entrega
                   <span class="hero-resalte"> rápida </span>
                   a domicilio
                 </h1>
-
                 <p>Recibe tus productos sin salir de casa.</p>
-
                 <a
-                  href="#contacto"
+                  href="paginas/contacto.html"
                   class="btn btn-lg rounded-pill px-4 fw-semibold hero-cta"
                 >
                   <i class="bi bi-whatsapp me-2"></i>
@@ -276,8 +196,6 @@
             </div>
           </div>
         </div>
-
-        <!-- FLECHAS -->
 
         <button
           class="carousel-control-prev"
@@ -301,707 +219,240 @@
       </div>
     </header>
 
-    <section id="nosotros" class="py-5">
-      ```
+    <!-- ACCESOS A SECCIONES -->
+    <section class="py-5">
       <div class="container">
-        <!-- ENCABEZADO DE LA SECCIÓN -->
         <div class="section-head text-center mb-5">
-          <span class="badge-label"> Conócenos </span>
-
-          <h2>Somos Farmacia Farma</h2>
-
-          <p class="text-muted mt-3 mx-auto nosotros-intro">
-            Una empresa comprometida con brindar productos de calidad, atención
-            profesional y soluciones orientadas al cuidado de la salud.
+          <span class="badge-label"> Explora </span>
+          <h2>Farmacia Farma</h2>
+          <p class="text-muted mt-3 mx-auto" style="max-width: 600px;">
+            Accede a cada una de nuestras secciones de forma rápida y sencilla.
           </p>
         </div>
 
-        <div class="row align-items-center g-5">
-          <!-- DESCRIPCIÓN DE LA EMPRESA -->
-
-          <div class="col-lg-6">
-            <div class="nosotros-contenido">
-              <span class="nosotros-subtitulo"> Nuestra empresa </span>
-
-              <h3>
-                Comprometidos con la salud y el bienestar de nuestros clientes
-              </h3>
-
-              <p>
-                En Farmacia Farma trabajamos cada día para ofrecer una atención
-                cercana, responsable y de calidad. Nuestra empresa nace con el
-                propósito de facilitar el acceso a medicamentos y productos de
-                cuidado personal, brindando a nuestros clientes confianza,
-                seguridad y una atención que responda a sus necesidades.
-              </p>
-
-              <p>
-                Contamos con una variedad de productos orientados al cuidado de
-                la salud, entre ellos medicamentos, productos de higiene y
-                cuidado personal, vitaminas y suplementos, además de equipos
-                médicos. Nuestro objetivo es mantener una oferta confiable y
-                brindar orientación adecuada durante el proceso de compra.
-              </p>
-
-              <p>
-                Nos caracteriza el compromiso con nuestros clientes, la atención
-                personalizada y la búsqueda constante de mejorar nuestros
-                servicios. Por ello, incorporamos herramientas digitales,
-                delivery y canales de atención que permiten realizar pedidos de
-                manera más rápida, cómoda y sencilla.
-              </p>
-
-              <!-- VALORES -->
-              <div class="nosotros-valores mt-4">
-                <div class="nosotros-valor">
-                  <div class="nosotros-valor-icon">
-                    <i class="bi bi-shield-check"></i>
-                  </div>
-
-                  <div>
-                    <h5>Confianza</h5>
-
-                    <p>
-                      Productos y atención pensados para brindar seguridad a
-                      nuestros clientes.
-                    </p>
-                  </div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3">
+            <a href="paginas/productos.html" class="text-decoration-none">
+              <div class="service-card h-100 text-center">
+                <div class="service-icon mx-auto">
+                  <i class="bi bi-capsule"></i>
                 </div>
-
-                <div class="nosotros-valor">
-                  <div class="nosotros-valor-icon">
-                    <i class="bi bi-heart-pulse"></i>
-                  </div>
-
-                  <div>
-                    <h5>Compromiso</h5>
-
-                    <p>
-                      Trabajamos para ofrecer una atención responsable y
-                      orientada al bienestar.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="nosotros-valor">
-                  <div class="nosotros-valor-icon">
-                    <i class="bi bi-people"></i>
-                  </div>
-
-                  <div>
-                    <h5>Atención cercana</h5>
-
-                    <p>
-                      Escuchamos las necesidades de cada cliente para brindar
-                      una mejor experiencia.
-                    </p>
-                  </div>
-                </div>
+                <h3>Productos</h3>
+                <p>Explora nuestro catálogo completo de medicamentos y cuidado personal.</p>
               </div>
-            </div>
+            </a>
           </div>
 
-          <!-- VIDEO + INFORMACIÓN -->
-
-          <div class="col-lg-6">
-            <div class="nosotros-media">
-              <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm">
-                <iframe
-                  src="https://www.youtube.com/embed/ScMzIvxBSi4"
-                  title="Video institucional de Farmacia Farma"
-                  allow="
-                    accelerometer;
-                    autoplay;
-                    clipboard-write;
-                    encrypted-media;
-                    gyroscope;
-                    picture-in-picture;
-                  "
-                  allowfullscreen
-                >
-                </iframe>
+          <div class="col-md-6 col-lg-3">
+            <a href="paginas/servicios.html" class="text-decoration-none">
+              <div class="service-card h-100 text-center">
+                <div class="service-icon mx-auto">
+                  <i class="bi bi-heart-pulse"></i>
+                </div>
+                <h3>Servicios</h3>
+                <p>Delivery, atención farmacéutica, control de presión y más.</p>
               </div>
+            </a>
+          </div>
 
-              <!-- INDICADORES -->
-
-              <div class="row g-3 mt-3">
-                <div class="col-4">
-                  <div class="nosotros-stat">
-                    <strong> +10 </strong>
-
-                    <span> Años de experiencia </span>
-                  </div>
+          <div class="col-md-6 col-lg-3">
+            <a href="paginas/nosotros.html" class="text-decoration-none">
+              <div class="service-card h-100 text-center">
+                <div class="service-icon mx-auto">
+                  <i class="bi bi-people"></i>
                 </div>
-
-                <div class="col-4">
-                  <div class="nosotros-stat">
-                    <strong> 100% </strong>
-
-                    <span> Compromiso </span>
-                  </div>
-                </div>
-
-                <div class="col-4">
-                  <div class="nosotros-stat">
-                    <strong> 24/7 </strong>
-
-                    <span> Atención </span>
-                  </div>
-                </div>
+                <h3>Nosotros</h3>
+                <p>Conoce nuestra empresa, valores, misión y visión.</p>
               </div>
-            </div>
+            </a>
+          </div>
+
+          <div class="col-md-6 col-lg-3">
+            <a href="paginas/contacto.html" class="text-decoration-none">
+              <div class="service-card h-100 text-center">
+                <div class="service-icon mx-auto">
+                  <i class="bi bi-chat-dots"></i>
+                </div>
+                <h3>Contacto</h3>
+                <p>Escríbenos por WhatsApp o completa el formulario de contacto.</p>
+              </div>
+            </a>
           </div>
         </div>
       </div>
-      ```
     </section>
 
-    <!-- =========================================
-     3. SERVICIOS
-========================================== -->
-
-    <section id="servicios" class="py-5 bg-soft">
+    <!-- BENEFICIOS -->
+    <section class="py-5 bg-soft">
       <div class="container">
-        <div class="section-head">
-          <span class="badge-label"> Lo que hacemos por ti </span>
-
-          <h2>Nuestros servicios</h2>
-        </div>
-
-        <div class="row g-4" id="servicios-container">
-          <!-- SERVICIO 1 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-truck"></i>
+        <div class="row g-4 text-center">
+          <div class="col-md-4">
+            <div class="p-4 rounded-4 border bg-white h-100">
+              <div class="bg-primary bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
+                <i class="bi bi-truck text-primary fs-3"></i>
               </div>
-
-              <h3>Delivery a domicilio</h3>
-
-              <p>
-                Llevamos tus medicamentos y productos hasta la puerta de tu
-                casa, de forma rápida y segura.
-              </p>
+              <h5>Delivery a domicilio</h5>
+              <p class="text-muted small mb-0">Recibe tus productos sin salir de casa.</p>
             </div>
           </div>
-
-          <!-- SERVICIO 2 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-heart-pulse"></i>
+          <div class="col-md-4">
+            <div class="p-4 rounded-4 border bg-white h-100">
+              <div class="bg-success bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
+                <i class="bi bi-shield-check text-success fs-3"></i>
               </div>
-
-              <h3>Atención farmacéutica</h3>
-
-              <p>
-                Un químico farmacéutico te orienta sobre el uso correcto de tus
-                medicamentos y sus dosis.
-              </p>
+              <h5>Calidad garantizada</h5>
+              <p class="text-muted small mb-0">Productos certificados y de confianza.</p>
             </div>
           </div>
-
-          <!-- SERVICIO 3 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-whatsapp"></i>
+          <div class="col-md-4">
+            <div class="p-4 rounded-4 border bg-white h-100">
+              <div class="bg-warning bg-opacity-10 rounded-3 p-3 d-inline-block mb-3">
+                <i class="bi bi-headset text-warning fs-3"></i>
               </div>
-
-              <h3>Pedidos por WhatsApp</h3>
-
-              <p>
-                Envíanos tu lista o tu receta por WhatsApp y te confirmamos
-                disponibilidad y precio al instante.
-              </p>
-            </div>
-          </div>
-
-          <!-- SERVICIO 4 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-activity"></i>
-              </div>
-
-              <h3>Control de presión arterial</h3>
-
-              <p>
-                Toma de presión gratuita en tienda para que cuides tu salud con
-                controles periódicos.
-              </p>
-            </div>
-          </div>
-
-          <!-- SERVICIO 5 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-bandaid"></i>
-              </div>
-
-              <h3>Inyectables</h3>
-
-              <p>
-                Aplicación de inyectables por personal capacitado, con material
-                descartable y a tu comodidad.
-              </p>
-            </div>
-          </div>
-
-          <!-- SERVICIO 6 -->
-
-          <div class="col-md-6 col-lg-4">
-            <div class="service-card">
-              <div class="service-icon">
-                <i class="bi bi-building"></i>
-              </div>
-
-              <h3>Convenios con empresas</h3>
-
-              <p>
-                Atendemos a clínicas, centros médicos y empresas con precios
-                preferenciales y abastecimiento continuo.
-              </p>
+              <h5>Atención personalizada</h5>
+              <p class="text-muted small mb-0">Asesoría farmacéutica profesional.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- =========================================
-     4. CLIENTES + ALIADOS Y PROVEEDORES
-========================================== -->
-
-    <section class="py-5">
-      <div class="container">
-        <div class="row g-5">
-          <!-- CLIENTES -->
-
-          <div class="col-lg-6" id="clientes">
-            <div class="section-head text-start">
-              <span class="badge-label"> Confianza comprobada </span>
-
-              <h2>Nuestros Clientes</h2>
-            </div>
-
-            <div class="row g-4">
-              <!-- CLIENTE 1 -->
-
-              <div class="col-md-6 col-lg-12">
-                <div class="p-4 rounded-4 border bg-white h-100 client-card">
-                  <img
-                    src="img/clientes/clinica-san-gabriel.png"
-                    alt="Logo de la Clínica San Gabriel"
-                    class="client-logo mb-3"
-                  />
-
-                  <h5>Clínica San Gabriel</h5>
-
-                  <p class="text-muted small mb-0">
-                    "Abastecimiento continuo y seguro para hospitalización y
-                    emergencias."
-                  </p>
-                </div>
-              </div>
-
-              <!-- CLIENTE 2 -->
-
-              <div class="col-md-6 col-lg-12">
-                <div class="p-4 rounded-4 border bg-white h-100 client-card">
-                  <img
-                    src="img/clientes/centro-medico-familiar.png"
-                    alt="Logo del Centro Médico Familiar"
-                    class="client-logo mb-3"
-                  />
-
-                  <h5>Centro Médico Familiar</h5>
-
-                  <p class="text-muted small mb-0">
-                    "Convenio corporativo con entrega preferencial y asesoría
-                    farmacéutica."
-                  </p>
-                </div>
-              </div>
-
-              <!-- CLIENTE 3 -->
-
-              <div class="col-md-6 col-lg-12">
-                <div class="p-4 rounded-4 border bg-white h-100 client-card">
-                  <img
-                    src="img/clientes/red-salud-integral.png"
-                    alt="Logo de la Red de Salud Integral"
-                    class="client-logo mb-3"
-                  />
-
-                  <h5>Red de Salud Integral</h5>
-
-                  <p class="text-muted small mb-0">
-                    "Dispensación garantizada de medicamentos especializados."
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ALIADOS Y PROVEEDORES -->
-
-          <div class="col-lg-6" id="aliados">
-            <div class="section-head text-start">
-              <span class="badge-label"> Nuestro sector </span>
-
-              <h2>Aliados y Proveedores</h2>
-            </div>
-
-            <div class="row g-4">
-              <!-- ALIADO 1 -->
-
-              <div class="col-md-6 col-lg-12">
-                <a
-                  href="https://www.inkafarma.pe"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="text-decoration-none"
-                >
-                  <div
-                    class="p-4 rounded-4 border h-100 text-center rubro-card"
-                  >
-                    <img
-                      src="img/rubros/inkafarma_logo.png"
-                      class="rubro-logo mb-3"
-                      alt="Inkafarma"
-                    />
-
-                    <h5 class="text-dark">Inkafarma</h5>
-
-                    <p class="text-muted small mb-0">
-                      Cadena líder de farmacias en el Perú.
-                    </p>
-                  </div>
-                </a>
-              </div>
-
-              <!-- ALIADO 2 -->
-
-              <div class="col-md-6 col-lg-12">
-                <a
-                  href="https://www.mifarma.com.pe"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="text-decoration-none"
-                >
-                  <div
-                    class="p-4 rounded-4 border h-100 text-center rubro-card"
-                  >
-                    <img
-                      src="img/rubros/mifarma_logo.webp"
-                      class="rubro-logo mb-3"
-                      alt="Mifarma"
-                    />
-
-                    <h5 class="text-dark">Mifarma</h5>
-
-                    <p class="text-muted small mb-0">
-                      Amplia red de boticas a nivel nacional.
-                    </p>
-                  </div>
-                </a>
-              </div>
-
-              <!-- ALIADO 3 -->
-
-              <div class="col-md-6 col-lg-12">
-                <a
-                  href="https://www.boticasysalud.com"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <div
-                    class="p-4 rounded-4 border h-100 text-center rubro-card"
-                  >
-                    <img
-                      src="img/rubros/bys_logo.png"
-                      class="rubro-logo mb-3"
-                      alt="Boticas y Salud"
-                    />
-
-                    <h5 class="text-dark">Boticas y Salud</h5>
-
-                    <p class="text-muted small mb-0">
-                      Cadena farmacéutica con presencia regional.
-                    </p>
-                  </div>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================
-     5. FOOTER
-========================================== -->
-
+    <!-- FOOTER -->
     <footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
       <div class="container">
         <div class="footer-grid">
-          <!-- REDES SOCIALES -->
-
           <div class="text-center text-md-start">
             <h5 class="fw-bold mb-3">Redes Sociales</h5>
-
-            <div
-              class="d-flex justify-content-center justify-content-md-start gap-3"
-            >
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook"
-                class="social-icon"
-              >
-                <i class="bi bi-facebook"></i>
-              </a>
-
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                class="social-icon"
-              >
-                <i class="bi bi-instagram"></i>
-              </a>
-
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Twitter"
-                class="social-icon"
-              >
-                <i class="bi bi-twitter-x"></i>
-              </a>
+            <div class="d-flex justify-content-center justify-content-md-start gap-3">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
             </div>
-
             <p class="small text-secondary mt-2 mb-0 footer-social-text">
               Síguenos en nuestras redes oficiales para noticias y ofertas.
             </p>
           </div>
 
-          <!-- LOGO UTP -->
-
           <div class="text-center">
-            <a
-              href="https://www.utp.edu.pe/"
-              target="_blank"
-              rel="noreferrer"
-              class="d-inline-block"
-            >
+            <a href="https://www.utp.edu.pe/" target="_blank" rel="noreferrer" class="d-inline-block">
               <div class="bg-white footer-logo-box">
-                <img
-                  src="img/logo-utp.webp"
-                  alt="Universidad Tecnológica del Perú"
-                  class="footer-logo"
-                />
+                <img src="img/logo-utp.webp" alt="Universidad Tecnológica del Perú" class="footer-logo" />
               </div>
             </a>
           </div>
 
-          <!-- CONTACTO -->
-
           <div class="text-center text-md-end">
-            <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
-
-            <p class="mb-0 fw-semibold">Nombre de los Responsables</p>
-
-            <p class="small text-secondary mb-2">
-              Montañez Pumalla Fabrizio Andre
-            </p>
-
-            <p class="small text-secondary mb-2">Tunqui Puelles Jose Armando</p>
-
+            <h5 class="fw-bold mb-2">Contacto</h5>
+            <p class="small text-secondary mb-1">Montañez Fabrizio</p>
+            <p class="small text-secondary mb-2">Tunqui Jose </p>
+            <p class="small text-secondary mb-2">Lopez Sebastian</p>
+            <p class="small text-secondary mb-2">Flores Daniel</p>
+            <p class="small text-secondary mb-2">Meza Alonso</p>
             <p class="mb-1">
-              <a
-                href="mailto:contacto@farmacia-farma.com"
-                class="text-light text-decoration-none"
-              >
+              <a href="mailto:contacto@farmacia-farma.com" class="text-light text-decoration-none">
                 <i class="bi bi-envelope me-2"></i>
-                contacto@farmacia-farma.com
+                BoticasPorTuSalud@farmacia-farma.com
               </a>
             </p>
-
-            <p class="small text-secondary mb-0">
-              +51 987 654 321 | Lima, Perú
-            </p>
+            <p class="small text-secondary mb-0">+51 955226468 | Lima, Perú</p>
           </div>
         </div>
 
         <hr class="border-secondary mt-4" />
-
         <p class="text-center small text-secondary mb-0">
-          © 2026 Farmacia Farma - Todos los derechos reservados.
+          © 2026 Boticas Por tu Salud - Todos los derechos reservados.
         </p>
       </div>
     </footer>
 
-    <!-- =========================================
-     MODAL LOGIN
-========================================== -->
+    <!-- PANEL DEL CARRITO -->
+    <div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="carritoTitulo"><i class="bi bi-cart3"></i>Mi carrito</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+      </div>
+      <div class="offcanvas-body">
+        <div id="carritoItems" class="cart-items"></div>
+        <div class="cart-footer bg-white border-top pt-3" id="carritoPie">
+          <div class="cart-subtotal d-flex justify-content-between mb-3 fs-5">
+            <span>Subtotal</span>
+            <span id="carritoTotal">S/ 0.00</span>
+          </div>
+          <div class="cart-actions d-flex flex-column gap-2">
+            <button type="button" class="btn btn-outline-primary rounded-pill py-2 fw-semibold" id="btnIrCarrito">Ver detalle de compra</button>
+            <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btnPagar">Proceder al pago</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <!-- MODAL LOGIN -->
     <div class="modal fade" id="loginModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-2">
           <div class="modal-header border-0">
             <h5 class="modal-title fw-bold">Iniciar Sesión</h5>
-
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-
           <div class="modal-body">
             <div id="loginError" class="alert alert-danger d-none"></div>
-
             <form id="loginForm">
               <div class="mb-3">
                 <label class="form-label"> Correo </label>
-
-                <input
-                  type="email"
-                  class="form-control"
-                  id="loginCorreo"
-                  required
-                />
+                <input type="email" class="form-control" id="loginCorreo" required />
               </div>
-
               <div class="mb-3">
                 <label class="form-label"> Contraseña </label>
-
-                <input
-                  type="password"
-                  class="form-control"
-                  id="loginContrasena"
-                  required
-                />
+                <input type="password" class="form-control" id="loginContrasena" required />
               </div>
-
-              <button type="submit" class="btn btn-primary w-100 rounded-pill">
-                Ingresar
-              </button>
+              <button type="submit" class="btn btn-primary w-100 rounded-pill">Ingresar</button>
             </form>
-
-            <p class="text-center small mt-3 mb-0">
-              ¿No tienes cuenta?
-
-              <a
-                href="#"
-                data-bs-toggle="modal"
-                data-bs-target="#registroModal"
-                data-bs-dismiss="modal"
-              >
-                Regístrate aquí
-              </a>
-            </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- =========================================
-     MODAL REGISTRO
-========================================== -->
-
+    <!-- MODAL REGISTRO -->
     <div class="modal fade" id="registroModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow-lg p-2">
           <div class="modal-header border-0">
             <h5 class="modal-title fw-bold">Crear Cuenta</h5>
-
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-
           <div class="modal-body">
             <div id="registroError" class="alert alert-danger d-none"></div>
-
             <form id="registroForm">
               <div class="row g-2">
                 <div class="col-6 mb-3">
                   <label class="form-label"> Nombre </label>
-
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="regNombre"
-                    required
-                  />
+                  <input type="text" class="form-control" id="regNombre" required />
                 </div>
-
                 <div class="col-6 mb-3">
                   <label class="form-label"> Apellido </label>
-
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="regApellido"
-                    required
-                  />
+                  <input type="text" class="form-control" id="regApellido" required />
                 </div>
               </div>
-
               <div class="mb-3">
                 <label class="form-label"> Correo </label>
-
-                <input
-                  type="email"
-                  class="form-control"
-                  id="regCorreo"
-                  required
-                />
+                <input type="email" class="form-control" id="regCorreo" required />
               </div>
-
               <div class="mb-3">
                 <label class="form-label"> Teléfono </label>
-
                 <input type="text" class="form-control" id="regTelefono" />
               </div>
-
               <div class="mb-3">
                 <label class="form-label"> Contraseña </label>
-
-                <input
-                  type="password"
-                  class="form-control"
-                  id="regContrasena"
-                  required
-                />
+                <input type="password" class="form-control" id="regContrasena" required />
               </div>
-
-              <button type="submit" class="btn btn-primary w-100 rounded-pill">
-                Crear Cuenta
-              </button>
+              <button type="submit" class="btn btn-primary w-100 rounded-pill">Crear Cuenta</button>
             </form>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- =========================================
-     TOAST DE AVISO
-========================================== -->
-
+    <!-- TOAST DE AVISO -->
     <div
       class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3"
       style="z-index: 2000"
@@ -1017,13 +468,15 @@
       </div>
     </div>
 
-    <!-- =========================================
-     JAVASCRIPT
-========================================== -->
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="js/services/config.js"></script>
+    <script src="js/utils/formatters.js"></script>
+    <script src="js/services/api-client.js"></script>
+    <script src="js/services/auth-service.js"></script>
+    <script src="js/services/cart-service.js"></script>
+    <script src="js/services/servicio-service.js"></script>
+    <script src="js/services/producto-service.js"></script>
+    <script src="js/services/usuario-service.js"></script>
     <script src="js/main.js"></script>
-    ```
   </body>
 </html>

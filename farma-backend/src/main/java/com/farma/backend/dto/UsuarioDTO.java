@@ -17,7 +17,8 @@ public class UsuarioDTO {
     public UsuarioDTO() {
     }
 
-    public UsuarioDTO(Integer id, String nombre, String apellido, String correo, String telefono, String rol, LocalDateTime fechaRegistro) {
+    public UsuarioDTO(Integer id, String nombre, String apellido, String correo, String telefono, String rol,
+            LocalDateTime fechaRegistro) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -28,7 +29,8 @@ public class UsuarioDTO {
     }
 
     public static UsuarioDTO fromEntity(Usuario u) {
-        if (u == null) return null;
+        if (u == null)
+            return null;
         return new UsuarioDTO(
                 u.getId(),
                 u.getNombre(),
@@ -36,8 +38,7 @@ public class UsuarioDTO {
                 u.getCorreo(),
                 u.getTelefono(),
                 u.getRol(),
-                u.getFechaRegistro()
-        );
+                u.getFechaRegistro());
     }
 
     public Integer getId() {
