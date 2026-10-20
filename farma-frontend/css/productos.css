@@ -402,3 +402,250 @@ main .form-select {
     font-size: 0.78rem;
   }
 }
+
+/* =========================================================
+   10. BUSCADOR ESTÁTICO Y ESTADO INICIAL DEL CATÁLOGO
+========================================================= */
+
+.search-box {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.search-box__field {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-box__icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--farma-muted);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.search-box__field .form-control {
+  height: 100%;
+  min-height: 48px;
+  padding-left: 2.6rem;
+  background: var(--farma-bg);
+  border: 1px solid var(--farma-border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out);
+}
+
+.search-box__field .form-control:focus {
+  background: #ffffff;
+  border-color: var(--farma-primary);
+  box-shadow: var(--ring);
+}
+
+.search-box__field .form-control::placeholder {
+  color: #94a3b8;
+}
+
+.search-box__btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0 1.15rem;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Mensaje inicial: antes de buscar no se muestra ningún producto */
+.catalogo-prompt {
+  padding: 3rem 1rem;
+  animation: pageEnter var(--dur-slow) var(--ease-out) both;
+}
+
+.catalogo-prompt__icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--farma-primary-soft);
+  color: var(--farma-primary);
+  font-size: 1.6rem;
+}
+
+.catalogo-prompt__title {
+  margin-bottom: 0.4rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--farma-dark);
+}
+
+.catalogo-prompt__hint {
+  margin-bottom: 0;
+  color: var(--farma-muted);
+  font-size: 0.92rem;
+}
+
+.catalogo-vacio {
+  animation: pageEnter var(--dur-base) var(--ease-out) both;
+}
+
+/* Salida y entrada de la grilla al buscar, filtrar u ordenar */
+#catalogo-productos {
+  transition: opacity var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+#catalogo-productos.catalogo-leaving {
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+}
+
+#catalogo-productos.catalogo-entering .product-card {
+  animation: cardIn var(--dur-base) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+@media (max-width: 575.98px) {
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-box__btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #catalogo-productos,
+  .catalogo-prompt,
+  .catalogo-vacio {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  #catalogo-productos.catalogo-entering .product-card {
+    animation: none !important;
+  }
+}
+
+/* Los inputs del rango de precio deben poder encogerse dentro del flex
+   (evita 2-4px de desborde horizontal en pantallas pequeñas). */
+aside .d-flex > input[type="number"] {
+  min-width: 0;
+}
+
+/* =========================================================
+   11. SUGERENCIAS DEL BUSCADOR (AUTOCOMPLETADO)
+========================================================= */
+
+@keyframes suggestIn {
+  from { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.99); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.search-suggest {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+
+  max-height: 352px;
+  margin: 0;
+  padding: 0.35rem;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid var(--farma-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+
+  animation: suggestIn var(--dur-fast) var(--ease-out) both;
+}
+
+.search-suggest[hidden] {
+  display: none;
+}
+
+.search-suggest__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.search-suggest__item:hover,
+.search-suggest__item.is-active {
+  background: var(--farma-primary-soft);
+}
+
+.search-suggest__img {
+  flex: 0 0 auto;
+
+  width: 38px;
+  height: 38px;
+
+  object-fit: cover;
+
+  background: var(--farma-bg);
+  border-radius: 8px;
+}
+
+.search-suggest__body {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.search-suggest__name {
+  overflow: hidden;
+
+  color: var(--farma-dark);
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.search-suggest__meta {
+  color: var(--farma-muted);
+  font-size: 0.74rem;
+}
+
+.search-suggest__mark {
+  padding: 0 1px;
+
+  color: inherit;
+  background: #fef3c7;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-suggest {
+    animation: none !important;
+  }
+}

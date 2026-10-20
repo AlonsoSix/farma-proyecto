@@ -198,7 +198,14 @@ function actualizarCarritoUI() {
   const pie = document.getElementById('carritoPie');
   const contenedor = document.getElementById('carritoItems');
 
-  if (contador) contador.textContent = totalUnits;
+  if (contador) {
+    const anterior = Number(contador.dataset.valor ?? 0);
+    contador.textContent = totalUnits;
+    if (anterior !== totalUnits) {
+      contador.dataset.valor = totalUnits;
+      if (window.FarmaFormatters.pulse) window.FarmaFormatters.pulse(contador);
+    }
+  }
   if (subtotal) subtotal.textContent = soles(totalPrice);
   if (botonPagar) botonPagar.disabled = items.length === 0;
   if (pie) pie.classList.toggle('d-none', items.length === 0);
@@ -214,7 +221,7 @@ function actualizarCarritoUI() {
     return;
   }
 
-  contenedor.innerHTML = `<div class="cart-store">Farmacia Farma (${totalUnits})</div>` +
+  contenedor.innerHTML = `<div class="cart-store">Boticas Por tu Salud (${totalUnits})</div>` +
     items.map(i => `
       <div class="cart-row">
         <img src="${esc(resolveImageUrl(i.imagen, EN_PAGINAS))}" alt="${esc(i.nombre)}"

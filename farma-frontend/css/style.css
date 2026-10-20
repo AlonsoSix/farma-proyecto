@@ -38,6 +38,13 @@
 
   --ring: 0 0 0 0.2rem rgba(14, 107, 168, 0.14);
 
+  /* Movimiento (transiciones suaves) */
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
   /* Bootstrap */
   --bs-primary: #0e6ba8;
   --bs-primary-rgb: 14, 107, 168;
@@ -341,65 +348,9 @@ a {
 
 /* =========================================================
    7. BUSCADOR
+   El buscador del catálogo (input + botón "Buscar") se define en
+   css/productos.css, que es la única página que lo usa.
 ========================================================= */
-
-.search-box {
-  position: relative;
-
-  flex: 1 1 auto;
-}
-
-.search-box .form-control {
-  padding: 0.6rem 3rem 0.6rem 1rem;
-
-  border: 1px solid var(--farma-border);
-  border-radius: 10px;
-
-  background: var(--farma-bg);
-
-  font-size: 0.88rem;
-}
-
-.search-box .form-control:focus {
-  background: #ffffff;
-
-  border-color: var(--farma-primary);
-
-  box-shadow: var(--ring);
-}
-
-.search-box .form-control::placeholder {
-  color: #94a3b8;
-}
-
-.search-box button {
-  position: absolute;
-
-  top: 50%;
-  right: 5px;
-
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: 0;
-  border-radius: 8px;
-
-  background: transparent;
-  color: var(--farma-muted);
-
-  transform: translateY(-50%);
-}
-
-.search-box button:hover {
-  color: var(--farma-primary);
-  background: var(--farma-primary-soft);
-}
 
 /* =========================================================
    8. BOTÓN DEL CARRITO
@@ -1820,4 +1771,115 @@ a {
 #aliados,
 #contacto {
   scroll-margin-top: 90px;
+}
+
+/* =========================================================
+   23. TRANSICIONES Y ANIMACIONES SUAVES
+   Solo se animan opacity y transform (rendimiento).
+========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.98); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes countPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* Entrada de página (todas las pantallas) */
+body {
+  animation: pageFadeIn var(--dur-slow) var(--ease-out) both;
+}
+
+main {
+  animation: pageEnter var(--dur-slow) var(--ease-out) both;
+}
+
+/* Salida antes de navegar (js/utils/transitions.js) */
+body.page-leaving {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) ease-out;
+}
+
+/* Navbar: transición de color y elevación sutil */
+.main-menu .nav-link {
+  transition: color var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.main-menu .nav-link:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+/* Contador del carrito al cambiar */
+.cart-count.pulse-once {
+  animation: countPop var(--dur-slow) var(--ease-spring);
+}
+
+/* Feedback al presionar botones */
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Modales de login/registro: entrada centrada con escala + fundido
+   (Bootstrap los desliza desde arriba por defecto). */
+.modal.fade .modal-dialog {
+  transform: translate3d(0, -10px, 0) scale(0.97);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.modal.show .modal-dialog {
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Preferencia de menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body,
+  main {
+    animation: none !important;
+  }
+
+  body.page-leaving {
+    opacity: 1;
+    transition: none;
+  }
+
+  .main-menu .nav-link:hover {
+    transform: none;
+  }
+
+  .cart-count.pulse-once {
+    animation: none !important;
+  }
+
+  .modal.fade .modal-dialog {
+    transition: none;
+  }
+
+  .btn:active {
+    transform: none;
+  }
 }

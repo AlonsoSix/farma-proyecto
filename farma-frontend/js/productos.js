@@ -13,6 +13,10 @@ let busquedaActual = '';
 let precioMinimo = null;
 let precioMaximo = null;
 let ordenActual = '';
+// Búsqueda estática: hasta que el usuario pulsa "Buscar" (o aplica un filtro)
+// el catálogo muestra un mensaje en lugar de productos.
+let busquedaIniciada = false;
+let timerTransicion = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   inicializarCatalogo();
@@ -31,24 +35,38 @@ function inicializarCatalogo() {
   }
 
   configurarEventos();
+  configurarSugerencias();
+  leerBusquedaURL();
   cargarProductos();
+}
+
+/* Permite llegar desde el index con ?q=termino (búsqueda estática). */
+function leerBusquedaURL() {
+  if (typeof window.URLSearchParams !== 'function') return;
+
+  const q = new URLSearchParams(window.location.search).get('q');
+  if (!q || !q.trim()) return;
+
+  busquedaActual = q.trim();
+  busquedaIniciada = true;
+
+  const buscador = document.getElementById('buscador');
+  if (buscador) buscador.value = busquedaActual;
 }
 
 function configurarEventos() {
   const buscador = document.getElementById('buscador');
   const formularioBusqueda = document.getElementById('buscadorForm');
 
-  buscador?.addEventListener('input', () => {
-    busquedaActual = buscador.value.trim();
-    paginaActual = 1;
-    renderCatalogo();
-  });
-
+  // Búsqueda ESTÁTICA: los resultados aparecen al enviar el formulario,
+  // no mientras se escribe.
   formularioBusqueda?.addEventListener('submit', (e) => {
     e.preventDefault();
     busquedaActual = buscador?.value.trim() || '';
     paginaActual = 1;
-    renderCatalogo();
+    busquedaIniciada = true;
+    cerrarSugerencias();
+    renderCatalogo({ animar: true });
   });
 
   // Categorías de la barra lateral
@@ -58,8 +76,9 @@ function configurarEventos() {
       const texto = enlace.textContent.trim();
       categoriaActual = texto.toLowerCase() === 'todas' ? '' : texto;
       paginaActual = 1;
+      busquedaIniciada = true;
       actualizarCategorias();
-      renderCatalogo();
+      renderCatalogo({ animar: true });
     });
   });
 
@@ -87,15 +106,17 @@ function configurarEventos() {
     precioMinimo = min;
     precioMaximo = max;
     paginaActual = 1;
-    renderCatalogo();
+    busquedaIniciada = true;
+    renderCatalogo({ animar: true });
   });
 
   // Ordenamiento
-  const selectorOrden = document.querySelector('main select.form-select');
+  const selectorOrden = document.getElementById('ordenCatalogo');
   selectorOrden?.addEventListener('change', () => {
     ordenActual = selectorOrden.value;
     paginaActual = 1;
-    renderCatalogo();
+    // Si todavía no se buscó nada, solo se guarda la preferencia.
+    if (busquedaIniciada) renderCatalogo({ animar: true });
   });
 
   // Acciones en catálogo (Agregar al carrito)
@@ -106,7 +127,7 @@ function configurarEventos() {
   });
 
   // Paginación
-  document.querySelector('main .pagination')?.addEventListener('click', (e) => {
+  document.getElementById('catalogoPaginacion')?.addEventListener('click', (e) => {
     const enlace = e.target.closest('[data-page]');
     if (!enlace) return;
     e.preventDefault();
@@ -114,7 +135,7 @@ function configurarEventos() {
     if (!pag || enlace.closest('.disabled')) return;
 
     paginaActual = pag;
-    renderCatalogo();
+    renderCatalogo({ animar: true });
     document.getElementById('catalogo-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
@@ -150,6 +171,185 @@ function configurarEventos() {
   // Auth en modales
   document.getElementById('loginForm')?.addEventListener('submit', manejarLogin);
   document.getElementById('registroForm')?.addEventListener('submit', manejarRegistro);
+}
+
+/* =========================================================
+   SUGERENCIAS DE PRODUCTOS (AUTOCOMPLETADO AL ESCRIBIR)
+   Solo sugiere mientras se escribe. La búsqueda del catálogo sigue
+   siendo estática: los resultados aparecen al pulsar "Buscar" o al
+   elegir una sugerencia (que reutiliza ese mismo envío).
+========================================================= */
+const MAX_SUGERENCIAS = 6;
+let sugerencias = [];
+let indiceSugerencia = -1;
+let timerSugerencias = null;
+
+function configurarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+  if (!buscador || !lista) return;
+
+  buscador.addEventListener('input', () => {
+    window.clearTimeout(timerSugerencias);
+    timerSugerencias = window.setTimeout(actualizarSugerencias, 140);
+  });
+
+  buscador.addEventListener('focus', () => {
+    if (buscador.value.trim()) actualizarSugerencias();
+  });
+
+  buscador.addEventListener('keydown', (e) => {
+    if (!sugerencias.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      moverSugerencia(1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      moverSugerencia(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cerrarSugerencias();
+    } else if (e.key === 'Enter' && indiceSugerencia >= 0) {
+      // Con una sugerencia activa, Enter la elige (no busca el texto parcial).
+      e.preventDefault();
+      elegirSugerencia(indiceSugerencia);
+    }
+  });
+
+  // Mantiene el foco en el input hasta que se procesa el click.
+  lista.addEventListener('mousedown', (e) => e.preventDefault());
+
+  lista.addEventListener('click', (e) => {
+    const opcion = e.target.closest('[data-sugerencia]');
+    if (!opcion) return;
+    elegirSugerencia(Number(opcion.dataset.sugerencia));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-box')) cerrarSugerencias();
+  });
+
+  document.addEventListener('focusin', (e) => {
+    if (!e.target.closest('.search-box')) cerrarSugerencias();
+  });
+}
+
+function actualizarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+  if (!buscador || !lista || !window.FarmaFormatters) return;
+
+  const { escapeHtml: esc, normalizeText, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
+  const termino = buscador.value.trim();
+
+  if (!termino || !productos.length) {
+    cerrarSugerencias();
+    return;
+  }
+
+  const txt = normalizeText(termino);
+  sugerencias = productos
+    .filter((p) => normalizeText(`${p.nombre ?? ''} ${p.categoria ?? ''}`).includes(txt))
+    .slice(0, MAX_SUGERENCIAS);
+
+  if (!sugerencias.length) {
+    cerrarSugerencias();
+    return;
+  }
+
+  indiceSugerencia = -1;
+  lista.innerHTML = sugerencias.map((p, i) => `
+    <li class="search-suggest__item" role="option" id="sugerencia-${i}"
+        data-sugerencia="${i}" aria-selected="false">
+      <img class="search-suggest__img" alt="" loading="lazy"
+           src="${esc(resolveImageUrl(p.imagenUrl, EN_PAGINAS))}"
+           onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
+      <span class="search-suggest__body">
+        <span class="search-suggest__name">${resaltarCoincidencia(p.nombre, termino)}</span>
+        <span class="search-suggest__meta">${esc(p.categoria || 'Farmacia')} · ${soles(p.precio)}</span>
+      </span>
+    </li>`).join('');
+
+  lista.hidden = false;
+  buscador.setAttribute('aria-expanded', 'true');
+  buscador.removeAttribute('aria-activedescendant');
+}
+
+/* Resalta el fragmento coincidente (todo el texto pasa por esc()). */
+function resaltarCoincidencia(nombre, termino) {
+  const { escapeHtml: esc, normalizeText } = window.FarmaFormatters;
+  const original = String(nombre ?? '');
+  const norm = normalizeText(original);
+  const busq = normalizeText(termino);
+
+  if (!busq || norm.length !== original.length) return esc(original);
+
+  const idx = norm.indexOf(busq);
+  if (idx === -1) return esc(original);
+
+  return esc(original.slice(0, idx))
+    + '<mark class="search-suggest__mark">' + esc(original.slice(idx, idx + busq.length)) + '</mark>'
+    + esc(original.slice(idx + busq.length));
+}
+
+function moverSugerencia(paso) {
+  const opciones = document.querySelectorAll('#buscadorSugerencias [data-sugerencia]');
+  if (!opciones.length) return;
+
+  if (indiceSugerencia === -1) {
+    // Desde "ninguna": abajo empieza en la primera, arriba en la última.
+    indiceSugerencia = paso > 0 ? 0 : opciones.length - 1;
+  } else {
+    indiceSugerencia = (indiceSugerencia + paso + opciones.length) % opciones.length;
+  }
+
+  opciones.forEach((opcion, i) => {
+    const activa = i === indiceSugerencia;
+    opcion.classList.toggle('is-active', activa);
+    opcion.setAttribute('aria-selected', activa ? 'true' : 'false');
+    if (activa) opcion.scrollIntoView({ block: 'nearest' });
+  });
+
+  document.getElementById('buscador')
+    ?.setAttribute('aria-activedescendant', `sugerencia-${indiceSugerencia}`);
+}
+
+function elegirSugerencia(indice) {
+  const producto = sugerencias[indice];
+  if (!producto) return;
+
+  const buscador = document.getElementById('buscador');
+  const formulario = document.getElementById('buscadorForm');
+
+  if (buscador) buscador.value = producto.nombre ?? '';
+  cerrarSugerencias();
+
+  // Reutiliza el envío estático ya existente: los resultados no se
+  // actualizan por tecla, solo al confirmar (botón o sugerencia).
+  if (formulario) {
+    if (typeof formulario.requestSubmit === 'function') formulario.requestSubmit();
+    else formulario.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+}
+
+function cerrarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+
+  window.clearTimeout(timerSugerencias);
+  sugerencias = [];
+  indiceSugerencia = -1;
+
+  if (lista) {
+    lista.hidden = true;
+    lista.innerHTML = '';
+  }
+
+  if (buscador) {
+    buscador.setAttribute('aria-expanded', 'false');
+    buscador.removeAttribute('aria-activedescendant');
+  }
 }
 
 /* ---------- Carga de Productos ---------- */
@@ -215,10 +415,77 @@ function obtenerProductosFiltrados() {
 }
 
 /* ---------- Render del Catálogo ---------- */
-function renderCatalogo() {
+function renderCatalogo(opciones) {
   const contenedor = document.getElementById('catalogo-productos');
   if (!contenedor || !window.FarmaFormatters) return;
 
+  // Antes de la primera búsqueda no se muestra ningún producto.
+  if (!busquedaIniciada) {
+    renderPromptInicial();
+    return;
+  }
+
+  const aplicar = () => pintarCatalogo(contenedor);
+
+  if (opciones && opciones.animar) aplicarConTransicion(contenedor, aplicar);
+  else aplicar();
+}
+
+/* Estado inicial: mensaje de bienvenida a la búsqueda. */
+function renderPromptInicial() {
+  const contenedor = document.getElementById('catalogo-productos');
+  if (!contenedor) return;
+
+  window.clearTimeout(timerTransicion);
+  contenedor.classList.remove('catalogo-leaving', 'catalogo-entering');
+
+  contenedor.innerHTML = `
+    <div class="col-12 w-100 text-center catalogo-prompt">
+      <div class="catalogo-prompt__icon">
+        <i class="bi bi-search" aria-hidden="true"></i>
+      </div>
+      <h3 class="catalogo-prompt__title">¿Qué producto desea buscar?</h3>
+      <p class="catalogo-prompt__hint">
+        Escribe el nombre o algunas letras y pulsa <strong>Buscar</strong>.
+      </p>
+    </div>`;
+
+  const resumen = document.getElementById('catalogoResumen');
+  if (resumen) resumen.textContent = 'Escribe el nombre de un producto y pulsa Buscar';
+
+  const nav = document.getElementById('catalogoPaginacion');
+  if (nav) {
+    nav.hidden = true;
+    nav.querySelector('.pagination').innerHTML = '';
+  }
+}
+
+/* Salida y entrada suave al buscar, filtrar u ordenar. */
+function aplicarConTransicion(contenedor, aplicar) {
+  window.clearTimeout(timerTransicion);
+
+  const reducido = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (reducido) {
+    aplicar();
+    return;
+  }
+
+  contenedor.classList.remove('catalogo-entering');
+  contenedor.classList.add('catalogo-leaving');
+
+  timerTransicion = window.setTimeout(() => {
+    aplicar();
+    contenedor.classList.remove('catalogo-leaving');
+    contenedor.classList.add('catalogo-entering');
+    timerTransicion = window.setTimeout(() => {
+      contenedor.classList.remove('catalogo-entering');
+    }, 480);
+  }, 130);
+}
+
+function pintarCatalogo(contenedor) {
   const { escapeHtml: esc, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
   const cartService = window.FarmaCartService;
   const lista = obtenerProductosFiltrados();
@@ -232,12 +499,13 @@ function renderCatalogo() {
 
   if (!productosPagina.length) {
     contenedor.innerHTML = `
-      <div class="col-12 text-center text-muted py-5">
-        <i class="bi bi-search fs-1"></i>
-        <p class="mt-3">No encontramos productos con esos criterios.</p>
+      <div class="col-12 w-100 text-center py-5 catalogo-vacio">
+        <i class="bi bi-search fs-1 text-muted"></i>
+        <p class="mt-3 mb-1 fw-semibold">Sin resultados para «${esc(busquedaActual || 'los filtros aplicados')}».</p>
+        <p class="small text-muted mb-0">Prueba con otro nombre o ajusta los filtros.</p>
       </div>`;
   } else {
-    contenedor.innerHTML = productosPagina.map(p => {
+    contenedor.innerHTML = productosPagina.map((p, i) => {
       const id = Number(p.id);
       const stock = Number(p.stock ?? 0);
       const cartItem = cartService ? cartService.getItem(id) : null;
@@ -249,7 +517,7 @@ function renderCatalogo() {
           : '<span class="badge text-bg-success mb-2">Disponible</span>';
 
       return `
-        <div class="col">
+        <div class="col" style="--i:${i}">
           <article class="product-card">
             <div class="product-card-img-container">
               <img src="${esc(resolveImageUrl(p.imagenUrl, EN_PAGINAS))}" alt="${esc(p.nombre)}"
@@ -276,19 +544,22 @@ function renderCatalogo() {
     }).join('');
   }
 
-  const resumen = document.querySelector('main > .d-flex.flex-wrap p');
+  const resumen = document.getElementById('catalogoResumen');
   if (resumen) {
     resumen.textContent = lista.length
       ? `Mostrando ${inicio + 1}-${Math.min(inicio + PRODUCTOS_POR_PAGINA, lista.length)} de ${lista.length} productos`
-      : 'No hay productos para mostrar';
+      : `Sin resultados para "${busquedaActual || 'los filtros aplicados'}"`;
   }
 
   renderPaginacion(totalPaginas);
 }
 
 function renderPaginacion(totalPaginas) {
-  const paginacion = document.querySelector('main .pagination');
+  const paginacion = document.querySelector('#catalogoPaginacion .pagination');
   if (!paginacion) return;
+
+  const nav = document.getElementById('catalogoPaginacion');
+  if (nav) nav.hidden = totalPaginas <= 1;
 
   if (totalPaginas <= 1) {
     paginacion.innerHTML = '';
@@ -361,7 +632,14 @@ function actualizarCarritoUI() {
   const pie = document.getElementById('carritoPie');
   const contenedor = document.getElementById('carritoItems');
 
-  if (contador) contador.textContent = totalUnits;
+  if (contador) {
+    const anterior = Number(contador.dataset.valor ?? 0);
+    contador.textContent = totalUnits;
+    if (anterior !== totalUnits) {
+      contador.dataset.valor = totalUnits;
+      if (window.FarmaFormatters.pulse) window.FarmaFormatters.pulse(contador);
+    }
+  }
   if (subtotal) subtotal.textContent = soles(totalPrice);
   if (botonPagar) botonPagar.disabled = items.length === 0;
   if (pie) pie.classList.toggle('d-none', items.length === 0);
@@ -377,7 +655,7 @@ function actualizarCarritoUI() {
     return;
   }
 
-  contenedor.innerHTML = `<div class="cart-store">Farmacia Farma (${totalUnits})</div>` +
+  contenedor.innerHTML = `<div class="cart-store">Boticas Por tu Salud (${totalUnits})</div>` +
     items.map(item => {
       const prod = productos.find(p => Number(p.id) === Number(item.id));
       const sinStock = prod && item.cantidad >= Number(prod.stock ?? 0);
