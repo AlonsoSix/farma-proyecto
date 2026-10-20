@@ -1,6 +1,6 @@
-# Farma
+# Farma · "Boticas Por tu Salud"
 
-Sistema de gestión para farmacia desarrollado con **Spring Boot**, **MySQL** y **JavaScript**.
+Sistema de gestión para **Boticas Por tu Salud**, desarrollado con **Spring Boot**, **MySQL** y **JavaScript**.
 
 ## 📋 Requisitos
 
