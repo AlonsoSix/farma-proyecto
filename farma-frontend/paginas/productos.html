@@ -130,7 +130,11 @@
               <i class="bi bi-search search-box__icon" aria-hidden="true"></i>
               <input type="search" id="buscador" class="form-control"
                 placeholder="Ej. paracetamol, vitamina C, alcohol..." autocomplete="off"
-                aria-label="Nombre del producto a buscar">
+                aria-label="Nombre del producto a buscar"
+                role="combobox" aria-autocomplete="list" aria-haspopup="listbox"
+                aria-expanded="false" aria-controls="buscadorSugerencias">
+              <ul class="search-suggest" id="buscadorSugerencias" role="listbox"
+                aria-label="Productos sugeridos" hidden></ul>
             </div>
             <button type="submit" class="btn btn-primary search-box__btn">
               <i class="bi bi-search" aria-hidden="true"></i>

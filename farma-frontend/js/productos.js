@@ -35,6 +35,7 @@ function inicializarCatalogo() {
   }
 
   configurarEventos();
+  configurarSugerencias();
   leerBusquedaURL();
   cargarProductos();
 }
@@ -64,6 +65,7 @@ function configurarEventos() {
     busquedaActual = buscador?.value.trim() || '';
     paginaActual = 1;
     busquedaIniciada = true;
+    cerrarSugerencias();
     renderCatalogo({ animar: true });
   });
 
@@ -169,6 +171,185 @@ function configurarEventos() {
   // Auth en modales
   document.getElementById('loginForm')?.addEventListener('submit', manejarLogin);
   document.getElementById('registroForm')?.addEventListener('submit', manejarRegistro);
+}
+
+/* =========================================================
+   SUGERENCIAS DE PRODUCTOS (AUTOCOMPLETADO AL ESCRIBIR)
+   Solo sugiere mientras se escribe. La búsqueda del catálogo sigue
+   siendo estática: los resultados aparecen al pulsar "Buscar" o al
+   elegir una sugerencia (que reutiliza ese mismo envío).
+========================================================= */
+const MAX_SUGERENCIAS = 6;
+let sugerencias = [];
+let indiceSugerencia = -1;
+let timerSugerencias = null;
+
+function configurarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+  if (!buscador || !lista) return;
+
+  buscador.addEventListener('input', () => {
+    window.clearTimeout(timerSugerencias);
+    timerSugerencias = window.setTimeout(actualizarSugerencias, 140);
+  });
+
+  buscador.addEventListener('focus', () => {
+    if (buscador.value.trim()) actualizarSugerencias();
+  });
+
+  buscador.addEventListener('keydown', (e) => {
+    if (!sugerencias.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      moverSugerencia(1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      moverSugerencia(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cerrarSugerencias();
+    } else if (e.key === 'Enter' && indiceSugerencia >= 0) {
+      // Con una sugerencia activa, Enter la elige (no busca el texto parcial).
+      e.preventDefault();
+      elegirSugerencia(indiceSugerencia);
+    }
+  });
+
+  // Mantiene el foco en el input hasta que se procesa el click.
+  lista.addEventListener('mousedown', (e) => e.preventDefault());
+
+  lista.addEventListener('click', (e) => {
+    const opcion = e.target.closest('[data-sugerencia]');
+    if (!opcion) return;
+    elegirSugerencia(Number(opcion.dataset.sugerencia));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-box')) cerrarSugerencias();
+  });
+
+  document.addEventListener('focusin', (e) => {
+    if (!e.target.closest('.search-box')) cerrarSugerencias();
+  });
+}
+
+function actualizarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+  if (!buscador || !lista || !window.FarmaFormatters) return;
+
+  const { escapeHtml: esc, normalizeText, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
+  const termino = buscador.value.trim();
+
+  if (!termino || !productos.length) {
+    cerrarSugerencias();
+    return;
+  }
+
+  const txt = normalizeText(termino);
+  sugerencias = productos
+    .filter((p) => normalizeText(`${p.nombre ?? ''} ${p.categoria ?? ''}`).includes(txt))
+    .slice(0, MAX_SUGERENCIAS);
+
+  if (!sugerencias.length) {
+    cerrarSugerencias();
+    return;
+  }
+
+  indiceSugerencia = -1;
+  lista.innerHTML = sugerencias.map((p, i) => `
+    <li class="search-suggest__item" role="option" id="sugerencia-${i}"
+        data-sugerencia="${i}" aria-selected="false">
+      <img class="search-suggest__img" alt="" loading="lazy"
+           src="${esc(resolveImageUrl(p.imagenUrl, EN_PAGINAS))}"
+           onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
+      <span class="search-suggest__body">
+        <span class="search-suggest__name">${resaltarCoincidencia(p.nombre, termino)}</span>
+        <span class="search-suggest__meta">${esc(p.categoria || 'Farmacia')} · ${soles(p.precio)}</span>
+      </span>
+    </li>`).join('');
+
+  lista.hidden = false;
+  buscador.setAttribute('aria-expanded', 'true');
+  buscador.removeAttribute('aria-activedescendant');
+}
+
+/* Resalta el fragmento coincidente (todo el texto pasa por esc()). */
+function resaltarCoincidencia(nombre, termino) {
+  const { escapeHtml: esc, normalizeText } = window.FarmaFormatters;
+  const original = String(nombre ?? '');
+  const norm = normalizeText(original);
+  const busq = normalizeText(termino);
+
+  if (!busq || norm.length !== original.length) return esc(original);
+
+  const idx = norm.indexOf(busq);
+  if (idx === -1) return esc(original);
+
+  return esc(original.slice(0, idx))
+    + '<mark class="search-suggest__mark">' + esc(original.slice(idx, idx + busq.length)) + '</mark>'
+    + esc(original.slice(idx + busq.length));
+}
+
+function moverSugerencia(paso) {
+  const opciones = document.querySelectorAll('#buscadorSugerencias [data-sugerencia]');
+  if (!opciones.length) return;
+
+  if (indiceSugerencia === -1) {
+    // Desde "ninguna": abajo empieza en la primera, arriba en la última.
+    indiceSugerencia = paso > 0 ? 0 : opciones.length - 1;
+  } else {
+    indiceSugerencia = (indiceSugerencia + paso + opciones.length) % opciones.length;
+  }
+
+  opciones.forEach((opcion, i) => {
+    const activa = i === indiceSugerencia;
+    opcion.classList.toggle('is-active', activa);
+    opcion.setAttribute('aria-selected', activa ? 'true' : 'false');
+    if (activa) opcion.scrollIntoView({ block: 'nearest' });
+  });
+
+  document.getElementById('buscador')
+    ?.setAttribute('aria-activedescendant', `sugerencia-${indiceSugerencia}`);
+}
+
+function elegirSugerencia(indice) {
+  const producto = sugerencias[indice];
+  if (!producto) return;
+
+  const buscador = document.getElementById('buscador');
+  const formulario = document.getElementById('buscadorForm');
+
+  if (buscador) buscador.value = producto.nombre ?? '';
+  cerrarSugerencias();
+
+  // Reutiliza el envío estático ya existente: los resultados no se
+  // actualizan por tecla, solo al confirmar (botón o sugerencia).
+  if (formulario) {
+    if (typeof formulario.requestSubmit === 'function') formulario.requestSubmit();
+    else formulario.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+}
+
+function cerrarSugerencias() {
+  const buscador = document.getElementById('buscador');
+  const lista = document.getElementById('buscadorSugerencias');
+
+  window.clearTimeout(timerSugerencias);
+  sugerencias = [];
+  indiceSugerencia = -1;
+
+  if (lista) {
+    lista.hidden = true;
+    lista.innerHTML = '';
+  }
+
+  if (buscador) {
+    buscador.setAttribute('aria-expanded', 'false');
+    buscador.removeAttribute('aria-activedescendant');
+  }
 }
 
 /* ---------- Carga de Productos ---------- */
