@@ -69,11 +69,21 @@
     bootstrap.Toast.getOrCreateInstance(el, { delay: 3000 }).show();
   }
 
+  /* Micro-feedback: reinicia una animación corta sobre un elemento. */
+  function pulse(el, clase = 'pulse-once') {
+    if (!el || typeof document === 'undefined') return;
+    el.classList.remove(clase);
+    void el.offsetWidth;
+    el.classList.add(clase);
+    el.addEventListener('animationend', () => el.classList.remove(clase), { once: true });
+  }
+
   return {
     escapeHtml,
     formatSoles,
     normalizeText,
     resolveImageUrl,
-    showToast
+    showToast,
+    pulse
   };
 });

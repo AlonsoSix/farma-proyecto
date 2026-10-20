@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo de Productos - Farmacia Farma</title>
+  <title>Catálogo de Productos - Boticas Por tu Salud</title>
   <link rel="icon" type="image/png" href="../img/favicon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,8 +33,8 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg main-nav">
     <div class="container">
-      <a class="navbar-brand" href="../index.html" aria-label="Farmacia Farma - volver al inicio">
-        <img src="../img/logo-farma.webp" alt="Farmacia Farma" class="brand-logo">
+      <a class="navbar-brand" href="../index.html" aria-label="Boticas Por tu Salud - volver al inicio">
+        <img src="../img/logo-farma.webp" alt="Boticas Por tu Salud" class="brand-logo">
       </a>
 
       <div class="d-flex align-items-center gap-2 order-2 order-lg-3 ms-auto ms-lg-0">
@@ -124,20 +124,29 @@
         <!-- CUADRÍCULA DE PRODUCTOS -->
         <main class="col-lg-9">
 
-          <!-- Buscador de productos -->
+          <!-- Buscador de productos (búsqueda estática: se confirma con Buscar) -->
           <form class="search-box mb-3" id="buscadorForm" role="search">
-            <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría"
-              autocomplete="off">
-            <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
+            <div class="search-box__field">
+              <i class="bi bi-search search-box__icon" aria-hidden="true"></i>
+              <input type="search" id="buscador" class="form-control"
+                placeholder="Ej. paracetamol, vitamina C, alcohol..." autocomplete="off"
+                aria-label="Nombre del producto a buscar">
+            </div>
+            <button type="submit" class="btn btn-primary search-box__btn">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <span>Buscar</span>
+            </button>
           </form>
 
           <!-- Cabecera de la grilla (Ordenamiento) -->
           <div class="d-flex flex-wrap justify-content-between align-items-center bg-white p-3 rounded-4 shadow-sm border mb-4">
-            <p class="mb-0 text-muted small">Mostrando catálogo completo</p>
+            <p class="mb-0 text-muted small" id="catalogoResumen" aria-live="polite">
+              Escribe el nombre de un producto y pulsa Buscar
+            </p>
             <div class="d-flex align-items-center gap-2">
-              <label class="text-muted small mb-0 d-none d-sm-block">Ordenar por:</label>
-              <select class="form-select form-select-sm border-0 bg-light rounded-pill px-3" style="width: auto;">
-                <option selected>Destacados</option>
+              <label class="text-muted small mb-0 d-none d-sm-block" for="ordenCatalogo">Ordenar por:</label>
+              <select id="ordenCatalogo" class="form-select form-select-sm border-0 bg-light rounded-pill px-3" style="width: auto;">
+                <option selected value="">Destacados</option>
                 <option value="asc">Precio: Menor a Mayor</option>
                 <option value="desc">Precio: Mayor a Menor</option>
                 <option value="az">Nombre: A - Z</option>
@@ -148,25 +157,20 @@
           <!-- Contenedor donde JS inyectará las tarjetas -->
           <!-- Se usa la clase "row" y "row-cols" para que se acomoden en grilla automáticamente -->
           <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4" id="catalogo-productos">
-            <div class="col-12 text-center text-muted py-5 w-100">
-              <div class="spinner-border text-primary mb-3" role="status"></div>
-              <p>Cargando productos desde el servidor...</p>
+            <div class="col-12 w-100 text-center catalogo-prompt">
+              <div class="catalogo-prompt__icon">
+                <i class="bi bi-search" aria-hidden="true"></i>
+              </div>
+              <h3 class="catalogo-prompt__title">¿Qué producto desea buscar?</h3>
+              <p class="catalogo-prompt__hint">
+                Escribe el nombre o algunas letras y pulsa <strong>Buscar</strong>.
+              </p>
             </div>
           </div>
 
           <!-- Paginación -->
-          <nav aria-label="Navegación de páginas" class="mt-5">
-            <ul class="pagination justify-content-center">
-              <li class="page-item disabled">
-                <a class="page-link rounded-start-pill px-3" href="#" tabindex="-1">Anterior</a>
-              </li>
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item">
-                <a class="page-link rounded-end-pill px-3" href="#">Siguiente</a>
-              </li>
-            </ul>
+          <nav aria-label="Navegación de páginas" class="mt-5" id="catalogoPaginacion" hidden>
+            <ul class="pagination justify-content-center"></ul>
           </nav>
 
         </main>
@@ -208,7 +212,7 @@
       </div>
 
       <hr class="border-secondary mt-4">
-      <p class="text-center small text-secondary mb-0">© 2026 Farmacia Farma - Todos los derechos reservados.</p>
+      <p class="text-center small text-secondary mb-0">© 2026 Boticas Por tu Salud - Todos los derechos reservados.</p>
     </div>
   </footer>
 
@@ -332,5 +336,6 @@
   <script src="../js/services/cart-service.js"></script>
   <script src="../js/services/producto-service.js"></script>
   <script src="../js/productos.js"></script>
+<script src="../js/utils/transitions.js"></script>
 </body>
 </html>
