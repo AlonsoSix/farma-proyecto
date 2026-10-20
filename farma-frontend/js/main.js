@@ -77,7 +77,9 @@ function actualizarNavbarUsuario() {
 
   if (!user || !user.id) {
     nav.innerHTML = `
-      <a href="${RUTA('login.html')}" class="btn btn-primary rounded-pill px-3">Iniciar sesión</a>
+      <a href="${RUTA('login.html')}" class="btn btn-primary rounded-pill btn-login">
+        <i class="bi bi-person-circle"></i> Iniciar sesión
+      </a>
     `;
     return;
   }

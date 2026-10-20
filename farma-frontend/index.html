@@ -27,20 +27,6 @@
 
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- Guard de sesión: si no hay usuario logueado, redirige al login -->
-    <script>
-      (function () {
-        try {
-          var raw = localStorage.getItem('farma_user');
-          var user = raw ? JSON.parse(raw) : null;
-          if (!user || !user.id) {
-            window.location.replace('login.html');
-          }
-        } catch (e) {
-          window.location.replace('login.html');
-        }
-      })();
-    </script>
   </head>
 
   <body>
@@ -479,5 +465,6 @@
     <script src="js/services/usuario-service.js"></script>
     <script src="js/main.js"></script>
   <script src="js/utils/transitions.js"></script>
+  <script src="js/utils/navbar.js"></script>
   </body>
 </html>

@@ -12,6 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('loginForm');
   const loginError = document.getElementById('loginError');
 
+  // Mostrar / ocultar contraseña
+  const btnVerPass = document.getElementById('btnVerPass');
+  const inputPassLogin = document.getElementById('loginContrasena');
+  if (btnVerPass && inputPassLogin) {
+    btnVerPass.addEventListener('click', () => {
+      const mostrar = inputPassLogin.type === 'password';
+      inputPassLogin.type = mostrar ? 'text' : 'password';
+      btnVerPass.setAttribute('aria-pressed', String(mostrar));
+      btnVerPass.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      btnVerPass.innerHTML = `<i class="bi ${mostrar ? 'bi-eye-slash' : 'bi-eye'}"></i>`;
+      inputPassLogin.focus();
+    });
+  }
+
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();

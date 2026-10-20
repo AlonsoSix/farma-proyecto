@@ -197,11 +197,73 @@ a {
 
   -webkit-backdrop-filter: saturate(180%) blur(12px);
   backdrop-filter: saturate(180%) blur(12px);
+
+  transition: box-shadow 0.2s ease, padding 0.2s ease, background-color 0.2s ease;
+}
+
+/* Sombra al hacer scroll (la clase la pone js/utils/navbar.js) */
+.main-nav.is-scrolled {
+  background: #ffffff;
+  border-bottom-color: transparent;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  padding: 0.3rem 0;
 }
 
 .main-nav .navbar-collapse {
   flex-grow: 1;
   align-items: center;
+}
+
+/* En escritorio el menú va centrado entre el logo y los botones */
+@media (min-width: 992px) {
+  .main-menu {
+    margin: 0 auto;
+  }
+
+  .main-menu .nav-link {
+    position: relative;
+  }
+
+  .main-nav .main-menu .nav-link.active {
+    background: transparent;
+  }
+
+  .main-nav .main-menu .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.1rem;
+
+    height: 2px;
+    border-radius: 2px;
+
+    background: var(--farma-primary);
+  }
+}
+
+/* En móvil el menú desplegable se separa del logo y los botones ocupan todo el ancho */
+@media (max-width: 991.98px) {
+  .main-nav .navbar-collapse {
+    margin-top: 0.6rem;
+    padding: 0.75rem 0 0.5rem;
+    border-top: 1px solid var(--farma-border);
+  }
+
+  .main-menu .nav-link {
+    padding: 0.65rem 0.75rem;
+  }
+
+  #navAuthContainer {
+    margin: 0.75rem 0 0 !important;
+  }
+
+  #navAuthContainer > .btn,
+  #navAuthContainer .dropdown,
+  #navAuthContainer .dropdown > .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .navbar-brand {
@@ -280,12 +342,34 @@ a {
   margin-left: auto;
 }
 
+@media (min-width: 992px) {
+  #navAuthContainer {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+}
+
 #navAuthContainer .btn {
   min-height: 38px;
 
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
   font-size: 0.82rem;
+  font-weight: 600;
 
   white-space: nowrap;
+}
+
+#navAuthContainer .btn-login {
+  padding: 0.35rem 1rem;
+  box-shadow: 0 4px 12px rgba(14, 107, 168, 0.22);
+}
+
+#navAuthContainer .btn-login:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(14, 107, 168, 0.3);
 }
 
 /* En laptops (lg) compactamos el menú para evitar que el navbar crezca */

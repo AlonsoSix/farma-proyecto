@@ -693,8 +693,9 @@ function actualizarNavbarUsuario() {
 
   if (!user || !user.id) {
     contenedor.innerHTML = `
-      <a href="../login.html" class="btn btn-outline-primary rounded-pill px-3">Iniciar sesión</a>
-      <a href="../login.html" class="btn btn-primary rounded-pill px-3">Registrarse</a>`;
+      <a href="../login.html" class="btn btn-primary rounded-pill btn-login">
+        <i class="bi bi-person-circle"></i> Iniciar sesión
+      </a>`;
     return;
   }
 
