@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,20 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../css/style.css">
 
+  <!-- Guard de sesión -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('farma_user');
+        var user = raw ? JSON.parse(raw) : null;
+        if (!user || !user.id) window.location.replace('../login.html');
+      } catch (e) {
+        window.location.replace('../login.html');
+      }
+    })();
+  </script>
 </head>
+
 <body>
 
   <!-- NAVBAR -->
@@ -46,7 +60,7 @@
         </ul>
 
         <div id="navAuthContainer" class="d-flex align-items-center gap-2">
-          <a href="../login.html" class="btn btn-primary rounded-pill btn-login"><i class="bi bi-person-circle"></i> Iniciar sesión</a>
+          <a href="../login.html" class="btn btn-primary rounded-pill px-3">Iniciar sesión</a>
         </div>
       </div>
     </div>
@@ -153,45 +167,38 @@
         <div class="col-lg-6">
           <div class="nosotros-media">
             <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm">
-              <iframe
-                src="https://www.youtube.com/embed/ScMzIvxBSi4"
+              <iframe src="https://www.youtube.com/embed/JIPZenS-hXM"
                 title="Video institucional de Boticas Por tu Salud"
-                allow="
-                  accelerometer;
-                  autoplay;
-                  clipboard-write;
-                  encrypted-media;
-                  gyroscope;
-                  picture-in-picture;
-                "
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen>
               </iframe>
             </div>
-
-            <!-- INDICADORES -->
-            <div class="row g-3 mt-3">
-              <div class="col-4">
-                <div class="nosotros-stat text-center">
-                  <strong class="fs-3 text-primary">+10</strong>
-                  <div class="text-muted small">Años de experiencia</div>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="nosotros-stat text-center">
-                  <strong class="fs-3 text-primary">100%</strong>
-                  <div class="text-muted small">Compromiso</div>
-                </div>
-              </div>
-              <div class="col-4">
-                <div class="nosotros-stat text-center">
-                  <strong class="fs-3 text-primary">24/7</strong>
-                  <div class="text-muted small">Atención</div>
-                </div>
-              </div>
+          </div>
+        </div>
+        <!-- INDICADORES -->
+        <div class="row g-3 mt-3">
+          <div class="col-4">
+            <div class="nosotros-stat text-center">
+              <strong class="fs-3 text-primary">+10</strong>
+              <div class="text-muted small">Años de experiencia</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="nosotros-stat text-center">
+              <strong class="fs-3 text-primary">100%</strong>
+              <div class="text-muted small">Compromiso</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="nosotros-stat text-center">
+              <strong class="fs-3 text-primary">24/7</strong>
+              <div class="text-muted small">Atención</div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+    </div>
     </div>
   </section>
 
@@ -240,11 +247,15 @@
         <div class="text-center text-md-start">
           <h5 class="fw-bold mb-3">Redes Sociales</h5>
           <div class="d-flex justify-content-center justify-content-md-start gap-3">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i
+                class="bi bi-facebook"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"
+              class="social-icon"><i class="bi bi-instagram"></i></a>
+            <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i
+                class="bi bi-twitter-x"></i></a>
           </div>
-          <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para noticias y ofertas.</p>
+          <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para
+            noticias y ofertas.</p>
         </div>
 
         <div class="text-center">
@@ -259,7 +270,8 @@
           <h5 class="fw-bold mb-2">Contacto</h5>
           <p class="small text-secondary mb-1">Montañez Pumalla Fabrizio Andre</p>
           <p class="small text-secondary mb-2">Tunqui Puelles Jose Armando</p>
-          <p class="mb-1"><a href="mailto:contacto@farmacia-farma.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@farmacia-farma.com</a></p>
+          <p class="mb-1"><a href="mailto:contacto@farmacia-farma.com" class="text-light text-decoration-none"><i
+                class="bi bi-envelope me-2"></i>contacto@farmacia-farma.com</a></p>
           <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
         </div>
       </div>
@@ -283,8 +295,10 @@
           <span id="carritoTotal" class="text-primary">S/ 0.00</span>
         </div>
         <div class="cart-actions d-flex flex-column gap-2">
-          <button type="button" class="btn btn-outline-primary rounded-pill py-2 fw-semibold" id="btnIrCarrito">Ver detalle de compra</button>
-          <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btnPagar">Proceder al pago</button>
+          <button type="button" class="btn btn-outline-primary rounded-pill py-2 fw-semibold" id="btnIrCarrito">Ver
+            detalle de compra</button>
+          <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" id="btnPagar">Proceder al
+            pago</button>
         </div>
       </div>
     </div>
@@ -292,7 +306,8 @@
 
   <!-- AVISOS (Toasts) -->
   <div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
-    <div id="toastAviso" class="toast toast-farma border-0 shadow-lg" role="status" aria-live="polite" aria-atomic="true">
+    <div id="toastAviso" class="toast toast-farma border-0 shadow-lg" role="status" aria-live="polite"
+      aria-atomic="true">
       <div class="toast-body d-flex align-items-center fw-medium" id="toastTexto"></div>
     </div>
   </div>
@@ -303,7 +318,8 @@
         <span class="toast-esquina-ico"><i class="bi bi-check-circle-fill text-success"></i></span>
         <span id="toastEsquinaTexto" class="fw-medium ms-2"></span>
       </div>
-      <div class="text-end"><button type="button" class="btn btn-sm btn-light fw-bold" data-bs-dismiss="toast">Cerrar</button></div>
+      <div class="text-end"><button type="button" class="btn btn-sm btn-light fw-bold"
+          data-bs-dismiss="toast">Cerrar</button></div>
     </div>
   </div>
 
@@ -320,17 +336,20 @@
           <form id="loginForm">
             <div class="mb-3">
               <label class="form-label text-muted small fw-semibold mb-1">Correo electrónico</label>
-              <input type="email" class="form-control form-control-lg bg-light border-0" id="loginCorreo" placeholder="ejemplo@correo.com" required>
+              <input type="email" class="form-control form-control-lg bg-light border-0" id="loginCorreo"
+                placeholder="ejemplo@correo.com" required>
             </div>
             <div class="mb-4">
               <label class="form-label text-muted small fw-semibold mb-1">Contraseña</label>
-              <input type="password" class="form-control form-control-lg bg-light border-0" id="loginContrasena" placeholder="••••••••" required>
+              <input type="password" class="form-control form-control-lg bg-light border-0" id="loginContrasena"
+                placeholder="••••••••" required>
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold">Ingresar</button>
           </form>
           <p class="text-center small mt-4 mb-0 text-muted">
             ¿No tienes cuenta?
-            <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal" class="text-primary fw-semibold text-decoration-none">Regístrate aquí</a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal"
+              class="text-primary fw-semibold text-decoration-none">Regístrate aquí</a>
           </p>
         </div>
       </div>
@@ -374,7 +393,8 @@
           </form>
           <p class="text-center small mt-4 mb-0 text-muted">
             ¿Ya tienes cuenta?
-            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal" class="text-primary fw-semibold text-decoration-none">Inicia sesión</a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" data-bs-dismiss="modal"
+              class="text-primary fw-semibold text-decoration-none">Inicia sesión</a>
           </p>
         </div>
       </div>
@@ -391,7 +411,7 @@
   <script src="../js/services/producto-service.js"></script>
   <script src="../js/services/usuario-service.js"></script>
   <script src="../js/main.js"></script>
-<script src="../js/utils/transitions.js"></script>
-<script src="../js/utils/navbar.js"></script>
+  <script src="../js/utils/transitions.js"></script>
 </body>
+
 </html>
