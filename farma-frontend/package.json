@@ -1,9 +1,0 @@
-{
-  "name": "farma-frontend",
-  "version": "1.0.0",
-  "description": "Frontend de Farmacia Farma con arquitectura modular y patrones SOLID",
-  "scripts": {
-    "test": "node --test test/**/*.test.js"
-  },
-  "type": "commonjs"
-}

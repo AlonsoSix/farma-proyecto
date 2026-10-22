@@ -1,11 +1,11 @@
 package com.farma.backend.controller;
 
-import com.farma.backend.dto.AuthResponse;
 import com.farma.backend.dto.LoginRequest;
 import com.farma.backend.dto.RegistroRequest;
 import com.farma.backend.model.Usuario;
-import com.farma.backend.service.AuthService;
-import jakarta.validation.Valid;
+import com.farma.backend.service.UsuarioService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,33 +17,35 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class AuthController {
 
-    private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+    @Autowired
+    private UsuarioService usuarioService;
 
     @PostMapping("/registro")
-    public ResponseEntity<Map<String, Object>> registrar(@Valid @RequestBody RegistroRequest request) {
-        Usuario nuevo = authService.registrar(request);
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("mensaje", "Cuenta creada correctamente.");
-        resp.put("id", nuevo.getId());
-        resp.put("nombre", nuevo.getNombre());
-        return ResponseEntity.ok(resp);
+    public ResponseEntity<?> registrar(@RequestBody RegistroRequest request) {
+        try {
+            Usuario nuevo = usuarioService.registrar(request);
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("mensaje", "Cuenta creada correctamente.");
+            resp.put("id", nuevo.getId());
+            resp.put("nombre", nuevo.getNombre());
+            return ResponseEntity.ok(resp);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        Usuario usuario = authService.login(request);
-        AuthResponse response = new AuthResponse(
-                "Bienvenido " + usuario.getNombre(),
-                usuario.getId(),
-                usuario.getNombre(),
-                usuario.getApellido(),
-                usuario.getCorreo(),
-                usuario.getRol()
-        );
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            Usuario usuario = usuarioService.login(request);
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("mensaje", "Bienvenido " + usuario.getNombre());
+            resp.put("id", usuario.getId());
+            resp.put("nombre", usuario.getNombre());
+            resp.put("rol", usuario.getRol());
+            return ResponseEntity.ok(resp);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
     }
 }

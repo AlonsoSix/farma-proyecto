@@ -1,488 +1,243 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración - Boticas Por tu Salud</title>
-  <link rel="icon" type="image/png" href="img/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de administración | Farmacia Farma</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
 
-  <!-- Fuentes e Iconos -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="css/admin.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body class="admin-body">
 
-  <!-- SIDEBAR -->
-  <aside class="admin-sidebar">
-    <a href="index.html" class="sidebar-brand">
-      <img src="img/logo-farma.webp" alt="Boticas Por tu Salud">
-      <div>
-        <div class="sidebar-brand-title">Boticas Por tu Salud</div>
-        <div class="sidebar-brand-sub">Panel de Control</div>
-      </div>
-    </a>
-
-    <!-- Info del Administrador -->
-    <div class="sidebar-user">
-      <div class="user-avatar" id="adminAvatar">A</div>
-      <div class="user-info">
-        <div class="user-name" id="adminNombre">Administrador</div>
-        <span class="user-role-badge" id="adminRol">ADMIN</span>
-      </div>
+<!-- BARRA SUPERIOR DEL PANEL -->
+<header class="admin-topbar">
+  <div class="container d-flex align-items-center gap-3">
+    <a href="index.html" aria-label="Ir a la tienda"><img src="img/logo-farma.webp" alt="Farmacia Farma" class="admin-logo"></a>
+    <span class="admin-etiqueta d-none d-sm-inline-flex"><i class="bi bi-shield-lock me-1"></i>Administrador</span>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <a href="index.html" class="btn btn-outline-primary rounded-pill px-3 d-none d-md-inline-block"><i class="bi bi-shop me-1"></i>Ver tienda</a>
+      <span class="admin-usuario d-none d-md-inline"><i class="bi bi-person-circle me-1"></i><span id="adminNombre">Administrador</span></span>
+      <button type="button" class="btn btn-primary rounded-pill px-3" id="btnSalir"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
     </div>
+  </div>
+</header>
 
-    <!-- Navegación -->
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">Principal</div>
-      <a class="sidebar-nav-link active" data-tab="dashboard">
-        <i class="bi bi-grid-1x2"></i>
-        <span>Dashboard</span>
-      </a>
+<!-- ACCESO RESTRINGIDO (si no es administrador) -->
+<main id="sinAcceso" class="container py-5 d-none">
+  <div class="admin-card text-center py-5 mx-auto" style="max-width:520px">
+    <i class="bi bi-shield-lock text-primary" style="font-size:3rem"></i>
+    <h1 class="h4 fw-bold mt-3">Acceso restringido</h1>
+    <p class="text-muted">Esta sección es solo para administradores. Inicia sesión con una cuenta de administrador para continuar.</p>
+    <a href="index.html" class="btn btn-primary rounded-pill px-4">Ir a la tienda e iniciar sesión</a>
+  </div>
+</main>
 
-      <div class="nav-section-title">Mantenimiento</div>
-      <a class="sidebar-nav-link" data-tab="productos">
-        <i class="bi bi-capsule"></i>
-        <span>Productos</span>
-      </a>
-      <a class="sidebar-nav-link" data-tab="servicios">
-        <i class="bi bi-heart-pulse"></i>
-        <span>Servicios</span>
-      </a>
-      <a class="sidebar-nav-link" data-tab="usuarios">
-        <i class="bi bi-people"></i>
-        <span>Usuarios</span>
-      </a>
-    </nav>
-
-    <!-- Footer Sidebar -->
-    <div class="sidebar-footer">
-      <a href="index.html" class="sidebar-nav-link text-white-50">
-        <i class="bi bi-shop"></i>
-        <span>Ir a la Tienda</span>
-      </a>
-      <a id="btnCerrarSesionAdmin" class="sidebar-nav-link text-danger">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>Cerrar Sesión</span>
-      </a>
+<!-- PANEL -->
+<main id="panel" class="container py-4 d-none">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <span class="badge-label">Panel de administración</span>
+      <h1 class="admin-titulo">Gestión de productos</h1>
+      <p class="text-muted mb-0">Registra, edita, da de baja y elimina los productos del catálogo.</p>
     </div>
-  </aside>
+    <button type="button" class="admin-btn-nuevo" id="btnNuevo"><i class="bi bi-plus-lg me-2"></i>Registrar producto</button>
+  </div>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="admin-main">
+  <!-- RESUMEN -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="admin-stat"><span class="admin-stat-ico"><i class="bi bi-box-seam"></i></span><div><strong id="statTotal">–</strong><span>Productos</span></div></div></div>
+    <div class="col-6 col-lg-3"><div class="admin-stat admin-stat-baja"><span class="admin-stat-ico"><i class="bi bi-eye-slash"></i></span><div><strong id="statBaja">–</strong><span>Dados de baja</span></div></div></div>
+    <div class="col-6 col-lg-3"><div class="admin-stat admin-stat-warn"><span class="admin-stat-ico"><i class="bi bi-exclamation-triangle"></i></span><div><strong id="statBajo">–</strong><span>Stock bajo (≤ 5)</span></div></div></div>
+    <div class="col-6 col-lg-3"><div class="admin-stat admin-stat-out"><span class="admin-stat-ico"><i class="bi bi-x-octagon"></i></span><div><strong id="statAgotados">–</strong><span>Agotados</span></div></div></div>
+  </div>
 
-    <!-- HEADER SUPERIOR -->
-    <header class="admin-header">
-      <div class="header-title-box">
-        <h1 id="seccionTitulo">Dashboard</h1>
-        <p id="seccionSubtitulo">Resumen general y estadísticas del sistema</p>
-      </div>
-      <div class="header-actions">
-        <a href="index.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-          <i class="bi bi-arrow-left me-1"></i> Ver Tienda
-        </a>
-      </div>
-    </header>
-
-    <div class="admin-content">
-
-      <!-- ================= PESTAÑA: DASHBOARD ================= -->
-      <section id="tab-dashboard" class="tab-pane-content">
-        <!-- Tarjetas de Estadísticas -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-info">
-              <div class="stat-label">Total Productos</div>
-              <div class="stat-value" id="statTotalProductos">0</div>
-            </div>
-            <div class="stat-icon primary">
-              <i class="bi bi-capsule"></i>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-info">
-              <div class="stat-label">Stock Crítico (≤ 5)</div>
-              <div class="stat-value text-danger" id="statStockBajo">0</div>
-            </div>
-            <div class="stat-icon warning">
-              <i class="bi bi-exclamation-triangle"></i>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-info">
-              <div class="stat-label">Servicios Activos</div>
-              <div class="stat-value" id="statTotalServicios">0</div>
-            </div>
-            <div class="stat-icon success">
-              <i class="bi bi-heart-pulse"></i>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-info">
-              <div class="stat-label">Usuarios Registrados</div>
-              <div class="stat-value" id="statTotalUsuarios">0</div>
-            </div>
-            <div class="stat-icon purple">
-              <i class="bi bi-people"></i>
-            </div>
-          </div>
-        </div>
-
-        <!-- Accesos Rápidos y Resumen -->
-        <div class="row g-4">
-          <div class="col-lg-8">
-            <div class="admin-card">
-              <div class="admin-card-header">
-                <h3><i class="bi bi-capsule text-primary"></i> Últimos Productos Registrados</h3>
-                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="cambiarTab('productos')">
-                  Ver todos <i class="bi bi-arrow-right ms-1"></i>
-                </button>
-              </div>
-              <div class="admin-table-container">
-                <table class="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Categoría</th>
-                      <th>Precio</th>
-                      <th>Stock</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody id="dashboardRecentProducts">
-                    <tr><td colspan="5" class="text-center py-4 text-muted">Cargando datos...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4">
-            <div class="admin-card">
-              <div class="admin-card-header">
-                <h3><i class="bi bi-lightning-charge text-warning"></i> Acciones Rápidas</h3>
-              </div>
-              <div class="admin-card-body d-flex flex-column gap-3">
-                <button class="btn btn-primary rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalProducto()">
-                  <i class="bi bi-plus-circle"></i> Nuevo Producto
-                </button>
-                <button class="btn btn-outline-primary rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalServicio()">
-                  <i class="bi bi-plus-circle"></i> Nuevo Servicio
-                </button>
-                <button class="btn btn-outline-dark rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2" onclick="abrirModalUsuario()">
-                  <i class="bi bi-person-plus"></i> Nuevo Usuario
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= PESTAÑA: PRODUCTOS ================= -->
-      <section id="tab-productos" class="tab-pane-content d-none">
-        <div class="admin-card">
-          <div class="admin-card-header">
-            <h3><i class="bi bi-capsule text-primary"></i> Catálogo de Productos</h3>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-              <div class="input-group input-group-sm" style="max-width: 250px;">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" id="filtroProdNombre" class="form-control border-start-0" placeholder="Buscar producto...">
-              </div>
-              <select id="filtroProdCategoria" class="form-select form-select-sm" style="width: auto;">
-                <option value="">Todas las categorías</option>
-              </select>
-              <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalProducto()">
-                <i class="bi bi-plus-lg me-1"></i> Agregar Producto
-              </button>
-            </div>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th style="width: 60px;">ID</th>
-                  <th style="width: 70px;">Img</th>
-                  <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Estado</th>
-                  <th class="text-end" style="width: 100px;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaProductosBody">
-                <tr><td colspan="8" class="text-center py-4 text-muted">Cargando productos...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= PESTAÑA: SERVICIOS ================= -->
-      <section id="tab-servicios" class="tab-pane-content d-none">
-        <div class="admin-card">
-          <div class="admin-card-header">
-            <h3><i class="bi bi-heart-pulse text-primary"></i> Servicios Farmacéuticos</h3>
-            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalServicio()">
-              <i class="bi bi-plus-lg me-1"></i> Agregar Servicio
-            </button>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th style="width: 60px;">ID</th>
-                  <th style="width: 70px;">Ícono</th>
-                  <th>Título</th>
-                  <th>Descripción</th>
-                  <th>Estado</th>
-                  <th class="text-end" style="width: 120px;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaServiciosBody">
-                <tr><td colspan="6" class="text-center py-4 text-muted">Cargando servicios...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= PESTAÑA: USUARIOS ================= -->
-      <section id="tab-usuarios" class="tab-pane-content d-none">
-        <div class="admin-card">
-          <div class="admin-card-header">
-            <h3><i class="bi bi-people text-primary"></i> Gestión de Usuarios</h3>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-              <div class="input-group input-group-sm" style="max-width: 250px;">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" id="filtroUsuarioNombre" class="form-control border-start-0" placeholder="Buscar por nombre o correo...">
-              </div>
-              <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="abrirModalUsuario()">
-                <i class="bi bi-person-plus me-1"></i> Nuevo Usuario
-              </button>
-            </div>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th style="width: 60px;">ID</th>
-                  <th>Nombre Completo</th>
-                  <th>Correo Electrónico</th>
-                  <th>Teléfono</th>
-                  <th>Rol</th>
-                  <th>Fecha Registro</th>
-                  <th class="text-end" style="width: 100px;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaUsuariosBody">
-                <tr><td colspan="7" class="text-center py-4 text-muted">Cargando usuarios...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </div>
-  </main>
-
-  <!-- ================= MODAL PRODUCTO (CREAR / EDITAR) ================= -->
-  <div class="modal fade" id="modalProducto" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalProductoTitulo">Nuevo Producto</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="formProducto">
-          <div class="modal-body">
-            <input type="hidden" id="prodId">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Nombre del Producto *</label>
-              <input type="text" class="form-control" id="prodNombre" required placeholder="Ej: Paracetamol 500mg">
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label fw-semibold">Precio (S/) *</label>
-                <input type="number" step="0.10" min="0" class="form-control" id="prodPrecio" required placeholder="0.00">
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-semibold">Stock *</label>
-                <input type="number" min="0" class="form-control" id="prodStock" required placeholder="0">
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Categoría</label>
-              <input type="text" class="form-control" id="prodCategoria" list="listaCategorias" placeholder="Medicamentos, Suplementos, etc.">
-              <datalist id="listaCategorias">
-                <option value="Medicamentos">
-                <option value="Suplementos">
-                <option value="Cuidado Personal">
-                <option value="Equipos Médicos">
-                <option value="Primeros Auxilios">
-              </datalist>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Descripción</label>
-              <textarea class="form-control" id="prodDescripcion" rows="2" placeholder="Detalles, indicaciones o dosificación..."></textarea>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">URL de la Imagen</label>
-              <input type="text" class="form-control" id="prodImagenUrl" placeholder="/img/productos/paracetamol.jpg o URL web">
-              <div class="image-preview-box mt-2" id="prodImgPreviewBox">
-                <span class="text-muted small">Vista previa de imagen</span>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarProducto">Guardar</button>
-          </div>
+  <!-- BÚSQUEDAS -->
+  <div class="admin-card mb-3">
+    <div class="row g-3 align-items-end">
+      <!-- Estática: busca un producto exacto por su código al presionar Buscar -->
+      <div class="col-lg-5">
+        <label for="busquedaCodigo" class="admin-label"><i class="bi bi-upc-scan me-1"></i>Búsqueda estática por código</label>
+        <form id="formCodigo" class="d-flex gap-2" role="search">
+          <input type="search" id="busquedaCodigo" class="form-control admin-input" placeholder="Ej.: FAR-0005 o 5" autocomplete="off">
+          <button type="submit" class="btn btn-primary rounded-pill px-4">Buscar</button>
         </form>
+        <small class="text-muted">Encuentra un producto exacto por su código.</small>
+      </div>
+      <!-- Dinámica: filtra mientras se escribe -->
+      <div class="col-lg-5">
+        <label for="busquedaDinamica" class="admin-label"><i class="bi bi-lightning-charge me-1"></i>Búsqueda dinámica</label>
+        <input type="search" id="busquedaDinamica" class="form-control admin-input" placeholder="Código, nombre, marca o categoría" autocomplete="off">
+        <small class="text-muted">Los resultados aparecen mientras escribes.</small>
+      </div>
+      <div class="col-lg-2 d-grid">
+        <button type="button" class="btn btn-outline-primary rounded-pill" id="btnTodos"><i class="bi bi-list-ul me-1"></i>Ver todos</button>
+        <small class="invisible">.</small>
       </div>
     </div>
   </div>
 
-  <!-- ================= MODAL SERVICIO (CREAR / EDITAR) ================= -->
-  <div class="modal fade" id="modalServicio" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalServicioTitulo">Nuevo Servicio</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- TABLA -->
+  <div class="admin-card p-0">
+    <div class="admin-tabla-head">
+      <p class="mb-0" id="resultadoTexto">Cargando productos...</p>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div id="filtroActivo"></div>
+        <label for="filtroEstado" class="small text-muted mb-0">Mostrar</label>
+        <select id="filtroEstado" class="form-select form-select-sm admin-select-estado">
+          <option value="todos">Todos</option>
+          <option value="activos">Solo activos</option>
+          <option value="inactivos">Solo dados de baja</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table admin-tabla align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+          <tr><td colspan="8" class="text-center text-muted py-5">Cargando productos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL REGISTRAR / EDITAR -->
+<div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoTitulo">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <form class="modal-content rounded-4" id="formProducto" novalidate>
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-bold" id="modalProductoTitulo">Registrar producto</h5>
+          <small class="text-muted" id="modalProductoSub">Completa los datos. Los campos con * son obligatorios.</small>
         </div>
-        <form id="formServicio">
-          <div class="modal-body">
-            <input type="hidden" id="servId">
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Título del Servicio *</label>
-              <input type="text" class="form-control" id="servTitulo" required placeholder="Ej: Control de presión arterial">
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Ícono (Bootstrap Icons) *</label>
-              <div class="input-group">
-                <span class="input-group-text" id="servIconoPreview"><i class="bi bi-heart-pulse"></i></span>
-                <input type="text" class="form-control" id="servIcono" required value="bi-heart-pulse" placeholder="bi-truck, bi-whatsapp, bi-activity, etc.">
-              </div>
-              <small class="text-muted">Ejemplos: bi-truck, bi-whatsapp, bi-heart-pulse, bi-activity, bi-bandaid, bi-building, bi-capsule</small>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Descripción *</label>
-              <textarea class="form-control" id="servDescripcion" rows="3" required placeholder="Detalle del servicio que se brinda..."></textarea>
-            </div>
-            <div class="form-check form-switch mb-2">
-              <input class="form-check-input" type="checkbox" id="servActivo" checked>
-              <label class="form-check-label fw-semibold" for="servActivo">Servicio Activo (visible en la tienda)</label>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarServicio">Guardar</button>
-          </div>
-        </form>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
-    </div>
-  </div>
-
-  <!-- ================= MODAL USUARIO (CREAR / EDITAR) ================= -->
-  <div class="modal fade" id="modalUsuario" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalUsuarioTitulo">Nuevo Usuario</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="formUsuario">
-          <div class="modal-body">
-            <input type="hidden" id="usuId">
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label fw-semibold">Nombre *</label>
-                <input type="text" class="form-control" id="usuNombre" required placeholder="Nombre">
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-semibold">Apellido *</label>
-                <input type="text" class="form-control" id="usuApellido" required placeholder="Apellido">
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Correo Electrónico *</label>
-              <input type="email" class="form-control" id="usuCorreo" required placeholder="correo@ejemplo.com">
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label class="form-label fw-semibold">Teléfono</label>
-                <input type="text" class="form-control" id="usuTelefono" placeholder="987654321">
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-semibold">Rol *</label>
-                <select class="form-select" id="usuRol" required>
-                  <option value="CLIENTE">CLIENTE</option>
-                  <option value="ADMIN">ADMIN (Administrador)</option>
-                </select>
-              </div>
-            </div>
-            <div class="mb-2">
-              <label class="form-label fw-semibold" id="labelUsuContrasena">Contraseña *</label>
-              <input type="password" class="form-control" id="usuContrasena" placeholder="Mínimo 6 caracteres">
-              <small class="text-muted d-none" id="usuContrasenaHelp">Dejar en blanco si no deseas cambiar la contraseña actual.</small>
+      <div class="modal-body">
+        <div id="formError" class="alert alert-danger d-none"></div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="fCodigo">Código</label>
+            <input type="text" id="fCodigo" class="form-control" readonly>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label" for="fNombre">Nombre *</label>
+            <input type="text" id="fNombre" class="form-control" maxlength="150" required>
+            <div class="invalid-feedback">Escribe el nombre del producto.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fMarca">Marca</label>
+            <input type="text" id="fMarca" class="form-control" maxlength="100">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fCategoria">Categoría *</label>
+            <input type="text" id="fCategoria" class="form-control" list="listaCategorias" maxlength="100" required placeholder="Elige o escribe una categoría">
+            <datalist id="listaCategorias"></datalist>
+            <div class="invalid-feedback">Indica la categoría.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fPrecio">Precio (S/) *</label>
+            <input type="number" id="fPrecio" class="form-control" min="0.01" step="0.01" required>
+            <div class="invalid-feedback">El precio debe ser mayor que 0.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fStock">Stock *</label>
+            <input type="number" id="fStock" class="form-control" min="0" step="1" required>
+            <div class="invalid-feedback">El stock debe ser 0 o más (número entero).</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fVencimiento">Fecha de vencimiento</label>
+            <input type="date" id="fVencimiento" class="form-control">
+            <div class="form-check mt-1">
+              <input class="form-check-input" type="checkbox" id="fNoVence">
+              <label class="form-check-label small" for="fNoVence">No vence (equipos)</label>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardarUsuario">Guardar</button>
+          <div class="col-md-8">
+            <label class="form-label" for="fImagen">Imagen</label>
+            <input type="text" id="fImagen" class="form-control" maxlength="255" placeholder="img/productos/nombre.jpg">
+            <small class="text-muted">Ruta de la imagen dentro de la carpeta del frontend, o una URL completa.</small>
           </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= MODAL CONFIRMACIÓN DE ELIMINACIÓN ================= -->
-  <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content text-center p-3">
-        <div class="modal-body">
-          <div class="mb-3 text-danger fs-1">
-            <i class="bi bi-trash3"></i>
+          <div class="col-md-4">
+            <div class="admin-preview"><img id="fPreview" alt="Vista previa"></div>
           </div>
-          <h5 class="fw-bold mb-2" id="eliminarTitulo">¿Eliminar registro?</h5>
-          <p class="text-muted small mb-4" id="eliminarMensaje">Esta acción no se puede deshacer.</p>
-          <div class="d-flex gap-2 justify-content-center">
-            <button type="button" class="btn btn-light rounded-pill px-3 w-50" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger rounded-pill px-3 w-50" id="btnConfirmarEliminar">Eliminar</button>
+          <div class="col-12">
+            <label class="form-label" for="fDescripcion">Descripción</label>
+            <textarea id="fDescripcion" class="form-control" rows="3"></textarea>
           </div>
         </div>
       </div>
-    </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnGuardar">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="guardarSpinner"></span>Guardar
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <!-- ================= TOAST NOTIFICACIONES ================= -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2050;">
-    <div id="adminToast" class="toast align-items-center text-white bg-dark border-0 rounded-4 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body d-flex align-items-center gap-2" id="adminToastBody">
-          <i class="bi bi-info-circle fs-5" id="adminToastIcon"></i>
-          <span id="adminToastMsg">Mensaje de notificación</span>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+<!-- MODAL ELIMINAR -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarTitulo">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 text-center p-3">
+      <div class="modal-body">
+        <span class="admin-eliminar-ico"><i class="bi bi-trash3"></i></span>
+        <h5 class="fw-bold mt-3" id="modalEliminarTitulo">¿Eliminar este producto?</h5>
+        <p class="mb-1"><strong id="eliminarNombre"></strong></p>
+        <p class="text-muted small mb-0">Código <span id="eliminarCodigo"></span>. Esta acción no se puede deshacer.</p>
+        <div id="eliminarError" class="alert alert-danger d-none mt-3 mb-0"></div>
+      </div>
+      <div class="modal-footer border-0 justify-content-center">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger rounded-pill px-4" id="btnConfirmarEliminar">Sí, eliminar</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/services/config.js"></script>
-  <script src="js/utils/formatters.js"></script>
-  <script src="js/services/api-client.js"></script>
-  <script src="js/services/auth-service.js"></script>
-  <script src="js/services/producto-service.js"></script>
-  <script src="js/services/servicio-service.js"></script>
-  <script src="js/services/usuario-service.js"></script>
-  <script src="js/admin.js"></script>
-<script src="js/utils/transitions.js"></script>
+<!-- MODAL DAR DE BAJA / ACTIVAR -->
+<div class="modal fade" id="modalEstado" tabindex="-1" aria-labelledby="modalEstadoTitulo">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 text-center p-3">
+      <div class="modal-body">
+        <span class="admin-estado-ico" id="estadoIco"><i class="bi bi-eye-slash"></i></span>
+        <h5 class="fw-bold mt-3" id="modalEstadoTitulo">¿Dar de baja este producto?</h5>
+        <p class="mb-1"><strong id="estadoNombre"></strong></p>
+        <p class="text-muted small mb-0" id="estadoTexto"></p>
+        <div id="estadoError" class="alert alert-danger d-none mt-3 mb-0"></div>
+      </div>
+      <div class="modal-footer border-0 justify-content-center">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn rounded-pill px-4" id="btnConfirmarEstado">Dar de baja</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AVISO (toast) -->
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
+  <div id="toastAviso" class="toast toast-farma border-0" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-body" id="toastTexto"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

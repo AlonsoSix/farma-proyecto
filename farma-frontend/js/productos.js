@@ -1,777 +1,372 @@
-/**
- * FARMACIA FARMA - Catálogo de Productos (productos.js)
- * Aplica principios SOLID delegando el estado en CartService, AuthService, ProductoService y Formatters.
- */
+/* =====================================================================
+   Página de productos: catálogo con búsqueda estática, búsqueda dinámica y filtros.
+   Usa lo que ya define main.js: productos, htmlTarjeta(), sincronizarTarjetas(),
+   esMasVendido(), esc() y MENSAJE_SIN_SERVIDOR.
+   ===================================================================== */
 
-const PRODUCTOS_POR_PAGINA = 9;
-const EN_PAGINAS = true; // esta página se encuentra en paginas/
+// Estado actual de búsquedas y filtros
+const filtros = {
+  estatica: '',            // texto aplicado al presionar "Buscar"
+  dinamica: '',            // texto que se aplica mientras se escribe
+  categorias: new Set(),   // categorías marcadas
+  marcas: new Set(),       // marcas marcadas
+  min: null,
+  max: null,
+  soloStock: false,
+  soloVendidos: false,
+  orden: 'relevancia'
+};
 
-let productos = [];
-let paginaActual = 1;
-let categoriaActual = '';
-let busquedaActual = '';
-let precioMinimo = null;
-let precioMaximo = null;
-let ordenActual = '';
-// Búsqueda estática: hasta que el usuario pulsa "Buscar" (o aplica un filtro)
-// el catálogo muestra un mensaje en lugar de productos.
-let busquedaIniciada = false;
-let timerTransicion = null;
+const $ = (id) => document.getElementById(id);
+let catalogoListo = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-  inicializarCatalogo();
+  // ---- Búsqueda ESTÁTICA: solo se aplica al enviar el formulario (botón o Enter) ----
+  $('formBusquedaEstatica').addEventListener('submit', (e) => {
+    e.preventDefault();
+    filtros.estatica = $('busquedaEstatica').value.trim();
+    aplicarFiltros();
+  });
+
+  // ---- Búsqueda DINÁMICA: se aplica en cada tecla (con una pequeña espera para no recalcular de más) ----
+  let espera;
+  $('busquedaDinamica').addEventListener('input', (e) => {
+    clearTimeout(espera);
+    espera = setTimeout(() => {
+      filtros.dinamica = e.target.value.trim();
+      aplicarFiltros();
+    }, 150);
+  });
+
+  // ---- Filtros ----
+  $('filtroCategorias').addEventListener('change', (e) => {
+    if (!e.target.matches('input[type=checkbox]')) return;
+    e.target.checked ? filtros.categorias.add(e.target.value) : filtros.categorias.delete(e.target.value);
+    aplicarFiltros();
+  });
+  $('filtroMarcas').addEventListener('change', (e) => {
+    if (!e.target.matches('input[type=checkbox]')) return;
+    e.target.checked ? filtros.marcas.add(e.target.value) : filtros.marcas.delete(e.target.value);
+    aplicarFiltros();
+  });
+  $('precioMin').addEventListener('input', leerPrecios);
+  $('precioMax').addEventListener('input', leerPrecios);
+  $('soloStock').addEventListener('change', (e) => { filtros.soloStock = e.target.checked; aplicarFiltros(); });
+  $('soloVendidos').addEventListener('change', (e) => { filtros.soloVendidos = e.target.checked; aplicarFiltros(); });
+  $('ordenar').addEventListener('change', (e) => { filtros.orden = e.target.value; aplicarFiltros(); });
+  $('btnLimpiar').addEventListener('click', limpiarTodo);
+
+  // Quitar un filtro desde su etiqueta (chip) o limpiar todo desde el mensaje "sin resultados"
+  $('filtrosActivos').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-quitar]');
+    if (chip) quitarFiltro(chip.dataset.quitar, chip.dataset.valor);
+  });
+  $('catalogo-grid').addEventListener('click', (e) => {
+    if (e.target.closest('#btnLimpiarVacio')) limpiarTodo();
+  });
+
+  iniciarDestacados();
+
+  // Buscador del navbar (ver main.js): funciona igual que la búsqueda estática
+  document.addEventListener('buscador:navbar', (e) => {
+    $('busquedaEstatica').value = e.detail;
+    filtros.estatica = e.detail;
+    aplicarFiltros();
+    $('catalogo').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Si se llega desde otra página con productos.html?q=..., se aplica como búsqueda estática
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) {
+    filtros.estatica = q.trim();
+    $('busquedaEstatica').value = filtros.estatica;
+    $('buscador').value = filtros.estatica;
+    // Si el catálogo ya se mostró (copia guardada), se vuelve a filtrar con la búsqueda
+    if (catalogoListo) { aplicarFiltros(); $('catalogo').scrollIntoView(); }
+  }
 });
 
-function inicializarCatalogo() {
-  actualizarNavbarUsuario();
-  actualizarCarritoUI();
+// main.js avisa cuando el backend devolvió los productos
+document.addEventListener('productos:cargados', () => {
+  catalogoListo = true;
+  construirFiltros();
+  pintarDestacados();
+  aplicarFiltros();
+  if (filtros.estatica) $('catalogo').scrollIntoView();
+});
+document.addEventListener('productos:error', () => {
+  $('resultadoTexto').textContent = 'Sin conexión con el servidor';
+  $('filtroCategorias').innerHTML = '<p class="small text-muted mb-0">No disponible.</p>';
+  $('filtroMarcas').innerHTML = '<p class="small text-muted mb-0">No disponible.</p>';
+  $('destacados').innerHTML = `<div class="w-100 text-center text-danger py-4">${MENSAJE_SIN_SERVIDOR}</div>`;
+  $('catalogo-grid').innerHTML = `<div class="catalogo-vacio text-danger">${MENSAJE_SIN_SERVIDOR}</div>`;
+});
 
-  // Suscribirse a cambios en el carrito (Observer Pattern)
-  if (window.FarmaCartService) {
-    window.FarmaCartService.subscribe(() => {
-      actualizarCarritoUI();
-      renderCatalogo();
-    });
+/* ---------- Utilidades de texto ---------- */
+
+// Minúsculas y sin tildes, para que "vitamína" encuentre "Vitamina"
+function normalizar(texto) {
+  return String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+// Separa la búsqueda en palabras: "vitamina c" -> ["vitamina", "c"]
+function palabras(texto) {
+  return normalizar(texto).split(/\s+/).filter(Boolean);
+}
+
+// El producto coincide si TODAS las palabras aparecen en su código, nombre, marca, categoría o descripción
+function coincide(p, terminos) {
+  if (!terminos.length) return true;
+  const texto = normalizar(`${p.codigo ?? ''} ${p.nombre} ${p.marca ?? ''} ${p.categoria ?? ''} ${p.descripcion ?? ''}`);
+  return terminos.every(t => texto.includes(t));
+}
+
+// Devuelve el nombre con las palabras buscadas envueltas en <mark> (todo escapado)
+function resaltar(nombre, terminos) {
+  if (!terminos.length) return esc(nombre);
+  const chars = [...String(nombre)];
+  const norm = chars.map(c => normalizar(c));  // misma posición carácter por carácter
+  const plano = norm.join('');
+  const marcar = new Array(chars.length).fill(false);
+  // índice en "plano" -> índice del carácter original
+  const mapa = [];
+  norm.forEach((n, i) => { for (let k = 0; k < n.length; k++) mapa.push(i); });
+  terminos.forEach(t => {
+    let desde = 0, pos;
+    while ((pos = plano.indexOf(t, desde)) !== -1) {
+      for (let k = pos; k < pos + t.length; k++) marcar[mapa[k]] = true;
+      desde = pos + t.length;
+    }
+  });
+  let html = '', abierto = false;
+  chars.forEach((c, i) => {
+    if (marcar[i] && !abierto) { html += '<mark>'; abierto = true; }
+    if (!marcar[i] && abierto) { html += '</mark>'; abierto = false; }
+    html += esc(c);
+  });
+  return abierto ? html + '</mark>' : html;
+}
+
+/* ---------- Filtros ---------- */
+
+// Lista de casillas (categorías o marcas) con cuántos productos hay en cada una.
+// Conserva las casillas que ya estaban marcadas.
+function construirLista(idContenedor, idConteo, campo, marcadas, prefijo) {
+  const conteo = {};
+  productos.forEach(p => {
+    const v = p[campo] || 'Otros';
+    conteo[v] = (conteo[v] || 0) + 1;
+  });
+  const nombres = Object.keys(conteo).sort((a, b) => a.localeCompare(b, 'es'));
+  $(idConteo).textContent = `(${nombres.length})`;
+  $(idContenedor).innerHTML = nombres.map((v, i) => `
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="${esc(v)}" id="${prefijo}${i}" ${marcadas.has(v) ? 'checked' : ''}>
+      <label class="form-check-label d-flex justify-content-between" for="${prefijo}${i}">
+        <span>${esc(v)}</span><span class="filtro-conteo">${conteo[v]}</span>
+      </label>
+    </div>`).join('');
+}
+
+function construirFiltros() {
+  construirLista('filtroCategorias', 'conteoCategorias', 'categoria', filtros.categorias, 'cat');
+  construirLista('filtroMarcas', 'conteoMarcas', 'marca', filtros.marcas, 'mar');
+}
+
+function leerPrecios() {
+  const min = $('precioMin').value === '' ? null : Number($('precioMin').value);
+  const max = $('precioMax').value === '' ? null : Number($('precioMax').value);
+  const invalido = min !== null && max !== null && min > max;
+  $('precioMin').classList.toggle('is-invalid', invalido);
+  $('precioMax').classList.toggle('is-invalid', invalido);
+  $('precioError').classList.toggle('d-none', !invalido);
+  if (invalido) return;          // no se aplica un rango imposible
+  filtros.min = min;
+  filtros.max = max;
+  aplicarFiltros();
+}
+
+function aplicarFiltros() {
+  if (!catalogoListo) return;   // todavía no llegan los productos del backend
+  const tEstatica = palabras(filtros.estatica);
+  const tDinamica = palabras(filtros.dinamica);
+  const todos = [...tEstatica, ...tDinamica];
+
+  let lista = productos.filter(p =>
+    coincide(p, tEstatica) &&
+    coincide(p, tDinamica) &&
+    (!filtros.categorias.size || filtros.categorias.has(p.categoria || 'Otros')) &&
+    (!filtros.marcas.size || filtros.marcas.has(p.marca || 'Otros')) &&
+    (filtros.min === null || Number(p.precio) >= filtros.min) &&
+    (filtros.max === null || Number(p.precio) <= filtros.max) &&
+    (!filtros.soloStock || Number(p.stock) > 0) &&
+    (!filtros.soloVendidos || esMasVendido(p))
+  );
+
+  if (filtros.orden === 'precio-asc') lista.sort((a, b) => a.precio - b.precio);
+  else if (filtros.orden === 'precio-desc') lista.sort((a, b) => b.precio - a.precio);
+  else if (filtros.orden === 'nombre') lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  // "relevancia": se respeta el orden del backend (los más vendidos van primero)
+
+  $('resultadoTexto').innerHTML = lista.length === 1
+    ? 'Encontramos <strong>1</strong> producto'
+    : `Encontramos <strong>${lista.length}</strong> productos`;
+  pintarChips();
+
+  $('catalogo-grid').innerHTML = lista.length
+    ? lista.map(p => htmlTarjeta(p, {
+        nombreHtml: resaltar(p.nombre, todos),
+        etiqueta: esMasVendido(p) ? 'Más vendido' : ''
+      })).join('')
+    : `<div class="catalogo-vacio">
+         <i class="bi bi-search"></i>
+         <h6>No encontramos productos</h6>
+         <p class="text-muted">Prueba con otras palabras o quita algunos filtros.</p>
+         <button type="button" class="btn btn-primary rounded-pill px-4" id="btnLimpiarVacio">Limpiar búsqueda y filtros</button>
+       </div>`;
+  sincronizarTarjetas();
+}
+
+// Etiquetas de los filtros activos, cada una con su "x" para quitarla
+function pintarChips() {
+  const chips = [];
+  const chip = (texto, tipo, valor = '') =>
+    `<button type="button" class="filtro-chip" data-quitar="${tipo}" data-valor="${esc(valor)}">
+       ${texto}<i class="bi bi-x"></i></button>`;
+
+  if (filtros.estatica) chips.push(chip(`Búsqueda: “${esc(filtros.estatica)}”`, 'estatica'));
+  if (filtros.dinamica) chips.push(chip(`En vivo: “${esc(filtros.dinamica)}”`, 'dinamica'));
+  filtros.categorias.forEach(c => chips.push(chip(esc(c), 'categoria', c)));
+  filtros.marcas.forEach(m => chips.push(chip(esc(m), 'marca', m)));
+  if (filtros.min !== null || filtros.max !== null) {
+    const txt = filtros.min !== null && filtros.max !== null ? `S/ ${filtros.min} – ${filtros.max}`
+      : filtros.min !== null ? `Desde S/ ${filtros.min}` : `Hasta S/ ${filtros.max}`;
+    chips.push(chip(txt, 'precio'));
   }
+  if (filtros.soloStock) chips.push(chip('Con stock', 'stock'));
+  if (filtros.soloVendidos) chips.push(chip('Más vendidos', 'vendidos'));
 
-  configurarEventos();
-  configurarSugerencias();
-  leerBusquedaURL();
-  cargarProductos();
+  $('filtrosActivos').innerHTML = chips.join('');
 }
 
-/* Permite llegar desde el index con ?q=termino (búsqueda estática). */
-function leerBusquedaURL() {
-  if (typeof window.URLSearchParams !== 'function') return;
-
-  const q = new URLSearchParams(window.location.search).get('q');
-  if (!q || !q.trim()) return;
-
-  busquedaActual = q.trim();
-  busquedaIniciada = true;
-
-  const buscador = document.getElementById('buscador');
-  if (buscador) buscador.value = busquedaActual;
-}
-
-function configurarEventos() {
-  const buscador = document.getElementById('buscador');
-  const formularioBusqueda = document.getElementById('buscadorForm');
-
-  // Búsqueda ESTÁTICA: los resultados aparecen al enviar el formulario,
-  // no mientras se escribe.
-  formularioBusqueda?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    busquedaActual = buscador?.value.trim() || '';
-    paginaActual = 1;
-    busquedaIniciada = true;
-    cerrarSugerencias();
-    renderCatalogo({ animar: true });
-  });
-
-  // Categorías de la barra lateral
-  document.querySelectorAll('aside .list-group-item a').forEach(enlace => {
-    enlace.addEventListener('click', (e) => {
-      e.preventDefault();
-      const texto = enlace.textContent.trim();
-      categoriaActual = texto.toLowerCase() === 'todas' ? '' : texto;
-      paginaActual = 1;
-      busquedaIniciada = true;
-      actualizarCategorias();
-      renderCatalogo({ animar: true });
-    });
-  });
-
-  // Filtro por precio
-  const formularioFiltros = document.querySelector('aside');
-  const entradasPrecio = formularioFiltros ? formularioFiltros.querySelectorAll('input[type="number"]') : [];
-  const botonFiltro = formularioFiltros?.querySelector('button.btn-outline-primary');
-
-  botonFiltro?.addEventListener('click', () => {
-    const minVal = entradasPrecio[0]?.value;
-    const maxVal = entradasPrecio[1]?.value;
-
-    const min = (minVal !== '' && minVal != null) ? Number(minVal) : null;
-    const max = (maxVal !== '' && maxVal != null) ? Number(maxVal) : null;
-
-    if (min !== null && max !== null && min > max) {
-      window.FarmaFormatters.showToast('El precio mínimo no puede superar al máximo.');
+function quitarFiltro(tipo, valor) {
+  switch (tipo) {
+    case 'estatica': filtros.estatica = ''; $('busquedaEstatica').value = ''; $('buscador').value = ''; break;
+    case 'dinamica': filtros.dinamica = ''; $('busquedaDinamica').value = ''; break;
+    case 'categoria':
+      filtros.categorias.delete(valor);
+      $('filtroCategorias').querySelectorAll('input').forEach(i => { if (i.value === valor) i.checked = false; });
+      break;
+    case 'marca':
+      filtros.marcas.delete(valor);
+      $('filtroMarcas').querySelectorAll('input').forEach(i => { if (i.value === valor) i.checked = false; });
+      break;
+    case 'precio':
+      filtros.min = filtros.max = null;
+      $('precioMin').value = $('precioMax').value = '';
+      leerPrecios();
       return;
+    case 'stock': filtros.soloStock = false; $('soloStock').checked = false; break;
+    case 'vendidos': filtros.soloVendidos = false; $('soloVendidos').checked = false; break;
+  }
+  aplicarFiltros();
+}
+
+function limpiarTodo() {
+  filtros.estatica = filtros.dinamica = '';
+  filtros.categorias.clear();
+  filtros.marcas.clear();
+  filtros.min = filtros.max = null;
+  filtros.soloStock = filtros.soloVendidos = false;
+  filtros.orden = 'relevancia';
+  ['busquedaEstatica', 'busquedaDinamica', 'buscador', 'precioMin', 'precioMax'].forEach(id => { $(id).value = ''; });
+  $('filtroCategorias').querySelectorAll('input').forEach(i => { i.checked = false; });
+  $('filtroMarcas').querySelectorAll('input').forEach(i => { i.checked = false; });
+  $('soloStock').checked = $('soloVendidos').checked = false;
+  $('ordenar').value = 'relevancia';
+  leerPrecios();   // quita el aviso de precio inválido y vuelve a pintar
+}
+
+/* ---------- Carrusel "Los más vendidos" ---------- */
+
+function iniciarDestacados() {
+  const track = $('destacados');
+  const pagina = () => track.clientWidth + 16;   // una "página" de tarjetas
+  $('destPrev').addEventListener('click', () => track.scrollBy({ left: -pagina(), behavior: 'smooth' }));
+  $('destNext').addEventListener('click', () => track.scrollBy({ left: pagina(), behavior: 'smooth' }));
+  track.addEventListener('scroll', actualizarPuntos, { passive: true });
+  window.addEventListener('resize', actualizarPuntos);
+  $('destPuntos').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-pag]');
+    if (b) track.scrollTo({ left: Number(b.dataset.pag) * pagina(), behavior: 'smooth' });
+  });
+
+  // Agregar al carrito / favorito desde el carrusel
+  track.addEventListener('click', (e) => {
+    const add = e.target.closest('.dest-add');
+    const fav = e.target.closest('.dest-fav');
+    if (add) {
+      const id = Number(add.dataset.id);
+      const antes = carrito[id]?.cantidad ?? 0;
+      agregarAlCarrito(id);
+      if ((carrito[id]?.cantidad ?? 0) > antes) mostrarAviso('Producto agregado a tu carrito');
     }
-    if ((min !== null && min < 0) || (max !== null && max < 0)) {
-      window.FarmaFormatters.showToast('Los precios no pueden ser negativos.');
-      return;
-    }
-
-    precioMinimo = min;
-    precioMaximo = max;
-    paginaActual = 1;
-    busquedaIniciada = true;
-    renderCatalogo({ animar: true });
+    if (fav) fav.classList.toggle('activo');
   });
-
-  // Ordenamiento
-  const selectorOrden = document.getElementById('ordenCatalogo');
-  selectorOrden?.addEventListener('change', () => {
-    ordenActual = selectorOrden.value;
-    paginaActual = 1;
-    // Si todavía no se buscó nada, solo se guarda la preferencia.
-    if (busquedaIniciada) renderCatalogo({ animar: true });
-  });
-
-  // Acciones en catálogo (Agregar al carrito)
-  document.getElementById('catalogo-productos')?.addEventListener('click', (e) => {
-    const boton = e.target.closest('.btn-add-cart');
-    if (!boton || boton.disabled) return;
-    agregarProductoAlCarrito(Number(boton.dataset.id));
-  });
-
-  // Paginación
-  document.getElementById('catalogoPaginacion')?.addEventListener('click', (e) => {
-    const enlace = e.target.closest('[data-page]');
-    if (!enlace) return;
-    e.preventDefault();
-    const pag = Number(enlace.dataset.page);
-    if (!pag || enlace.closest('.disabled')) return;
-
-    paginaActual = pag;
-    renderCatalogo({ animar: true });
-    document.getElementById('catalogo-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  // Acciones en carrito lateral (+, -, eliminar)
-  document.getElementById('carritoItems')?.addEventListener('click', (e) => {
-    const boton = e.target.closest('button[data-accion]');
-    if (!boton || boton.disabled) return;
-
-    const id = Number(boton.dataset.id);
-    const accion = boton.dataset.accion;
-    const prod = productos.find(p => Number(p.id) === id);
-    const stock = prod ? Number(prod.stock ?? 0) : null;
-
-    if (accion === 'eliminar') {
-      window.FarmaCartService.removeItem(id);
-      window.FarmaFormatters.showToast('Has eliminado este producto de tu carrito.');
-    } else if (accion === 'mas') {
-      const ok = window.FarmaCartService.updateQuantity(id, 1, stock);
-      if (!ok) window.FarmaFormatters.showToast('No hay más unidades disponibles.');
-    } else if (accion === 'menos') {
-      window.FarmaCartService.updateQuantity(id, -1);
-    }
-  });
-
-  document.getElementById('btnIrCarrito')?.addEventListener('click', () => {
-    window.FarmaFormatters.showToast('La página de detalle de compra estará disponible próximamente.');
-  });
-
-  document.getElementById('btnPagar')?.addEventListener('click', () => {
-    window.FarmaFormatters.showToast('El pago en línea estará disponible próximamente.');
-  });
-
-  // Auth en modales
-  document.getElementById('loginForm')?.addEventListener('submit', manejarLogin);
-  document.getElementById('registroForm')?.addEventListener('submit', manejarRegistro);
+  // Si el carrito cambia (aquí, en una tarjeta o en el panel), se actualizan los botones
+  new MutationObserver(sincronizarDestacados).observe($('cartCount'), { childList: true });
 }
 
-/* =========================================================
-   SUGERENCIAS DE PRODUCTOS (AUTOCOMPLETADO AL ESCRIBIR)
-   Solo sugiere mientras se escribe. La búsqueda del catálogo sigue
-   siendo estática: los resultados aparecen al pulsar "Buscar" o al
-   elegir una sugerencia (que reutiliza ese mismo envío).
-========================================================= */
-const MAX_SUGERENCIAS = 6;
-let sugerencias = [];
-let indiceSugerencia = -1;
-let timerSugerencias = null;
-
-function configurarSugerencias() {
-  const buscador = document.getElementById('buscador');
-  const lista = document.getElementById('buscadorSugerencias');
-  if (!buscador || !lista) return;
-
-  buscador.addEventListener('input', () => {
-    window.clearTimeout(timerSugerencias);
-    timerSugerencias = window.setTimeout(actualizarSugerencias, 140);
-  });
-
-  buscador.addEventListener('focus', () => {
-    if (buscador.value.trim()) actualizarSugerencias();
-  });
-
-  buscador.addEventListener('keydown', (e) => {
-    if (!sugerencias.length) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      moverSugerencia(1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      moverSugerencia(-1);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cerrarSugerencias();
-    } else if (e.key === 'Enter' && indiceSugerencia >= 0) {
-      // Con una sugerencia activa, Enter la elige (no busca el texto parcial).
-      e.preventDefault();
-      elegirSugerencia(indiceSugerencia);
-    }
-  });
-
-  // Mantiene el foco en el input hasta que se procesa el click.
-  lista.addEventListener('mousedown', (e) => e.preventDefault());
-
-  lista.addEventListener('click', (e) => {
-    const opcion = e.target.closest('[data-sugerencia]');
-    if (!opcion) return;
-    elegirSugerencia(Number(opcion.dataset.sugerencia));
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-box')) cerrarSugerencias();
-  });
-
-  document.addEventListener('focusin', (e) => {
-    if (!e.target.closest('.search-box')) cerrarSugerencias();
-  });
-}
-
-function actualizarSugerencias() {
-  const buscador = document.getElementById('buscador');
-  const lista = document.getElementById('buscadorSugerencias');
-  if (!buscador || !lista || !window.FarmaFormatters) return;
-
-  const { escapeHtml: esc, normalizeText, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
-  const termino = buscador.value.trim();
-
-  if (!termino || !productos.length) {
-    cerrarSugerencias();
-    return;
-  }
-
-  const txt = normalizeText(termino);
-  sugerencias = productos
-    .filter((p) => normalizeText(`${p.nombre ?? ''} ${p.categoria ?? ''}`).includes(txt))
-    .slice(0, MAX_SUGERENCIAS);
-
-  if (!sugerencias.length) {
-    cerrarSugerencias();
-    return;
-  }
-
-  indiceSugerencia = -1;
-  lista.innerHTML = sugerencias.map((p, i) => `
-    <li class="search-suggest__item" role="option" id="sugerencia-${i}"
-        data-sugerencia="${i}" aria-selected="false">
-      <img class="search-suggest__img" alt="" loading="lazy"
-           src="${esc(resolveImageUrl(p.imagenUrl, EN_PAGINAS))}"
-           onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
-      <span class="search-suggest__body">
-        <span class="search-suggest__name">${resaltarCoincidencia(p.nombre, termino)}</span>
-        <span class="search-suggest__meta">${esc(p.categoria || 'Farmacia')} · ${soles(p.precio)}</span>
-      </span>
-    </li>`).join('');
-
-  lista.hidden = false;
-  buscador.setAttribute('aria-expanded', 'true');
-  buscador.removeAttribute('aria-activedescendant');
-}
-
-/* Resalta el fragmento coincidente (todo el texto pasa por esc()). */
-function resaltarCoincidencia(nombre, termino) {
-  const { escapeHtml: esc, normalizeText } = window.FarmaFormatters;
-  const original = String(nombre ?? '');
-  const norm = normalizeText(original);
-  const busq = normalizeText(termino);
-
-  if (!busq || norm.length !== original.length) return esc(original);
-
-  const idx = norm.indexOf(busq);
-  if (idx === -1) return esc(original);
-
-  return esc(original.slice(0, idx))
-    + '<mark class="search-suggest__mark">' + esc(original.slice(idx, idx + busq.length)) + '</mark>'
-    + esc(original.slice(idx + busq.length));
-}
-
-function moverSugerencia(paso) {
-  const opciones = document.querySelectorAll('#buscadorSugerencias [data-sugerencia]');
-  if (!opciones.length) return;
-
-  if (indiceSugerencia === -1) {
-    // Desde "ninguna": abajo empieza en la primera, arriba en la última.
-    indiceSugerencia = paso > 0 ? 0 : opciones.length - 1;
-  } else {
-    indiceSugerencia = (indiceSugerencia + paso + opciones.length) % opciones.length;
-  }
-
-  opciones.forEach((opcion, i) => {
-    const activa = i === indiceSugerencia;
-    opcion.classList.toggle('is-active', activa);
-    opcion.setAttribute('aria-selected', activa ? 'true' : 'false');
-    if (activa) opcion.scrollIntoView({ block: 'nearest' });
-  });
-
-  document.getElementById('buscador')
-    ?.setAttribute('aria-activedescendant', `sugerencia-${indiceSugerencia}`);
-}
-
-function elegirSugerencia(indice) {
-  const producto = sugerencias[indice];
-  if (!producto) return;
-
-  const buscador = document.getElementById('buscador');
-  const formulario = document.getElementById('buscadorForm');
-
-  if (buscador) buscador.value = producto.nombre ?? '';
-  cerrarSugerencias();
-
-  // Reutiliza el envío estático ya existente: los resultados no se
-  // actualizan por tecla, solo al confirmar (botón o sugerencia).
-  if (formulario) {
-    if (typeof formulario.requestSubmit === 'function') formulario.requestSubmit();
-    else formulario.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-  }
-}
-
-function cerrarSugerencias() {
-  const buscador = document.getElementById('buscador');
-  const lista = document.getElementById('buscadorSugerencias');
-
-  window.clearTimeout(timerSugerencias);
-  sugerencias = [];
-  indiceSugerencia = -1;
-
-  if (lista) {
-    lista.hidden = true;
-    lista.innerHTML = '';
-  }
-
-  if (buscador) {
-    buscador.setAttribute('aria-expanded', 'false');
-    buscador.removeAttribute('aria-activedescendant');
-  }
-}
-
-/* ---------- Carga de Productos ---------- */
-async function cargarProductos() {
-  const contenedor = document.getElementById('catalogo-productos');
-  if (!contenedor || !window.FarmaProductoService) return;
-
-  try {
-    const datos = await window.FarmaProductoService.getAll();
-    if (!Array.isArray(datos)) throw new Error('El servidor no devolvió una lista de productos.');
-
-    productos = datos;
-    actualizarCategorias();
-    renderCatalogo();
-  } catch (err) {
-    contenedor.innerHTML = `
-      <div class="col-12 text-center text-danger py-5">
-        <i class="bi bi-exclamation-triangle fs-1"></i>
-        <p class="mt-3">No se pudo conectar con el servidor.</p>
-        <p class="small">Verifica que el backend esté funcionando en el puerto 8081.</p>
-        <button class="btn btn-outline-primary rounded-pill" type="button" onclick="cargarProductos()">
-          Intentar nuevamente
-        </button>
-      </div>`;
-  }
-}
-
-/* ---------- Filtrado y Ordenamiento ---------- */
-function obtenerProductosFiltrados() {
-  const { normalizeText } = window.FarmaFormatters;
-  let lista = [...productos];
-
-  if (categoriaActual) {
-    const cat = normalizeText(categoriaActual);
-    lista = lista.filter(p => normalizeText(p.categoria).includes(cat));
-  }
-
-  if (busquedaActual) {
-    const txt = normalizeText(busquedaActual);
-    lista = lista.filter(p => {
-      const contenido = normalizeText(`${p.nombre ?? ''} ${p.categoria ?? ''} ${p.descripcion ?? ''}`);
-      return contenido.includes(txt);
-    });
-  }
-
-  if (precioMinimo !== null) {
-    lista = lista.filter(p => Number(p.precio) >= precioMinimo);
-  }
-
-  if (precioMaximo !== null) {
-    lista = lista.filter(p => Number(p.precio) <= precioMaximo);
-  }
-
-  if (ordenActual === 'asc') {
-    lista.sort((a, b) => Number(a.precio) - Number(b.precio));
-  } else if (ordenActual === 'desc') {
-    lista.sort((a, b) => Number(b.precio) - Number(a.precio));
-  } else if (ordenActual === 'az') {
-    lista.sort((a, b) => String(a.nombre ?? '').localeCompare(String(b.nombre ?? ''), 'es', { sensitivity: 'base' }));
-  }
-
-  return lista;
-}
-
-/* ---------- Render del Catálogo ---------- */
-function renderCatalogo(opciones) {
-  const contenedor = document.getElementById('catalogo-productos');
-  if (!contenedor || !window.FarmaFormatters) return;
-
-  // Antes de la primera búsqueda no se muestra ningún producto.
-  if (!busquedaIniciada) {
-    renderPromptInicial();
-    return;
-  }
-
-  const aplicar = () => pintarCatalogo(contenedor);
-
-  if (opciones && opciones.animar) aplicarConTransicion(contenedor, aplicar);
-  else aplicar();
-}
-
-/* Estado inicial: mensaje de bienvenida a la búsqueda. */
-function renderPromptInicial() {
-  const contenedor = document.getElementById('catalogo-productos');
-  if (!contenedor) return;
-
-  window.clearTimeout(timerTransicion);
-  contenedor.classList.remove('catalogo-leaving', 'catalogo-entering');
-
-  contenedor.innerHTML = `
-    <div class="col-12 w-100 text-center catalogo-prompt">
-      <div class="catalogo-prompt__icon">
-        <i class="bi bi-search" aria-hidden="true"></i>
-      </div>
-      <h3 class="catalogo-prompt__title">¿Qué producto desea buscar?</h3>
-      <p class="catalogo-prompt__hint">
-        Escribe el nombre o algunas letras y pulsa <strong>Buscar</strong>.
-      </p>
-    </div>`;
-
-  const resumen = document.getElementById('catalogoResumen');
-  if (resumen) resumen.textContent = 'Escribe el nombre de un producto y pulsa Buscar';
-
-  const nav = document.getElementById('catalogoPaginacion');
-  if (nav) {
-    nav.hidden = true;
-    nav.querySelector('.pagination').innerHTML = '';
-  }
-}
-
-/* Salida y entrada suave al buscar, filtrar u ordenar. */
-function aplicarConTransicion(contenedor, aplicar) {
-  window.clearTimeout(timerTransicion);
-
-  const reducido = window.matchMedia
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (reducido) {
-    aplicar();
-    return;
-  }
-
-  contenedor.classList.remove('catalogo-entering');
-  contenedor.classList.add('catalogo-leaving');
-
-  timerTransicion = window.setTimeout(() => {
-    aplicar();
-    contenedor.classList.remove('catalogo-leaving');
-    contenedor.classList.add('catalogo-entering');
-    timerTransicion = window.setTimeout(() => {
-      contenedor.classList.remove('catalogo-entering');
-    }, 480);
-  }, 130);
-}
-
-function pintarCatalogo(contenedor) {
-  const { escapeHtml: esc, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
-  const cartService = window.FarmaCartService;
-  const lista = obtenerProductosFiltrados();
-
-  const totalPaginas = Math.ceil(lista.length / PRODUCTOS_POR_PAGINA);
-  if (totalPaginas > 0 && paginaActual > totalPaginas) paginaActual = totalPaginas;
-  if (totalPaginas === 0) paginaActual = 1;
-
-  const inicio = (paginaActual - 1) * PRODUCTOS_POR_PAGINA;
-  const productosPagina = lista.slice(inicio, inicio + PRODUCTOS_POR_PAGINA);
-
-  if (!productosPagina.length) {
-    contenedor.innerHTML = `
-      <div class="col-12 w-100 text-center py-5 catalogo-vacio">
-        <i class="bi bi-search fs-1 text-muted"></i>
-        <p class="mt-3 mb-1 fw-semibold">Sin resultados para «${esc(busquedaActual || 'los filtros aplicados')}».</p>
-        <p class="small text-muted mb-0">Prueba con otro nombre o ajusta los filtros.</p>
-      </div>`;
-  } else {
-    contenedor.innerHTML = productosPagina.map((p, i) => {
-      const id = Number(p.id);
-      const stock = Number(p.stock ?? 0);
-      const cartItem = cartService ? cartService.getItem(id) : null;
-
-      const estadoStock = stock <= 0
-        ? '<span class="badge text-bg-danger mb-2">Agotado</span>'
-        : stock <= 5
-          ? `<span class="badge text-bg-warning mb-2">Últimas ${stock} unidades</span>`
-          : '<span class="badge text-bg-success mb-2">Disponible</span>';
-
-      return `
-        <div class="col" style="--i:${i}">
-          <article class="product-card">
-            <div class="product-card-img-container">
-              <img src="${esc(resolveImageUrl(p.imagenUrl, EN_PAGINAS))}" alt="${esc(p.nombre)}"
-                   loading="lazy" onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
-            </div>
-            <div class="product-card-body">
-              <span class="product-category">${esc(p.categoria || 'Farmacia')}</span>
-              <h3 class="product-title">${esc(p.nombre)}</h3>
-              <p class="product-description">${esc(p.descripcion || '')}</p>
-              <div class="product-stock">${estadoStock}</div>
-              <div class="product-price">${soles(p.precio)}</div>
-              <button type="button" class="btn-add-cart" data-id="${id}" ${stock <= 0 ? 'disabled' : ''}>
-                ${
-                  stock <= 0
-                    ? 'Sin stock'
-                    : cartItem
-                      ? `Agregar otra unidad (${cartItem.cantidad})`
-                      : 'Agregar al carrito'
-                }
-              </button>
-            </div>
-          </article>
-        </div>`;
-    }).join('');
-  }
-
-  const resumen = document.getElementById('catalogoResumen');
-  if (resumen) {
-    resumen.textContent = lista.length
-      ? `Mostrando ${inicio + 1}-${Math.min(inicio + PRODUCTOS_POR_PAGINA, lista.length)} de ${lista.length} productos`
-      : `Sin resultados para "${busquedaActual || 'los filtros aplicados'}"`;
-  }
-
-  renderPaginacion(totalPaginas);
-}
-
-function renderPaginacion(totalPaginas) {
-  const paginacion = document.querySelector('#catalogoPaginacion .pagination');
-  if (!paginacion) return;
-
-  const nav = document.getElementById('catalogoPaginacion');
-  if (nav) nav.hidden = totalPaginas <= 1;
-
-  if (totalPaginas <= 1) {
-    paginacion.innerHTML = '';
-    return;
-  }
-
-  let html = `
-    <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
-      <a class="page-link rounded-start-pill px-3" href="#" data-page="${paginaActual - 1}">Anterior</a>
-    </li>`;
-
-  for (let p = 1; p <= totalPaginas; p++) {
-    html += `
-      <li class="page-item ${p === paginaActual ? 'active' : ''}">
-        <a class="page-link" href="#" data-page="${p}">${p}</a>
-      </li>`;
-  }
-
-  html += `
-    <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
-      <a class="page-link rounded-end-pill px-3" href="#" data-page="${paginaActual + 1}">Siguiente</a>
-    </li>`;
-
-  paginacion.innerHTML = html;
-}
-
-function actualizarCategorias() {
-  const { normalizeText } = window.FarmaFormatters;
-  const enlaces = document.querySelectorAll('aside .list-group-item a');
-
-  enlaces.forEach(enlace => {
-    const texto = enlace.textContent.trim();
-    const esTodas = normalizeText(texto) === 'todas';
-    const activa = esTodas ? !categoriaActual : normalizeText(texto) === normalizeText(categoriaActual);
-
-    enlace.classList.toggle('categoria-activa', activa);
-    enlace.classList.toggle('fw-semibold', activa);
-
-    const insignia = enlace.parentElement.querySelector('.badge');
-    if (!insignia) return;
-
-    const cantidad = esTodas
-      ? productos.length
-      : productos.filter(p => normalizeText(p.categoria).includes(normalizeText(texto))).length;
-
-    insignia.textContent = cantidad;
-    insignia.className = activa ? 'badge bg-primary rounded-pill' : 'badge bg-light text-dark rounded-pill';
-  });
-}
-
-function agregarProductoAlCarrito(id) {
-  const prod = productos.find(p => Number(p.id) === id);
-  if (!prod) return;
-
-  const agregado = window.FarmaCartService.addItem(prod);
-  if (!agregado) {
-    window.FarmaFormatters.showToast('No hay más unidades disponibles de este producto.');
-  }
-}
-
-function actualizarCarritoUI() {
-  if (!window.FarmaCartService || !window.FarmaFormatters) return;
-
-  const { items, totalUnits, totalPrice } = window.FarmaCartService.getSummary();
-  const { escapeHtml: esc, formatSoles: soles, resolveImageUrl } = window.FarmaFormatters;
-
-  const contador = document.getElementById('cartCount');
-  const subtotal = document.getElementById('carritoTotal');
-  const botonPagar = document.getElementById('btnPagar');
-  const pie = document.getElementById('carritoPie');
-  const contenedor = document.getElementById('carritoItems');
-
-  if (contador) {
-    const anterior = Number(contador.dataset.valor ?? 0);
-    contador.textContent = totalUnits;
-    if (anterior !== totalUnits) {
-      contador.dataset.valor = totalUnits;
-      if (window.FarmaFormatters.pulse) window.FarmaFormatters.pulse(contador);
-    }
-  }
-  if (subtotal) subtotal.textContent = soles(totalPrice);
-  if (botonPagar) botonPagar.disabled = items.length === 0;
-  if (pie) pie.classList.toggle('d-none', items.length === 0);
-  if (!contenedor) return;
-
-  if (!items.length) {
-    contenedor.innerHTML = `
-      <div class="cart-empty">
-        <div class="cart-empty-icon"><i class="bi bi-cart3"></i></div>
-        <h6>Tu carrito está vacío</h6>
-        <p>Agrega productos para iniciar tu compra.</p>
-      </div>`;
-    return;
-  }
-
-  contenedor.innerHTML = `<div class="cart-store">Boticas Por tu Salud (${totalUnits})</div>` +
-    items.map(item => {
-      const prod = productos.find(p => Number(p.id) === Number(item.id));
-      const sinStock = prod && item.cantidad >= Number(prod.stock ?? 0);
-
-      return `
-        <div class="cart-row">
-          <img src="${esc(resolveImageUrl(item.imagen, EN_PAGINAS))}" alt="${esc(item.nombre)}"
-               onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
-          <div class="cart-info">
-            <div class="cart-name">${esc(item.nombre)}</div>
-            ${item.categoria ? `<div class="cart-cat">${esc(item.categoria)}</div>` : ''}
-            <div class="cart-qty">
-              <span>Cantidad:</span>
-              <button type="button" data-accion="menos" data-id="${item.id}" aria-label="Quitar uno"
-                      ${item.cantidad <= 1 ? 'disabled' : ''}>−</button>
-              <span>${item.cantidad}</span>
-              <button type="button" data-accion="mas" data-id="${item.id}" aria-label="Agregar uno"
-                      ${sinStock ? 'disabled' : ''}>+</button>
-            </div>
-          </div>
-          <div class="cart-side">
-            <div class="cart-price">${soles(item.cantidad * item.precio)}</div>
-            <button type="button" class="cart-del" data-accion="eliminar" data-id="${item.id}">Eliminar</button>
-          </div>
-        </div>`;
-    }).join('');
-}
-
-function actualizarNavbarUsuario() {
-  const contenedor = document.getElementById('navAuthContainer');
-  if (!contenedor || !window.FarmaAuthService) return;
-
-  const user = window.FarmaAuthService.getCurrentUser();
-  const esc = window.FarmaFormatters.escapeHtml;
-
-  if (!user || !user.id) {
-    contenedor.innerHTML = `
-      <a href="../login.html" class="btn btn-primary rounded-pill btn-login">
-        <i class="bi bi-person-circle"></i> Iniciar sesión
-      </a>`;
-    return;
-  }
-
-  const esAdmin = user.rol === 'ADMIN';
-  contenedor.innerHTML = `
-    ${esAdmin ? `<a href="../admin.html" class="btn btn-warning rounded-pill px-3 fw-semibold"><i class="bi bi-shield-lock-fill"></i> Panel Admin</a>` : ''}
-    <div class="dropdown">
-      <button class="btn btn-light rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <i class="bi bi-person-circle text-primary me-1"></i>
-        ${esc(user.nombre || 'Mi Cuenta')}
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-        <li class="px-3 py-2 small">
-          <strong>${esc(user.nombre)} ${esc(user.apellido || '')}</strong>
-          <div><span class="badge ${esAdmin ? 'bg-primary' : 'bg-secondary'}">${esc(user.rol)}</span></div>
-        </li>
-        ${esAdmin ? `<li><a class="dropdown-item" href="../admin.html">Panel de administración</a></li>` : ''}
-        <li><hr class="dropdown-divider"></li>
-        <li>
-          <a class="dropdown-item text-danger" href="#" onclick="cerrarSesionUsuario(event)">
-            <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+function pintarDestacados() {
+  const lista = productos.filter(esMasVendido);
+  $('destacados').innerHTML = lista.map(p => {
+    const href = p.codigo ? `producto.html?codigo=${encodeURIComponent(p.codigo)}` : `producto.html?id=${p.id}`;
+    return `
+      <article class="dest-card" data-id="${p.id}">
+        <div class="dest-fila">
+          <a class="dest-img" href="${href}">
+            <img src="${esc(rutaImagen(p.imagenUrl))}" alt="${esc(p.nombre)}" loading="lazy"
+                 onerror="this.onerror=null;this.src='${IMG_VACIA}'">
           </a>
-        </li>
-      </ul>
-    </div>`;
+          <div class="dest-info">
+            <span class="dest-cat">${esc(p.categoria || 'Farmacia')}</span>
+            <a class="dest-nombre" href="${href}">${esc(p.nombre)}</a>
+            ${p.marca ? `<span class="dest-marca"><i class="bi bi-patch-check-fill"></i>${esc(p.marca)}</span>` : ''}
+            <div class="dest-precio">${soles(p.precio)} <small>Precio online</small></div>
+          </div>
+        </div>
+        <div class="dest-acciones">
+          <button type="button" class="dest-add" data-id="${p.id}">Agregar al carrito</button>
+          <button type="button" class="btn-fav dest-fav" aria-label="Favorito"><i class="bi bi-heart"></i></button>
+        </div>
+      </article>`;
+  }).join('');
+  sincronizarDestacados();
+  actualizarPuntos();
 }
 
-function cerrarSesionUsuario(e) {
-  if (e) e.preventDefault();
-  window.FarmaAuthService.logout();
-  actualizarNavbarUsuario();
-  window.FarmaFormatters.showToast('Has cerrado sesión correctamente.');
+// Texto del botón según lo que ya hay en el carrito
+function sincronizarDestacados() {
+  document.querySelectorAll('.dest-add').forEach(b => {
+    const p = productos.find(x => x.id === Number(b.dataset.id));
+    if (!p) return;
+    const stock = Number(p.stock ?? 0);
+    const enCarrito = carrito[p.id]?.cantidad ?? 0;
+    b.disabled = stock <= 0 || enCarrito >= stock;
+    b.classList.toggle('en-carrito', enCarrito > 0);
+    b.textContent = stock <= 0 ? 'Agotado' : enCarrito >= stock ? 'Sin más stock' : enCarrito ? `En carrito (${enCarrito})` : 'Agregar al carrito';
+  });
 }
 
-async function manejarLogin(e) {
-  e.preventDefault();
-  const correo = document.getElementById('loginCorreo').value.trim();
-  const contrasena = document.getElementById('loginContrasena').value;
-  const errorBox = document.getElementById('loginError');
-  errorBox?.classList.add('d-none');
-
-  try {
-    const user = await window.FarmaAuthService.login(correo, contrasena);
-    const modal = document.getElementById('loginModal');
-    if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).hide();
-    e.target.reset();
-    actualizarNavbarUsuario();
-    window.FarmaFormatters.showToast(`Bienvenido ${user.nombre || ''}.`);
-  } catch (err) {
-    if (errorBox) {
-      errorBox.textContent = err.message || 'Error al iniciar sesión.';
-      errorBox.classList.remove('d-none');
-    }
-  }
-}
-
-async function manejarRegistro(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('regNombre').value.trim();
-  const apellido = document.getElementById('regApellido').value.trim();
-  const correo = document.getElementById('regCorreo').value.trim();
-  const contrasena = document.getElementById('regContrasena').value;
-  const telefono = document.getElementById('regTelefono').value.trim();
-  const errorBox = document.getElementById('registroError');
-  errorBox?.classList.add('d-none');
-
-  try {
-    await window.FarmaAuthService.register({ nombre, apellido, correo, contrasena, telefono });
-    alert('Cuenta creada correctamente. Ahora puedes iniciar sesión.');
-    const modal = document.getElementById('registroModal');
-    if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).hide();
-    e.target.reset();
-  } catch (err) {
-    if (errorBox) {
-      errorBox.textContent = err.message || 'Error al registrarse.';
-      errorBox.classList.remove('d-none');
-    }
-  }
+// Puntos debajo del carrusel (uno por "página") y estado de las flechas
+function actualizarPuntos() {
+  const track = $('destacados');
+  const paginas = Math.max(1, Math.round(track.scrollWidth / (track.clientWidth + 16)));
+  const actual = Math.min(paginas - 1, Math.round(track.scrollLeft / (track.clientWidth + 16)));
+  $('destPuntos').innerHTML = paginas > 1
+    ? Array.from({ length: paginas }, (_, i) =>
+        `<button type="button" data-pag="${i}" class="${i === actual ? 'activo' : ''}" aria-label="Página ${i + 1}"></button>`).join('')
+    : '';
+  $('destPrev').disabled = track.scrollLeft <= 4;
+  $('destNext').disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
 }

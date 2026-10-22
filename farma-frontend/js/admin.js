@@ -1,603 +1,421 @@
-/**
- * FARMACIA FARMA - Panel de Administración (admin.js)
- * Aplica principios SOLID delegando operaciones CRUD y utilidades en servicios especializados.
- */
+/* =====================================================================
+   Panel de administración: CRUD de productos
+   - Registrar  -> POST   /api/productos
+   - Editar     -> PUT    /api/productos/codigo/{codigo}
+   - Eliminar   -> DELETE /api/productos/codigo/{codigo}
+   - Búsqueda estática por código -> GET /api/productos/codigo/{codigo}
+   - Búsqueda dinámica            -> GET /api/productos/buscar?texto=...
+   Cada producto se identifica por su CÓDIGO (FAR-0001), no por su id.
+   ===================================================================== */
 
-let adminUser = null;
-let listaProductos = [];
-let listaServicios = [];
-let listaUsuarios = [];
-let itemAEliminar = null; // { tipo: 'producto'|'servicio'|'usuario', id, nombre }
+const API = 'http://localhost:8081/api';
+const IMG_VACIA = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">' +
+  '<rect width="80" height="80" fill="#eef3f8"/><g fill="none" stroke="#9fb3c8" stroke-width="3" stroke-linecap="round">' +
+  '<rect x="27" y="22" width="26" height="36" rx="5"/><path d="M33 22v-5h14v5M40 33v14M33 40h14"/></g></svg>'
+);
+
+let todos = [];            // catálogo completo (para el resumen y las categorías)
+let vista = [];            // productos que se muestran en la tabla
+let modo = { tipo: 'todos', valor: '' };   // 'todos' | 'codigo' | 'dinamica'
+let editando = null;       // código del producto que se edita (null = registrar)
+let porEliminar = null;    // producto que se va a eliminar
+let porCambiar = null;     // producto que se va a dar de baja o activar
+let filtroEstado = 'todos';   // 'todos' | 'activos' | 'inactivos'
+
+const $ = (id) => document.getElementById(id);
+let modalProducto, modalEliminar, modalEstado;
+
+/* ---------- Sesión: solo entra el ADMIN ---------- */
+function leerSesion() {
+  try { return JSON.parse(localStorage.getItem('farma_sesion')); } catch (e) { return null; }
+}
+const sesion = leerSesion();
+const esAdmin = !!sesion && String(sesion.rol).toUpperCase() === 'ADMIN';
 
 document.addEventListener('DOMContentLoaded', () => {
-  verificarAccesoAdmin();
-  inicializarNavegacion();
-  inicializarFormularios();
-  inicializarFiltros();
+  $('btnSalir').addEventListener('click', () => {
+    try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
+    location.href = 'index.html';
+  });
+
+  if (!esAdmin) {           // cliente o sin sesión: no se muestra el panel
+    $('sinAcceso').classList.remove('d-none');
+    $('btnSalir').classList.add('d-none');
+    return;
+  }
+  $('panel').classList.remove('d-none');
+  $('adminNombre').textContent = sesion.nombre || 'Administrador';
+
+  modalProducto = new bootstrap.Modal($('modalProducto'));
+  modalEliminar = new bootstrap.Modal($('modalEliminar'));
+  modalEstado = new bootstrap.Modal($('modalEstado'));
+
+  // Búsqueda ESTÁTICA por código (al presionar Buscar / Enter)
+  $('formCodigo').addEventListener('submit', (e) => {
+    e.preventDefault();
+    $('busquedaDinamica').value = '';
+    buscarPorCodigo($('busquedaCodigo').value);
+  });
+
+  // Búsqueda DINÁMICA (mientras se escribe, con una pequeña espera)
+  let espera;
+  $('busquedaDinamica').addEventListener('input', (e) => {
+    clearTimeout(espera);
+    $('busquedaCodigo').value = '';
+    espera = setTimeout(() => buscarDinamico(e.target.value), 300);
+  });
+
+  $('btnTodos').addEventListener('click', verTodos);
+  $('filtroActivo').addEventListener('click', (e) => { if (e.target.closest('button')) verTodos(); });
+
+  // Acciones de la tabla
+  $('tablaCuerpo').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    const p = vista.find(x => x.codigo === btn.dataset.codigo);
+    if (!p) return;
+    if (btn.dataset.accion === 'editar') abrirFormulario(p);
+    if (btn.dataset.accion === 'eliminar') pedirEliminar(p);
+    if (btn.dataset.accion === 'estado') pedirCambioEstado(p);
+  });
+
+  // Formulario
+  $('btnNuevo').addEventListener('click', () => abrirFormulario(null));
+  $('formProducto').addEventListener('submit', guardar);
+  $('fImagen').addEventListener('input', actualizarPreview);
+  // El stock debe ser un número entero (0, 1, 2...)
+  $('fStock').addEventListener('input', validarStock);
+  $('fNoVence').addEventListener('change', (e) => {
+    $('fVencimiento').disabled = e.target.checked;
+    if (e.target.checked) $('fVencimiento').value = '';
+  });
+  $('btnConfirmarEliminar').addEventListener('click', eliminar);
+  $('btnConfirmarEstado').addEventListener('click', cambiarEstado);
+  $('filtroEstado').addEventListener('change', (e) => { filtroEstado = e.target.value; pintarTabla(); });
+
   cargarTodo();
 });
 
-/* ================= 1. VERIFICACIÓN DE SESIÓN ================= */
-function verificarAccesoAdmin() {
-  const authService = window.FarmaAuthService;
-  if (!authService || !authService.isAdmin()) {
-    alert('Acceso denegado. Tu cuenta no tiene privilegios de administrador.\nRedirigiendo a la tienda...');
-    window.location.href = 'index.html';
-    return;
+/* ---------- Utilidades ---------- */
+function esc(t) {
+  return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function soles(n) { return 'S/ ' + Number(n).toFixed(2); }
+function rutaImagen(url) {
+  if (!url) return IMG_VACIA;
+  return /^(https?:|data:)/i.test(url) ? url : String(url).trim().replace(/^\/+/, '');
+}
+function formatoFecha(v) {
+  if (!v) return null;
+  const [a, m, d] = Array.isArray(v) ? v : String(v).slice(0, 10).split('-').map(Number);
+  return new Date(a, m - 1, d).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function aviso(texto) {
+  $('toastTexto').textContent = texto;
+  bootstrap.Toast.getOrCreateInstance($('toastAviso'), { delay: 2800 }).show();
+}
+// "5", "0005", "far5" o "FAR-0005" -> "FAR-0005"
+function normalizarCodigo(texto) {
+  const limpio = String(texto).trim().toUpperCase();
+  const numero = limpio.replace(/^FAR-?/, '');
+  return /^\d+$/.test(numero) ? 'FAR-' + numero.padStart(4, '0') : limpio;
+}
+// Marca el texto buscado con <mark> (todo escapado)
+function resaltar(texto, q) {
+  const t = String(texto ?? '');
+  if (!q) return esc(t);
+  const i = t.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
+
+// fetch con manejo de errores: el backend responde {"error": "..."}
+async function api(ruta, opciones = {}) {
+  let res;
+  try {
+    res = await fetch(API + ruta, opciones);
+  } catch (e) {
+    throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.');
   }
-
-  adminUser = authService.getCurrentUser();
-  const nombreCompleto = `${adminUser.nombre || 'Admin'} ${adminUser.apellido || ''}`.trim();
-  document.getElementById('adminNombre').textContent = nombreCompleto;
-  document.getElementById('adminAvatar').textContent = (adminUser.nombre || 'A').charAt(0).toUpperCase();
-  document.getElementById('adminRol').textContent = adminUser.rol;
-
-  document.getElementById('btnCerrarSesionAdmin')?.addEventListener('click', () => {
-    if (confirm('¿Deseas cerrar tu sesión de administrador?')) {
-      authService.logout();
-      window.location.href = 'index.html';
-    }
-  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || `Error del servidor (${res.status}).`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
+const cabecerasAdmin = () => ({ 'Content-Type': 'application/json', 'X-Usuario-Id': String(sesion.id) });
 
-/* ================= 2. NAVEGACIÓN ================= */
-function inicializarNavegacion() {
-  document.querySelectorAll('.sidebar-nav-link[data-tab]').forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      cambiarTab(link.getAttribute('data-tab'));
-    });
-  });
-}
-
-function cambiarTab(tabName) {
-  document.querySelectorAll('.sidebar-nav-link[data-tab]').forEach(l => {
-    l.classList.toggle('active', l.getAttribute('data-tab') === tabName);
-  });
-
-  document.querySelectorAll('.tab-pane-content').forEach(p => p.classList.add('d-none'));
-  const targetPane = document.getElementById(`tab-${tabName}`);
-  if (targetPane) targetPane.classList.remove('d-none');
-
-  const titulos = {
-    dashboard: { t: 'Dashboard', s: 'Resumen general y estadísticas del sistema' },
-    productos: { t: 'Gestión de Productos', s: 'Catálogo de medicamentos, precios y control de inventario' },
-    servicios: { t: 'Gestión de Servicios', s: 'Servicios farmacéuticos ofrecidos en tienda y en línea' },
-    usuarios: { t: 'Gestión de Usuarios', s: 'Administración de cuentas de clientes y administradores' }
-  };
-  const info = titulos[tabName] || { t: 'Panel de Administración', s: '' };
-  document.getElementById('seccionTitulo').textContent = info.t;
-  document.getElementById('seccionSubtitulo').textContent = info.s;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ================= 3. CARGA GLOBAL DE DATOS ================= */
+/* ---------- Carga y vistas ---------- */
+// El panel pide TODOS los productos (también los dados de baja); la tienda solo recibe los activos
+const cargarCatalogoAdmin = () => api('/productos/admin', { headers: cabecerasAdmin() });
+const estaActivo = (p) => p.activo !== false;
 async function cargarTodo() {
-  await Promise.all([
-    cargarProductos(),
-    cargarServicios(),
-    cargarUsuarios()
-  ]);
-  actualizarEstadisticas();
-  renderDashboardRecientes();
-}
-
-function actualizarEstadisticas() {
-  document.getElementById('statTotalProductos').textContent = listaProductos.length;
-  const stockCritico = listaProductos.filter(p => Number(p.stock || 0) <= 5).length;
-  document.getElementById('statStockBajo').textContent = stockCritico;
-
-  const serviciosActivos = listaServicios.filter(s => s.activo === true).length;
-  document.getElementById('statTotalServicios').textContent = serviciosActivos;
-  document.getElementById('statTotalUsuarios').textContent = listaUsuarios.length;
-}
-
-function renderDashboardRecientes() {
-  const tbody = document.getElementById('dashboardRecentProducts');
-  if (!tbody) return;
-
-  const esc = window.FarmaFormatters.escapeHtml;
-  const resolveImg = window.FarmaFormatters.resolveImageUrl;
-
-  if (!listaProductos.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay productos registrados aún.</td></tr>';
-    return;
-  }
-  const ultimos = [...listaProductos].slice(0, 5);
-  tbody.innerHTML = ultimos.map(p => {
-    const stock = Number(p.stock || 0);
-    const chipStock = stock <= 0
-      ? '<span class="badge bg-danger">Agotado</span>'
-      : stock <= 5
-        ? `<span class="badge bg-warning text-dark">Bajo (${stock})</span>`
-        : `<span class="badge bg-success">Disponible (${stock})</span>`;
-
-    return `
-      <tr>
-        <td>
-          <div class="d-flex align-items-center gap-2">
-            <img src="${resolveImg(p.imagenUrl, false)}" class="table-img-thumb" alt=""
-                 onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
-            <span class="fw-semibold">${esc(p.nombre)}</span>
-          </div>
-        </td>
-        <td><span class="text-secondary small">${esc(p.categoria || 'Sin categoría')}</span></td>
-        <td class="fw-bold">S/ ${Number(p.precio).toFixed(2)}</td>
-        <td>${stock} unid.</td>
-        <td>${chipStock}</td>
-      </tr>`;
-  }).join('');
-}
-
-/* ================= 4. CRUD PRODUCTOS ================= */
-async function cargarProductos() {
   try {
-    listaProductos = await window.FarmaProductoService.getAll();
-    renderTablaProductos();
-    actualizarCategoriasFiltro();
-  } catch (err) {
-    window.FarmaFormatters.showToast('No se pudieron cargar los productos: ' + err.message, 'error');
+    todos = await cargarCatalogoAdmin();
+    pintarResumen();
+    await refrescarVista();
+  } catch (e) {
+    $('resultadoTexto').textContent = 'Sin conexión';
+    $('tablaCuerpo').innerHTML = `<tr><td colspan="8" class="text-center text-danger py-5">${esc(e.message)}</td></tr>`;
   }
 }
 
-function renderTablaProductos() {
-  const tbody = document.getElementById('tablaProductosBody');
-  if (!tbody) return;
+// Vuelve a aplicar la búsqueda que estaba activa (después de registrar, editar o eliminar)
+async function refrescarVista() {
+  if (modo.tipo === 'codigo') return buscarPorCodigo(modo.valor, true);
+  if (modo.tipo === 'dinamica') return buscarDinamico(modo.valor);
+  vista = todos;
+  pintarTabla();
+}
 
-  const esc = window.FarmaFormatters.escapeHtml;
-  const resolveImg = window.FarmaFormatters.resolveImageUrl;
-  const filtroTexto = (document.getElementById('filtroProdNombre').value || '').trim().toLowerCase();
-  const filtroCat = document.getElementById('filtroProdCategoria').value;
+function verTodos() {
+  $('busquedaCodigo').value = '';
+  $('busquedaDinamica').value = '';
+  modo = { tipo: 'todos', valor: '' };
+  vista = todos;
+  pintarTabla();
+}
 
-  const filtrados = listaProductos.filter(p => {
-    const coincideTexto = !filtroTexto || (p.nombre && p.nombre.toLowerCase().includes(filtroTexto)) || (p.descripcion && p.descripcion.toLowerCase().includes(filtroTexto));
-    const coincideCat = !filtroCat || p.categoria === filtroCat;
-    return coincideTexto && coincideCat;
-  });
+async function buscarPorCodigo(texto, silencioso = false) {
+  const codigo = normalizarCodigo(texto);
+  if (!codigo) return verTodos();
+  $('busquedaCodigo').value = codigo;
+  modo = { tipo: 'codigo', valor: codigo };
+  try {
+    vista = [await api('/productos/codigo/' + encodeURIComponent(codigo))];
+    pintarTabla();
+  } catch (e) {
+    vista = [];
+    pintarTabla(e.status === 404 ? `No existe un producto con el código ${codigo}.` : e.message);
+    if (!silencioso && e.status !== 404) aviso(e.message);
+  }
+}
 
-  if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No se encontraron productos coincidentes.</td></tr>';
+async function buscarDinamico(texto) {
+  const q = texto.trim();
+  if (!q) return verTodos();
+  modo = { tipo: 'dinamica', valor: q };
+  try {
+    const resultado = await api('/productos/buscar?texto=' + encodeURIComponent(q));
+    if (modo.valor !== q) return;      // llegó una respuesta vieja: se ignora
+    vista = resultado;
+    pintarTabla();
+  } catch (e) {
+    vista = [];
+    pintarTabla(e.message);
+  }
+}
+
+/* ---------- Pintar ---------- */
+function pintarResumen() {
+  $('statTotal').textContent = todos.length;
+  $('statBaja').textContent = todos.filter(p => !estaActivo(p)).length;
+  $('statBajo').textContent = todos.filter(p => p.stock > 0 && p.stock <= 5).length;
+  $('statAgotados').textContent = todos.filter(p => p.stock <= 0).length;
+  // Categorías existentes como sugerencias en el formulario
+  const cats = [...new Set(todos.map(p => p.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  $('listaCategorias').innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join('');
+}
+
+function pintarTabla(mensajeVacio) {
+  const q = modo.tipo === 'dinamica' ? modo.valor : '';
+  // Filtro "Mostrar": todos / solo activos / solo dados de baja
+  const lista = vista.filter(p => filtroEstado === 'todos' || (filtroEstado === 'activos') === estaActivo(p));
+  $('resultadoTexto').innerHTML = modo.tipo === 'todos' && filtroEstado === 'todos'
+    ? `<strong>${lista.length}</strong> productos registrados`
+    : `<strong>${lista.length}</strong> ${lista.length === 1 ? 'resultado' : 'resultados'} de ${todos.length} productos`;
+  $('filtroActivo').innerHTML = modo.tipo === 'todos' ? '' : `
+    <button type="button" class="filtro-chip">
+      ${modo.tipo === 'codigo' ? 'Código' : 'Búsqueda'}: “${esc(modo.valor)}” <i class="bi bi-x"></i>
+    </button>`;
+
+  if (!lista.length) {
+    if (vista.length && !mensajeVacio) mensajeVacio = filtroEstado === 'activos' ? 'No hay productos activos con este filtro.' : 'No hay productos dados de baja con este filtro.';
+    $('tablaCuerpo').innerHTML = `
+      <tr><td colspan="8" class="admin-vacio">
+        <i class="bi bi-search"></i>
+        <p class="mb-0">${esc(mensajeVacio || 'No hay productos que coincidan con la búsqueda.')}</p>
+      </td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtrados.map(p => {
-    const stock = Number(p.stock || 0);
-    const chipStock = stock <= 0
-      ? '<span class="badge bg-danger">Agotado</span>'
-      : stock <= 5
-        ? `<span class="badge bg-warning text-dark">Últimas ${stock}</span>`
-        : '<span class="badge bg-success">Disponible</span>';
-
+  $('tablaCuerpo').innerHTML = lista.map(p => {
+    const stock = Number(p.stock ?? 0);
+    const chip = stock <= 0 ? 'chip-out' : stock <= 5 ? 'chip-warn' : 'chip-ok';
+    const activo = estaActivo(p);
     return `
-      <tr>
-        <td class="text-muted fw-bold">#${p.id}</td>
+      <tr class="${activo ? '' : 'fila-inactiva'}">
+        <td><span class="admin-codigo">${resaltar(p.codigo, q)}</span></td>
         <td>
-          <img src="${resolveImg(p.imagenUrl, false)}" class="table-img-thumb" alt="${esc(p.nombre)}"
-               onerror="this.onerror=null;this.src='${window.FarmaConfig.IMG_VACIA}'">
-        </td>
-        <td>
-          <div class="fw-semibold">${esc(p.nombre)}</div>
-          <div class="small text-muted text-truncate" style="max-width: 250px;">${esc(p.descripcion || '')}</div>
-        </td>
-        <td><span class="badge bg-light text-dark border">${esc(p.categoria || 'Sin categoría')}</span></td>
-        <td class="fw-bold text-primary">S/ ${Number(p.precio).toFixed(2)}</td>
-        <td><span class="fw-semibold">${stock}</span></td>
-        <td>${chipStock}</td>
-        <td class="text-end">
-          <div class="d-inline-flex gap-1">
-            <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalProducto(${p.id})">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('producto', ${p.id}, '${esc(p.nombre)}')">
-              <i class="bi bi-trash3"></i>
-            </button>
+          <div class="admin-prod">
+            <img src="${esc(rutaImagen(p.imagenUrl))}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
+            <div>
+              <a class="admin-prod-nombre" href="producto.html?codigo=${encodeURIComponent(p.codigo)}" target="_blank" rel="noopener">${resaltar(p.nombre, q)}</a>
+              <small>${p.marca ? resaltar(p.marca, q) : '<span class="text-muted">Sin marca</span>'}</small>
+            </div>
           </div>
+        </td>
+        <td>${resaltar(p.categoria || '—', q)}</td>
+        <td class="fw-semibold text-nowrap">${soles(p.precio)}</td>
+        <td><span class="chip ${chip}">${stock}</span></td>
+        <td class="text-nowrap">${formatoFecha(p.fechaVencimiento) ?? '<span class="text-muted">No aplica</span>'}</td>
+        <td>${activo
+          ? '<span class="estado estado-activo"><i class="bi bi-circle-fill"></i>Activo</span>'
+          : '<span class="estado estado-baja"><i class="bi bi-circle-fill"></i>De baja</span>'}</td>
+        <td class="text-nowrap">
+          <button type="button" class="admin-accion" data-accion="editar" data-codigo="${esc(p.codigo)}" title="Editar" aria-label="Editar ${esc(p.nombre)}"><i class="bi bi-pencil"></i></button>
+          ${activo
+            ? `<button type="button" class="admin-accion admin-accion-baja" data-accion="estado" data-codigo="${esc(p.codigo)}" title="Dar de baja" aria-label="Dar de baja ${esc(p.nombre)}"><i class="bi bi-eye-slash"></i></button>`
+            : `<button type="button" class="admin-accion admin-accion-activar" data-accion="estado" data-codigo="${esc(p.codigo)}" title="Activar" aria-label="Activar ${esc(p.nombre)}"><i class="bi bi-eye"></i></button>`}
+          <button type="button" class="admin-accion admin-accion-borrar" data-accion="eliminar" data-codigo="${esc(p.codigo)}" title="Eliminar" aria-label="Eliminar ${esc(p.nombre)}"><i class="bi bi-trash3"></i></button>
         </td>
       </tr>`;
   }).join('');
 }
 
-function actualizarCategoriasFiltro() {
-  const select = document.getElementById('filtroProdCategoria');
-  if (!select) return;
-  const esc = window.FarmaFormatters.escapeHtml;
-  const categorias = Array.from(new Set(listaProductos.map(p => p.categoria).filter(Boolean))).sort();
-  select.innerHTML = '<option value="">Todas las categorías</option>' +
-    categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+/* ---------- Registrar / Editar ---------- */
+function validarStock() {
+  $('fStock').setCustomValidity(/^\d+$/.test($('fStock').value) ? '' : 'entero');
 }
 
-function abrirModalProducto(id = null) {
-  const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
-  const titulo = document.getElementById('modalProductoTitulo');
-  const previewBox = document.getElementById('prodImgPreviewBox');
-
-  document.getElementById('formProducto').reset();
-  document.getElementById('prodId').value = '';
-
-  if (id) {
-    const prod = listaProductos.find(p => p.id === id);
-    if (!prod) return;
-    titulo.textContent = 'Editar Producto #' + prod.id;
-    document.getElementById('prodId').value = prod.id;
-    document.getElementById('prodNombre').value = prod.nombre || '';
-    document.getElementById('prodPrecio').value = prod.precio || '';
-    document.getElementById('prodStock').value = prod.stock ?? 0;
-    document.getElementById('prodCategoria').value = prod.categoria || '';
-    document.getElementById('prodDescripcion').value = prod.descripcion || '';
-    document.getElementById('prodImagenUrl').value = prod.imagenUrl || '';
-    actualizarVistaPreviaProducto(prod.imagenUrl);
-  } else {
-    titulo.textContent = 'Nuevo Producto';
-    previewBox.innerHTML = '<span class="text-muted small">Vista previa de imagen</span>';
-  }
-
-  modal.show();
+function abrirFormulario(p) {
+  editando = p ? p.codigo : null;
+  const f = $('formProducto');
+  f.reset();
+  $('fStock').setCustomValidity('');
+  f.classList.remove('was-validated');
+  $('formError').classList.add('d-none');
+  $('modalProductoTitulo').textContent = p ? 'Editar producto' : 'Registrar producto';
+  $('modalProductoSub').textContent = p ? `Modificando ${p.codigo}. El código no se puede cambiar.` : 'Completa los datos. Los campos con * son obligatorios.';
+  $('fCodigo').value = p ? p.codigo : 'Automático';
+  $('fNombre').value = p?.nombre ?? '';
+  $('fMarca').value = p?.marca ?? '';
+  $('fCategoria').value = p?.categoria ?? '';
+  $('fPrecio').value = p ? Number(p.precio).toFixed(2) : '';
+  $('fStock').value = p?.stock ?? '';
+  $('fVencimiento').value = p?.fechaVencimiento ? String(p.fechaVencimiento).slice(0, 10) : '';
+  $('fNoVence').checked = !!p && !p.fechaVencimiento;
+  $('fVencimiento').disabled = $('fNoVence').checked;
+  $('fImagen').value = p?.imagenUrl ?? '';
+  $('fDescripcion').value = p?.descripcion ?? '';
+  actualizarPreview();
+  modalProducto.show();
 }
 
-function actualizarVistaPreviaProducto(url) {
-  const box = document.getElementById('prodImgPreviewBox');
-  if (!box) return;
-  const resolveImg = window.FarmaFormatters.resolveImageUrl;
-  if (url && url.trim()) {
-    box.innerHTML = `<img src="${resolveImg(url, false)}" alt="Preview" onerror="this.parentElement.innerHTML='<span class=\\\'text-danger small\\\'>No se pudo cargar la imagen</span>'">`;
-  } else {
-    box.innerHTML = '<span class="text-muted small">Vista previa de imagen</span>';
-  }
+function actualizarPreview() {
+  const img = $('fPreview');
+  img.onerror = () => { img.onerror = null; img.src = IMG_VACIA; };
+  img.src = rutaImagen($('fImagen').value);
 }
 
-async function guardarProducto(e) {
+async function guardar(e) {
   e.preventDefault();
-  const id = document.getElementById('prodId').value;
-  const nombre = document.getElementById('prodNombre').value.trim();
-  const precio = parseFloat(document.getElementById('prodPrecio').value);
-  const stock = parseInt(document.getElementById('prodStock').value, 10);
-  const categoria = document.getElementById('prodCategoria').value.trim();
-  const descripcion = document.getElementById('prodDescripcion').value.trim();
-  const imagenUrl = document.getElementById('prodImagenUrl').value.trim();
+  const f = $('formProducto');
+  $('formError').classList.add('d-none');
+  validarStock();
+  if (!f.checkValidity()) { f.classList.add('was-validated'); return; }
 
-  const payload = { nombre, precio, stock, categoria, descripcion, imagenUrl };
-  const esEdicion = !!id;
-  const btn = document.getElementById('btnGuardarProducto');
-  btn.disabled = true;
-
-  try {
-    if (esEdicion) {
-      await window.FarmaProductoService.update(id, payload);
-    } else {
-      await window.FarmaProductoService.create(payload);
-    }
-
-    window.FarmaFormatters.showToast(`Producto ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
-    bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
-    await cargarProductos();
-    actualizarEstadisticas();
-    renderDashboardRecientes();
-  } catch (err) {
-    window.FarmaFormatters.showToast(err.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-/* ================= 5. CRUD SERVICIOS ================= */
-async function cargarServicios() {
-  try {
-    listaServicios = await window.FarmaServicioService.getAll(true);
-    renderTablaServicios();
-  } catch (err) {
-    window.FarmaFormatters.showToast('No se pudieron cargar los servicios: ' + err.message, 'error');
-  }
-}
-
-function renderTablaServicios() {
-  const tbody = document.getElementById('tablaServiciosBody');
-  if (!tbody) return;
-  const esc = window.FarmaFormatters.escapeHtml;
-
-  if (!listaServicios.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Aún no hay servicios registrados.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = listaServicios.map(s => {
-    const badgeActivo = s.activo
-      ? '<span class="badge badge-status-active"><i class="bi bi-check-circle me-1"></i>Activo</span>'
-      : '<span class="badge badge-status-inactive"><i class="bi bi-slash-circle me-1"></i>Inactivo</span>';
-
-    return `
-      <tr>
-        <td class="text-muted fw-bold">#${s.id}</td>
-        <td>
-          <div class="service-icon-box">
-            <i class="bi ${esc(s.icono || 'bi-heart-pulse')}"></i>
-          </div>
-        </td>
-        <td><div class="fw-semibold text-dark">${esc(s.titulo)}</div></td>
-        <td><div class="small text-muted" style="max-width: 320px;">${esc(s.descripcion)}</div></td>
-        <td>
-          <button class="btn btn-sm p-0 border-0" onclick="toggleEstadoServicio(${s.id}, ${!s.activo})" title="Cambiar estado">
-            ${badgeActivo}
-          </button>
-        </td>
-        <td class="text-end">
-          <div class="d-inline-flex gap-1">
-            <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalServicio(${s.id})">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('servicio', ${s.id}, '${esc(s.titulo)}')">
-              <i class="bi bi-trash3"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-}
-
-function abrirModalServicio(id = null) {
-  const modal = new bootstrap.Modal(document.getElementById('modalServicio'));
-  const titulo = document.getElementById('modalServicioTitulo');
-  document.getElementById('formServicio').reset();
-  document.getElementById('servId').value = '';
-
-  if (id) {
-    const s = listaServicios.find(x => x.id === id);
-    if (!s) return;
-    titulo.textContent = 'Editar Servicio #' + s.id;
-    document.getElementById('servId').value = s.id;
-    document.getElementById('servTitulo').value = s.titulo || '';
-    document.getElementById('servIcono').value = s.icono || 'bi-heart-pulse';
-    document.getElementById('servDescripcion').value = s.descripcion || '';
-    document.getElementById('servActivo').checked = !!s.activo;
-  } else {
-    titulo.textContent = 'Nuevo Servicio';
-    document.getElementById('servIcono').value = 'bi-heart-pulse';
-    document.getElementById('servActivo').checked = true;
-  }
-
-  actualizarIconoPreview();
-  modal.show();
-}
-
-function actualizarIconoPreview() {
-  const val = document.getElementById('servIcono').value.trim() || 'bi-heart-pulse';
-  document.getElementById('servIconoPreview').innerHTML = `<i class="bi ${val}"></i>`;
-}
-
-async function guardarServicio(e) {
-  e.preventDefault();
-  const id = document.getElementById('servId').value;
-  const titulo = document.getElementById('servTitulo').value.trim();
-  const icono = document.getElementById('servIcono').value.trim() || 'bi-heart-pulse';
-  const descripcion = document.getElementById('servDescripcion').value.trim();
-  const activo = document.getElementById('servActivo').checked;
-
-  const payload = { titulo, icono, descripcion, activo };
-  const esEdicion = !!id;
-  const btn = document.getElementById('btnGuardarServicio');
-  btn.disabled = true;
-
-  try {
-    if (esEdicion) {
-      await window.FarmaServicioService.update(id, payload);
-    } else {
-      await window.FarmaServicioService.create(payload);
-    }
-
-    window.FarmaFormatters.showToast(`Servicio ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
-    bootstrap.Modal.getInstance(document.getElementById('modalServicio')).hide();
-    await cargarServicios();
-    actualizarEstadisticas();
-  } catch (err) {
-    window.FarmaFormatters.showToast(err.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-async function toggleEstadoServicio(id, nuevoEstado) {
-  try {
-    await window.FarmaServicioService.toggleActive(id, nuevoEstado);
-    window.FarmaFormatters.showToast('Estado del servicio actualizado.', 'info');
-    await cargarServicios();
-    actualizarEstadisticas();
-  } catch (err) {
-    window.FarmaFormatters.showToast(err.message, 'error');
-  }
-}
-
-/* ================= 6. CRUD USUARIOS ================= */
-async function cargarUsuarios() {
-  try {
-    listaUsuarios = await window.FarmaUsuarioService.getAll();
-    renderTablaUsuarios();
-  } catch (err) {
-    window.FarmaFormatters.showToast('No se pudieron cargar los usuarios: ' + err.message, 'error');
-  }
-}
-
-function renderTablaUsuarios() {
-  const tbody = document.getElementById('tablaUsuariosBody');
-  if (!tbody) return;
-  const esc = window.FarmaFormatters.escapeHtml;
-  const filtro = (document.getElementById('filtroUsuarioNombre').value || '').trim().toLowerCase();
-
-  const filtrados = listaUsuarios.filter(u => {
-    if (!filtro) return true;
-    const full = `${u.nombre || ''} ${u.apellido || ''} ${u.correo || ''}`.toLowerCase();
-    return full.includes(filtro);
-  });
-
-  if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron usuarios coincidentes.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtrados.map(u => {
-    const esAdmin = u.rol === 'ADMIN';
-    const badgeRol = esAdmin
-      ? '<span class="badge badge-role-admin"><i class="bi bi-shield-check me-1"></i>ADMIN</span>'
-      : '<span class="badge badge-role-cliente"><i class="bi bi-person me-1"></i>CLIENTE</span>';
-
-    const fecha = u.fechaRegistro ? new Date(u.fechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-
-    return `
-      <tr>
-        <td class="text-muted fw-bold">#${u.id}</td>
-        <td><div class="fw-semibold text-dark">${esc(u.nombre)} ${esc(u.apellido || '')}</div></td>
-        <td><span class="text-secondary">${esc(u.correo)}</span></td>
-        <td>${esc(u.telefono || '—')}</td>
-        <td>${badgeRol}</td>
-        <td><small class="text-muted">${fecha}</small></td>
-        <td class="text-end">
-          <div class="d-inline-flex gap-1">
-            <button class="btn-action btn-action-edit" title="Editar" onclick="abrirModalUsuario(${u.id})">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn-action btn-action-delete" title="Eliminar" onclick="confirmarEliminar('usuario', ${u.id}, '${esc(u.nombre)}')">
-              <i class="bi bi-trash3"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-}
-
-function abrirModalUsuario(id = null) {
-  const modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
-  const titulo = document.getElementById('modalUsuarioTitulo');
-  const labelPass = document.getElementById('labelUsuContrasena');
-  const inputPass = document.getElementById('usuContrasena');
-  const helpPass = document.getElementById('usuContrasenaHelp');
-
-  document.getElementById('formUsuario').reset();
-  document.getElementById('usuId').value = '';
-
-  if (id) {
-    const u = listaUsuarios.find(x => x.id === id);
-    if (!u) return;
-    titulo.textContent = 'Editar Usuario #' + u.id;
-    document.getElementById('usuId').value = u.id;
-    document.getElementById('usuNombre').value = u.nombre || '';
-    document.getElementById('usuApellido').value = u.apellido || '';
-    document.getElementById('usuCorreo').value = u.correo || '';
-    document.getElementById('usuTelefono').value = u.telefono || '';
-    document.getElementById('usuRol').value = u.rol || 'CLIENTE';
-
-    labelPass.textContent = 'Contraseña (Opcional)';
-    inputPass.required = false;
-    inputPass.placeholder = 'Dejar vacío para conservar la contraseña';
-    helpPass.classList.remove('d-none');
-  } else {
-    titulo.textContent = 'Nuevo Usuario';
-    document.getElementById('usuRol').value = 'CLIENTE';
-    labelPass.textContent = 'Contraseña *';
-    inputPass.required = true;
-    inputPass.placeholder = 'Mínimo 6 caracteres';
-    helpPass.classList.add('d-none');
-  }
-
-  modal.show();
-}
-
-async function guardarUsuario(e) {
-  e.preventDefault();
-  const id = document.getElementById('usuId').value;
-  const nombre = document.getElementById('usuNombre').value.trim();
-  const apellido = document.getElementById('usuApellido').value.trim();
-  const correo = document.getElementById('usuCorreo').value.trim();
-  const telefono = document.getElementById('usuTelefono').value.trim();
-  const rol = document.getElementById('usuRol').value;
-  const contrasena = document.getElementById('usuContrasena').value.trim();
-
-  const payload = { nombre, apellido, correo, telefono, rol };
-  if (contrasena) payload.contrasena = contrasena;
-
-  const esEdicion = !!id;
-  const btn = document.getElementById('btnGuardarUsuario');
-  btn.disabled = true;
-
-  try {
-    if (esEdicion) {
-      await window.FarmaUsuarioService.update(id, payload);
-    } else {
-      await window.FarmaUsuarioService.create(payload);
-    }
-
-    window.FarmaFormatters.showToast(`Usuario ${esEdicion ? 'actualizado' : 'creado'} correctamente.`, 'success');
-    bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
-    await cargarUsuarios();
-    actualizarEstadisticas();
-  } catch (err) {
-    window.FarmaFormatters.showToast(err.message, 'error');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-/* ================= 7. ELIMINACIÓN GENÉRICA ================= */
-function confirmarEliminar(tipo, id, nombre) {
-  if (tipo === 'usuario' && adminUser && adminUser.id === id) {
-    alert('No puedes eliminar tu propia cuenta de administrador en sesión.');
-    return;
-  }
-
-  itemAEliminar = { tipo, id, nombre };
-  const titulos = {
-    producto: '¿Eliminar Producto?',
-    servicio: '¿Eliminar Servicio?',
-    usuario: '¿Eliminar Usuario?'
+  const datos = {
+    nombre: $('fNombre').value.trim(),
+    marca: $('fMarca').value.trim(),
+    categoria: $('fCategoria').value.trim(),
+    precio: Number($('fPrecio').value),
+    stock: Number($('fStock').value),
+    fechaVencimiento: $('fNoVence').checked ? null : ($('fVencimiento').value || null),
+    imagenUrl: $('fImagen').value.trim(),
+    descripcion: $('fDescripcion').value.trim()
   };
 
-  document.getElementById('eliminarTitulo').textContent = titulos[tipo] || '¿Eliminar registro?';
-  document.getElementById('eliminarMensaje').textContent = `¿Estás seguro de que deseas eliminar permanentemente "${nombre}"? Esta acción no se puede deshacer.`;
-
-  const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
-  modal.show();
-}
-
-async function ejecutarEliminar() {
-  if (!itemAEliminar) return;
-  const { tipo, id } = itemAEliminar;
-  const btn = document.getElementById('btnConfirmarEliminar');
-  btn.disabled = true;
-
+  ocupado(true);
   try {
-    if (tipo === 'producto') await window.FarmaProductoService.delete(id);
-    else if (tipo === 'servicio') await window.FarmaServicioService.delete(id);
-    else if (tipo === 'usuario') await window.FarmaUsuarioService.delete(id);
-
-    window.FarmaFormatters.showToast(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} eliminado correctamente.`, 'success');
-    bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar')).hide();
-
-    if (tipo === 'producto') await cargarProductos();
-    else if (tipo === 'servicio') await cargarServicios();
-    else if (tipo === 'usuario') await cargarUsuarios();
-
-    actualizarEstadisticas();
-    renderDashboardRecientes();
+    const guardado = editando
+      ? await api('/productos/codigo/' + encodeURIComponent(editando), { method: 'PUT', headers: cabecerasAdmin(), body: JSON.stringify(datos) })
+      : await api('/productos', { method: 'POST', headers: cabecerasAdmin(), body: JSON.stringify(datos) });
+    modalProducto.hide();
+    aviso(editando ? `Producto ${guardado.codigo} actualizado.` : `Producto ${guardado.codigo} registrado.`);
+    todos = await cargarCatalogoAdmin();
+    pintarResumen();
+    await refrescarVista();
   } catch (err) {
-    window.FarmaFormatters.showToast(err.message, 'error');
+    $('formError').textContent = err.message;
+    $('formError').classList.remove('d-none');
   } finally {
-    btn.disabled = false;
-    itemAEliminar = null;
+    ocupado(false);
   }
 }
 
-/* ================= 8. INICIALIZACIÓN ================= */
-function inicializarFormularios() {
-  document.getElementById('formProducto').addEventListener('submit', guardarProducto);
-  document.getElementById('formServicio').addEventListener('submit', guardarServicio);
-  document.getElementById('formUsuario').addEventListener('submit', guardarUsuario);
-  document.getElementById('btnConfirmarEliminar').addEventListener('click', ejecutarEliminar);
-
-  document.getElementById('prodImagenUrl').addEventListener('input', (e) => {
-    actualizarVistaPreviaProducto(e.target.value);
-  });
-  document.getElementById('servIcono').addEventListener('input', actualizarIconoPreview);
+function ocupado(si) {
+  $('btnGuardar').disabled = si;
+  $('guardarSpinner').classList.toggle('d-none', !si);
 }
 
-function inicializarFiltros() {
-  document.getElementById('filtroProdNombre').addEventListener('input', renderTablaProductos);
-  document.getElementById('filtroProdCategoria').addEventListener('change', renderTablaProductos);
-  document.getElementById('filtroUsuarioNombre').addEventListener('input', renderTablaUsuarios);
+/* ---------- Eliminar ---------- */
+function pedirEliminar(p) {
+  porEliminar = p;
+  $('eliminarNombre').textContent = p.nombre;
+  $('eliminarCodigo').textContent = p.codigo;
+  $('eliminarError').classList.add('d-none');
+  modalEliminar.show();
+}
+
+async function eliminar() {
+  if (!porEliminar) return;
+  const btn = $('btnConfirmarEliminar');
+  btn.disabled = true;
+  try {
+    const r = await api('/productos/codigo/' + encodeURIComponent(porEliminar.codigo), { method: 'DELETE', headers: cabecerasAdmin() });
+    modalEliminar.hide();
+    aviso(r.mensaje || 'Producto eliminado.');
+    todos = await cargarCatalogoAdmin();
+    pintarResumen();
+    await refrescarVista();
+  } catch (err) {
+    $('eliminarError').textContent = err.message;
+    $('eliminarError').classList.remove('d-none');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- Dar de baja / Activar (sin borrar el producto) ---------- */
+function pedirCambioEstado(p) {
+  porCambiar = p;
+  const darDeBaja = estaActivo(p);
+  $('modalEstadoTitulo').textContent = darDeBaja ? '¿Dar de baja este producto?' : '¿Activar este producto?';
+  $('estadoNombre').textContent = `${p.nombre} (${p.codigo})`;
+  $('estadoTexto').textContent = darDeBaja
+    ? 'Dejará de mostrarse en la tienda, pero no se borra: podrás activarlo cuando quieras.'
+    : 'Volverá a mostrarse en la tienda para que los clientes puedan comprarlo.';
+  $('estadoIco').className = 'admin-estado-ico ' + (darDeBaja ? 'baja' : 'activar');
+  $('estadoIco').innerHTML = `<i class="bi ${darDeBaja ? 'bi-eye-slash' : 'bi-eye'}"></i>`;
+  const btn = $('btnConfirmarEstado');
+  btn.textContent = darDeBaja ? 'Sí, dar de baja' : 'Sí, activar';
+  btn.className = 'btn rounded-pill px-4 ' + (darDeBaja ? 'btn-warning' : 'btn-success');
+  $('estadoError').classList.add('d-none');
+  modalEstado.show();
+}
+
+async function cambiarEstado() {
+  if (!porCambiar) return;
+  const nuevoEstado = !estaActivo(porCambiar);
+  const btn = $('btnConfirmarEstado');
+  btn.disabled = true;
+  try {
+    const p = await api('/productos/codigo/' + encodeURIComponent(porCambiar.codigo) + '/estado', {
+      method: 'PATCH', headers: cabecerasAdmin(), body: JSON.stringify({ activo: nuevoEstado })
+    });
+    modalEstado.hide();
+    aviso(nuevoEstado ? `Producto ${p.codigo} activado. Ya se muestra en la tienda.` : `Producto ${p.codigo} dado de baja. Ya no se muestra en la tienda.`);
+    todos = await cargarCatalogoAdmin();
+    pintarResumen();
+    await refrescarVista();
+  } catch (err) {
+    $('estadoError').textContent = err.message;
+    $('estadoError').classList.remove('d-none');
+  } finally {
+    btn.disabled = false;
+  }
 }
