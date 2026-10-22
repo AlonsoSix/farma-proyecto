@@ -306,7 +306,7 @@ function actualizarCarritoUI() {
   document.getElementById('carritoPie').classList.toggle('d-none', !items.length);
 
   document.getElementById('carritoItems').innerHTML = items.length
-    ? `<div class="cart-store">Farmacia Farma (${totalUnidades})</div>` + items.map(i => `
+    ? `<div class="cart-store">PorTuSalud (${totalUnidades})</div>` + items.map(i => `
         <div class="cart-row">
           <img src="${esc(rutaImagen(i.imagen))}" alt="" onerror="this.onerror=null;this.src='${IMG_VACIA}'">
           <div class="cart-info">

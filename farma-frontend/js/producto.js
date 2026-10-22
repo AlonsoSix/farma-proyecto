@@ -61,7 +61,7 @@ function pintarDetalle(p) {
   const vence = formatoFecha(p.fechaVencimiento);
   const categoria = esc(p.categoria || 'Farmacia');
 
-  document.title = `${p.nombre} | Farmacia Farma`;
+  document.title = `${p.nombre} | PorTuSalud`;
 
   // Ruta de navegación: Inicio / Productos / Categoría / Nombre
   document.getElementById('migas').innerHTML = MIGAS_BASE + `

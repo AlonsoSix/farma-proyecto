@@ -1376,7 +1376,7 @@ a.detalle-marca:hover { text-decoration: underline; }
 .pantalla-carga {
   position: fixed; inset: 0; z-index: 3000;
   display: none;
-  flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  flex-direction: column; align-items: center; justify-content: center; gap: 1.75rem;
   background: var(--farma-bg);
   transition: opacity .3s ease;
 }
@@ -1403,7 +1403,7 @@ html.carga-saliendo .pantalla-carga { opacity: 0; }
   border-right-color: var(--farma-accent);
   animation: cargaGiro .9s linear infinite;
 }
-.carga-texto { margin: 0; font-size: 1.35rem; font-weight: 600; color: var(--farma-primary); letter-spacing: .02em; }
+.carga-texto { margin: 0; font-size: 1.2rem; font-weight: 600; color: var(--farma-primary); letter-spacing: .02em; }
 
 @keyframes cargaGiro { to { transform: rotate(360deg); } }
 @keyframes cargaLatido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
