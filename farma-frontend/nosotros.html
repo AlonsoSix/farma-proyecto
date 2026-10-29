@@ -1,397 +1,1027 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nosotros | PorTuSalud</title>
-<link rel="icon" type="image/png" href="img/favicon.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nosotros | PorTuSalud</title>
+    <link rel="icon" type="image/png" href="img/favicon.png" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="css/style.css">
-<!-- Pantalla de carga: se muestra al llegar desde un enlace interno o al recargar la página (ver main.js) -->
-<script>
-try {
-  var nav = performance.getEntriesByType('navigation')[0];
-  var recarga = nav ? nav.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
-  if (recarga || sessionStorage.getItem('farma_cargando')) document.documentElement.classList.add('cargando-pagina');
-} catch (e) {}
-</script>
-</head>
-<body>
-
-<!-- PANTALLA DE CARGA -->
-<div id="pantallaCarga" class="pantalla-carga" aria-hidden="true">
-  <div class="carga-logo"><img src="img/favicon.png" alt=""></div>
-  <p class="carga-texto">Cargando...</p>
-</div>
-
-<!-- FRANJA SUPERIOR -->
-<div class="topbar">
-  <div class="container d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la zona</span>
-    <span class="d-none d-md-inline"><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654 321</span>
-  </div>
-</div>
-
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg bg-white sticky-top main-nav">
-  <div class="container">
-    <a class="navbar-brand" href="index.html" aria-label="PorTuSalud - volver al inicio">
-      <img src="img/logo-farma3.png" alt="PorTuSalud" class="brand-logo">
-    </a>
-
-    <div class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0">
-      <button class="btn-cart" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel" aria-label="Ver carrito">
-        <i class="bi bi-cart3"></i>
-        <span id="cartCount" class="cart-count">0</span>
-      </button>
-      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menú">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Pantalla de carga: se muestra al llegar desde un enlace interno o al recargar la página (ver main.js) -->
+    <script>
+      try {
+        var nav = performance.getEntriesByType("navigation")[0];
+        var recarga = nav
+          ? nav.type === "reload"
+          : performance.navigation && performance.navigation.type === 1;
+        if (recarga || sessionStorage.getItem("farma_cargando"))
+          document.documentElement.classList.add("cargando-pagina");
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <!-- PANTALLA DE CARGA -->
+    <div id="pantallaCarga" class="pantalla-carga" aria-hidden="true">
+      <div class="carga-logo"><img src="img/favicon.png" alt="" /></div>
+      <p class="carga-texto">Cargando...</p>
     </div>
 
-    <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
-      <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría" autocomplete="off">
-      <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
-    </form>
-
-    <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
-      <div class="d-flex gap-2 py-3 py-lg-0">
-        <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar sesión</button>
-        <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#registroModal">Registrarse</button>
+    <!-- FRANJA SUPERIOR -->
+    <div class="topbar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span
+          ><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la
+          zona</span
+        >
+        <span class="d-none d-md-inline"
+          ><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654
+          321</span
+        >
       </div>
     </div>
-  </div>
-  <div class="subnav">
-    <div class="container">
-      <a href="index.html">Inicio</a>
-      <a href="productos.html">Productos</a>
-      <a href="servicios.html">Servicios</a>
-      <a href="nosotros.html" class="activo" aria-current="page">Nosotros</a>
-      <a href="contacto.html">Contacto</a>
-    </div>
-  </div>
-</nav>
 
-<!-- ENCABEZADO DE PÁGINA -->
-<header class="page-hero">
-  <div class="container">
-    <nav aria-label="Ruta de navegación">
-      <ol class="breadcrumb page-hero-migas">
-        <li class="breadcrumb-item"><a href="index.html">Inicio</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Nosotros</li>
-      </ol>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg bg-white sticky-top main-nav">
+      <div class="container">
+        <a
+          class="navbar-brand"
+          href="index.html"
+          aria-label="PorTuSalud - volver al inicio"
+        >
+          <img src="img/logo-farma3.png" alt="PorTuSalud" class="brand-logo" />
+        </a>
+
+        <div
+          class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0"
+        >
+          <button
+            class="btn-cart"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#carritoPanel"
+            aria-label="Ver carrito"
+          >
+            <i class="bi bi-cart3"></i>
+            <span id="cartCount" class="cart-count">0</span>
+          </button>
+          <button
+            class="navbar-toggler border-0 shadow-none"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navMenu"
+            aria-label="Menú"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
+
+        <form
+          class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4"
+          id="buscadorForm"
+          role="search"
+        >
+          <input
+            type="search"
+            id="buscador"
+            class="form-control"
+            placeholder="Busca un producto o categoría"
+            autocomplete="off"
+          />
+          <button type="submit" aria-label="Buscar">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+
+        <div
+          class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0"
+          id="navMenu"
+        >
+          <div class="d-flex gap-2 py-3 py-lg-0">
+            <button
+              class="btn btn-outline-primary rounded-pill px-3"
+              data-bs-toggle="modal"
+              data-bs-target="#loginModal"
+            >
+              Iniciar sesión
+            </button>
+            <button
+              class="btn btn-primary rounded-pill px-3"
+              data-bs-toggle="modal"
+              data-bs-target="#registroModal"
+            >
+              Registrarse
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="subnav">
+        <div class="container">
+          <a href="index.html">Inicio</a>
+          <a href="productos.html">Productos</a>
+          <a href="servicios.html">Servicios</a>
+          <a href="nosotros.html" class="activo" aria-current="page"
+            >Nosotros</a
+          >
+          <a href="contacto.html">Contacto</a>
+        </div>
+      </div>
     </nav>
-    <h1>Sobre nosotros</h1>
-    <p>Conoce quiénes somos, qué nos mueve y quiénes confían en nosotros.</p>
-  </div>
-</header>
 
-<!-- SOBRE LA EMPRESA + VIDEO -->
-<section class="py-5">
-  <div class="container">
-    <div class="row align-items-center g-4 g-lg-5">
-      <div class="col-lg-6">
-        <span class="badge-label">Sobre Nosotros</span>
-        <h2 class="mb-3">Comprometidos con tu bienestar</h2>
-        <p class="text-muted nosotros-parrafo">
-          En PorTuSalud llevamos más de 10 años brindando atención farmacéutica de calidad,
-          con un equipo profesional comprometido en ofrecer los mejores productos y el mejor servicio
-          a nuestros clientes. Contamos con medicamentos, productos de cuidado personal y equipos
-          médicos con registro sanitario vigente.
-        </p>
-        <div class="row text-center mt-4">
-          <div class="col-4">
-            <h3 class="text-primary fw-bold">+10</h3>
-            <p class="small text-muted mb-0">Años de experiencia</p>
-          </div>
-          <div class="col-4">
-            <h3 class="text-primary fw-bold">100%</h3>
-            <p class="small text-muted mb-0">Clientes satisfechos</p>
-          </div>
-          <div class="col-4">
-            <h3 class="text-primary fw-bold">24/7</h3>
-            <p class="small text-muted mb-0">Atención disponible</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="ratio ratio-16x9 shadow rounded-4 overflow-hidden">
-          <iframe src="https://www.youtube.com/embed/JIPZenS-hXM?rel=0"
-                  title="Video corporativo PorTuSalud"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerpolicy="strict-origin-when-cross-origin"
-                  allowfullscreen></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- MISIÓN, VISIÓN Y VALORES -->
-<section class="py-5 bg-soft">
-  <div class="container">
-    <div class="section-head">
-      <span class="badge-label">Nuestra esencia</span>
-      <h2>Misión, visión y valores</h2>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="service-card">
-          <div class="service-icon"><i class="bi bi-bullseye"></i></div>
-          <h3>Misión</h3>
-          <p>Brindar productos farmacéuticos de calidad y una atención cercana y profesional que contribuya al bienestar de nuestros clientes.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="service-card">
-          <div class="service-icon"><i class="bi bi-eye"></i></div>
-          <h3>Visión</h3>
-          <p>Ser la farmacia de confianza de la comunidad, reconocida por su servicio, su variedad de productos y su atención digital.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="service-card">
-          <div class="service-icon"><i class="bi bi-gem"></i></div>
-          <h3>Valores</h3>
-          <ul class="service-list mt-0">
-            <li>Compromiso con la salud</li>
-            <li>Honestidad y transparencia</li>
-            <li>Atención con calidez</li>
-            <li>Responsabilidad</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CLIENTES -->
-<section id="clientes" class="py-5 bg-soft">
-  <div class="container">
-    <div class="section-head">
-      <span class="badge-label">Confianza Comprobada</span>
-      <h2>Nuestros Clientes</h2>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 border bg-white h-100 client-card">
-          <img src="img/clientes/clinica-san-gabriel.png" alt="Logo de la Clínica San Gabriel" class="client-logo mb-3">
-          <h5>Clínica San Gabriel</h5>
-          <p class="text-muted small mb-0">"Abastecimiento continuo y seguro para hospitalización y emergencias."</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 border bg-white h-100 client-card">
-          <img src="img/clientes/centro-medico-familiar.png" alt="Logo del Centro Médico Familiar" class="client-logo mb-3">
-          <h5>Centro Médico Familiar</h5>
-          <p class="text-muted small mb-0">"Convenio corporativo con entrega preferencial y asesoría farmacéutica."</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 border bg-white h-100 client-card">
-          <img src="img/clientes/red-salud-integral.png" alt="Logo de la Red de Salud Integral" class="client-logo mb-3">
-          <h5>Red de Salud Integral</h5>
-          <p class="text-muted small mb-0">"Dispensación garantizada de medicamentos especializados."</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- REFERENTES DEL SECTOR -->
-<section id="rubros" class="py-5">
-  <div class="container">
-    <div class="section-head">
-      <span class="badge-label">Nuestro rubro</span>
-      <h2>Referentes del sector farmacéutico</h2>
-    </div>
-    <div class="row g-4 justify-content-center">
-      <div class="col-md-4">
-        <a href="https://www.inkafarma.pe" target="_blank" rel="noreferrer" class="text-decoration-none">
-          <div class="p-4 rounded-4 border h-100 text-center rubro-card">
-            <img src="img/rubros/inkafarma_logo.png" class="rubro-logo mb-3" alt="Inkafarma">
-            <h5 class="text-dark">Inkafarma</h5>
-            <p class="text-muted small mb-0">Cadena líder de farmacias en el Perú</p>
-          </div>
-        </a>
-      </div>
-      <div class="col-md-4">
-        <a href="https://www.mifarma.com.pe" target="_blank" rel="noreferrer" class="text-decoration-none">
-          <div class="p-4 rounded-4 border h-100 text-center rubro-card">
-            <img src="img/rubros/mifarma_logo.webp" class="rubro-logo mb-3" alt="Mifarma">
-            <h5 class="text-dark">Mifarma</h5>
-            <p class="text-muted small mb-0">Amplia red de boticas a nivel nacional</p>
-          </div>
-        </a>
-      </div>
-      <div class="col-md-4">
-        <a href="https://www.boticasysalud.com" target="_blank" rel="noreferrer" class="text-decoration-none">
-          <div class="p-4 rounded-4 border h-100 text-center rubro-card">
-            <img src="img/rubros/bys_logo.png" class="rubro-logo mb-3" alt="Boticas y Salud">
-            <h5 class="text-dark">Boticas y Salud</h5>
-            <p class="text-muted small mb-0">Cadena farmacéutica con presencia regional</p>
-          </div>
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- FOOTER -->
-<footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
-  <div class="container">
-    <div class="footer-grid">
-
-      <!-- Redes sociales -->
-      <div class="text-center text-md-start">
-        <h5 class="fw-bold mb-3">Redes Sociales</h5>
-        <div class="d-flex justify-content-center justify-content-md-start gap-3">
-          <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
-        </div>
-        <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para noticias y ofertas.</p>
-      </div>
-
-      <!-- Logo UTP (centrado real) -->
-      <div class="text-center">
-        <a href="https://www.utp.edu.pe/" target="_blank" rel="noreferrer" class="d-inline-block">
-          <div class="bg-white footer-logo-box">
-            <img src="img/logo-utp.webp" alt="Universidad Tecnológica del Perú" class="footer-logo">
-          </div>
-        </a>
-      </div>
-
-      <!-- Contacto corporativo -->
-      <div class="text-center text-md-end">
-        <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
-        <p class="mb-0 fw-semibold">Nombre del Responsable</p>
-        <p class="small text-secondary mb-2">Encargado(a) de Farmacia y Desarrollo</p>
-        <p class="mb-1"><a href="mailto:contacto@portusalud.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@portusalud.com</a></p>
-        <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
-      </div>
-
-    </div>
-
-    <hr class="border-secondary mt-4">
-    <p class="text-center small text-secondary mb-0">© 2026 PorTuSalud - Todos los derechos reservados.</p>
-  </div>
-</footer>
-
-<!-- PANEL DEL CARRITO -->
-<div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="carritoTitulo"><i class="bi bi-cart3"></i>Mi carrito</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-  </div>
-  <div class="offcanvas-body">
-    <div id="carritoItems" class="cart-items"></div>
-    <div class="cart-footer" id="carritoPie">
-      <div class="cart-subtotal"><span>Subtotal</span><span id="carritoTotal">S/ 0.00</span></div>
-      <div class="cart-actions">
-        <button type="button" class="cart-link" id="btnIrCarrito">Ir a mi carrito</button>
-        <button type="button" class="cart-buy" id="btnPagar">Comprar ahora</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- AVISO (toast) -->
-<div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
-  <div id="toastAviso" class="toast toast-farma border-0" role="status" aria-live="polite" aria-atomic="true">
-    <div class="toast-body" id="toastTexto"></div>
-  </div>
-</div>
-
-<!-- AVISO EN LA ESQUINA (al quitar un producto desde una tarjeta) -->
-<div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index:2000">
-  <div id="toastEsquina" class="toast toast-esquina" role="status" aria-live="polite" aria-atomic="true">
-    <div class="toast-esquina-cuerpo">
-      <span class="toast-esquina-ico"><i class="bi bi-check-lg"></i></span>
-      <span id="toastEsquinaTexto"></span>
-    </div>
-    <div class="text-end"><button type="button" class="toast-esquina-ok" data-bs-dismiss="toast">Ok</button></div>
-  </div>
-</div>
-
-<!-- MODAL LOGIN -->
-<div class="modal fade" id="loginModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-2">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Iniciar Sesión</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="loginError" class="alert alert-danger d-none"></div>
-        <form id="loginForm">
-          <div class="mb-3">
-            <label class="form-label">Correo</label>
-            <input type="email" class="form-control" id="loginCorreo" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="loginContrasena" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100 rounded-pill">Ingresar</button>
-        </form>
-        <p class="text-center small mt-3 mb-0">
-          ¿No tienes cuenta?
-          <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal">Regístrate aquí</a>
+    <!-- ENCABEZADO DE PÁGINA -->
+    <header class="page-hero">
+      <div class="container">
+        <nav aria-label="Ruta de navegación">
+          <ol class="breadcrumb page-hero-migas">
+            <li class="breadcrumb-item"><a href="index.html">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Nosotros</li>
+          </ol>
+        </nav>
+        <h1>Sobre nosotros</h1>
+        <p>
+          Conoce a la empresa, al equipo del proyecto UTP y a los
+          desarrolladores detrás de esta web.
         </p>
       </div>
-    </div>
-  </div>
-</div>
+    </header>
 
-<!-- MODAL REGISTRO -->
-<div class="modal fade" id="registroModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-2">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Crear Cuenta</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- ===== 1. NOSOTROS + SLIDER DE 3 IMÁGENES ===== -->
+    <section class="py-5">
+      <div class="container">
+        <div class="row align-items-center g-4 g-lg-5">
+          <div class="col-lg-6">
+            <span class="badge-label">Sobre Nosotros</span>
+            <h2 class="mb-3">Comprometidos con tu bienestar</h2>
+            <p class="text-muted nosotros-parrafo">
+              En PorTuSalud llevamos más de 10 años brindando atención
+              farmacéutica de calidad, con un equipo profesional comprometido en
+              ofrecer los mejores productos y el mejor servicio a nuestros
+              clientes. Contamos con medicamentos, productos de cuidado personal
+              y equipos médicos con registro sanitario vigente.
+            </p>
+            <div class="row text-center mt-4">
+              <div class="col-4">
+                <h3 class="text-primary fw-bold">+10</h3>
+                <p class="small text-muted mb-0">Años de experiencia</p>
+              </div>
+              <div class="col-4">
+                <h3 class="text-primary fw-bold">100%</h3>
+                <p class="small text-muted mb-0">Clientes satisfechos</p>
+              </div>
+              <div class="col-4">
+                <h3 class="text-primary fw-bold">24/7</h3>
+                <p class="small text-muted mb-0">Atención disponible</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <!-- Slider: para cambiar una imagen, cambia el src de cada <img> -->
+            <div
+              id="nosotrosSlider"
+              class="carousel slide nos-slider"
+              data-bs-ride="carousel"
+            >
+              <div class="carousel-indicators">
+                <button
+                  type="button"
+                  data-bs-target="#nosotrosSlider"
+                  data-bs-slide-to="0"
+                  class="active"
+                  aria-current="true"
+                  aria-label="Imagen 1"
+                ></button>
+                <button
+                  type="button"
+                  data-bs-target="#nosotrosSlider"
+                  data-bs-slide-to="1"
+                  aria-label="Imagen 2"
+                ></button>
+                <button
+                  type="button"
+                  data-bs-target="#nosotrosSlider"
+                  data-bs-slide-to="2"
+                  aria-label="Imagen 3"
+                ></button>
+              </div>
+              <div class="carousel-inner">
+                <div class="carousel-item active">
+                  <img
+                    src="img/hero/farmacia-banner.webp"
+                    alt="Interior de la farmacia PorTuSalud"
+                  />
+                  <div class="nos-slider-texto">
+                    <h5>Nuestra farmacia</h5>
+                    <p>Productos con registro sanitario vigente.</p>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <img
+                    src="img/hero/farmacia-atencion.webp"
+                    alt="Químico farmacéutico atendiendo a una clienta"
+                  />
+                  <div class="nos-slider-texto">
+                    <h5>Atención profesional</h5>
+                    <p>Te asesoramos en cada compra.</p>
+                  </div>
+                </div>
+                <div class="carousel-item">
+                  <img
+                    src="img/hero/farmacia-delivery.webp"
+                    alt="Repartidor entregando un pedido a domicilio"
+                  />
+                  <div class="nos-slider-texto">
+                    <h5>Delivery a domicilio</h5>
+                    <p>Llevamos tu pedido hasta tu puerta.</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                class="carousel-control-prev"
+                type="button"
+                data-bs-target="#nosotrosSlider"
+                data-bs-slide="prev"
+                aria-label="Anterior"
+              >
+                <span class="carousel-control-prev-icon"></span>
+              </button>
+              <button
+                class="carousel-control-next"
+                type="button"
+                data-bs-target="#nosotrosSlider"
+                data-bs-slide="next"
+                aria-label="Siguiente"
+              >
+                <span class="carousel-control-next-icon"></span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <div id="registroError" class="alert alert-danger d-none"></div>
-        <form id="registroForm">
-          <div class="row g-2">
-            <div class="col-6 mb-3">
-              <label class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="regNombre" required>
+    </section>
+
+    <!-- ===== 2. EQUIPO DEL PROYECTO UTP: MAPA ORGANIZACIONAL ===== -->
+    <!-- Cambia "img/equipo/sin-foto.svg" por la foto de cada persona (ej. img/equipo/coordinador.jpg) -->
+    <section id="equipo" class="py-5 bg-soft">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge-label">Equipo del proyecto UTP</span>
+          <h2>Mapa organizacional</h2>
+        </div>
+
+        <div class="organigrama">
+          <!-- Coordinador -->
+          <div class="org-nivel">
+            <div class="org-card org-coordinador">
+              <img
+                src="img/equipo/Fabrizio-Montañez.jpg"
+                alt="Foto del coordinador"
+                class="org-foto"
+              />
+              <span class="org-cargo">Coordinador</span>
+              <h3>Fabrizio Montañez</h3>
+              <p>
+                Organiza al equipo, reparte las tareas y es el enlace con la
+                empresa y el docente.
+              </p>
             </div>
-            <div class="col-6 mb-3">
-              <label class="form-label">Apellido</label>
-              <input type="text" class="form-control" id="regApellido" required>
+          </div>
+
+          <!-- Cargos 1, 2, 3 y 4 -->
+          <div class="org-nivel org-hijos">
+            <div class="org-card">
+              <img
+                src="img/equipo/Anónimo.jpg"
+                alt="Foto del integrante 1"
+                class="org-foto"
+              />
+              <span class="org-cargo">Cargo 1: Analista</span>
+              <h3>Jose Tunqui</h3>
+              <p>
+                Levanta los requisitos con la empresa y documenta el sistema.
+              </p>
+            </div>
+            <div class="org-card">
+              <img
+                src="img/equipo/Anónimo.jpg"
+                alt="Foto del integrante 2"
+                class="org-foto"
+              />
+              <span class="org-cargo">Cargo 2: Diseñador(a) UI</span>
+              <h3>Gerardo Meza</h3>
+              <p>Diseña los bocetos, wireframes y la apariencia de la web.</p>
+            </div>
+            <div class="org-card">
+              <img
+                src="img/equipo/Anónimo.jpg"
+                alt="Foto del integrante 3"
+                class="org-foto"
+              />
+              <span class="org-cargo">Cargo 3: Tester</span>
+              <h3>Dennis Chuquiray</h3>
+              <p>
+                Prueba cada página y reporta los errores antes de cada entrega.
+              </p>
+            </div>
+            <div class="org-card">
+              <img
+                src="img/equipo/Sebastian-Lopez.jpg"
+                alt="Foto del integrante 4"
+                class="org-foto"
+              />
+              <span class="org-cargo">Cargo 4: Documentador(a)</span>
+              <h3>Sebastian Lopez</h3>
+              <p>Redacta los informes del avance y el manual de usuario.</p>
             </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Correo</label>
-            <input type="email" class="form-control" id="regCorreo" required>
+        </div>
+
+        <!-- Jefe de la organización y persona de contacto (de la empresa) -->
+        <div class="row g-4 mt-4 justify-content-center">
+          <div class="col-md-6 col-lg-5">
+            <div class="org-contacto">
+              <div class="service-icon mb-0">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div>
+                <span class="org-cargo">Jefe de la organización</span>
+                <h3>Nombre del Jefe(a)</h3>
+                <p>Gerente general de PorTuSalud</p>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Teléfono</label>
-            <input type="text" class="form-control" id="regTelefono">
+          <div class="col-md-6 col-lg-5">
+            <div class="org-contacto">
+              <div class="service-icon mb-0">
+                <i class="bi bi-telephone"></i>
+              </div>
+              <div>
+                <span class="org-cargo">Persona de contacto</span>
+                <h3>Nombre del Contacto</h3>
+                <p>
+                  <a href="mailto:contacto@portusalud.com"
+                    >contacto@portusalud.com</a
+                  >
+                  · +51 987 654 321
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="regContrasena" required>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. FINALIDAD Y AGRADECIMIENTO (texto a confirmar con la empresa) ===== -->
+    <section class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="service-card">
+              <div class="service-icon"><i class="bi bi-bullseye"></i></div>
+              <h3>Finalidad del proyecto</h3>
+              <p class="nosotros-parrafo">
+                Desarrollar una web para PorTuSalud que muestre su catálogo de
+                productos y servicios, facilite la atención a sus clientes y
+                permita al administrador gestionar los productos de forma
+                sencilla desde un panel propio.
+              </p>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary w-100 rounded-pill">Crear Cuenta</button>
-        </form>
+          <div class="col-lg-6">
+            <div class="service-card">
+              <div class="service-icon"><i class="bi bi-heart"></i></div>
+              <h3>Agradecimiento</h3>
+              <p class="nosotros-parrafo">
+                Agradecemos a PorTuSalud por abrirnos sus puertas, por su tiempo
+                y por la información brindada, y a la Universidad Tecnológica
+                del Perú por guiarnos durante el desarrollo de este proyecto.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4. DESARROLLADORES (5 tarjetas con C.V.) ===== -->
+    <!-- Por cada desarrollador cambia: foto, nombre, programas, lenguajes, habilidades y el PDF de docs/cv/ -->
+    <section id="desarrolladores" class="py-5 bg-soft">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge-label">Conoce al equipo</span>
+          <h2>Desarrolladores</h2>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+          <!-- Desarrollador 1 -->
+          <div class="col-md-6 col-xl-4">
+            <article class="dev-card">
+              <div class="dev-top">
+                <img
+                  src="img/equipo/Anónimo.jpg"
+                  alt="Foto del desarrollador 1"
+                  class="dev-foto"
+                />
+                <div>
+                  <h3>Dennis Chuquiray</h3>
+                  <span class="dev-rol">Desarrollador(a) Frontend</span>
+                </div>
+              </div>
+              <div class="dev-cv">
+                <div>
+                  <h4><i class="bi bi-window-stack"></i>Programas</h4>
+                  <ul>
+                    <li>Visual Studio Code</li>
+                    <li>Figma</li>
+                    <li>Git y GitHub</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4><i class="bi bi-code-slash"></i>Lenguajes</h4>
+                  <ul>
+                    <li>HTML</li>
+                    <li>CSS</li>
+                    <li>JavaScript</li>
+                  </ul>
+                </div>
+              </div>
+              <h4><i class="bi bi-people"></i>Habilidades blandas</h4>
+              <div class="dev-chips">
+                <span>Trabajo en equipo</span><span>Comunicación</span
+                ><span>Responsabilidad</span><span>Creatividad</span
+                ><span>Puntualidad</span>
+              </div>
+              <a
+                href="docs/CV-DENNIS CHUQUIRAY.pdf"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-primary rounded-pill dev-btn"
+              >
+                <i class="bi bi-file-earmark-pdf me-2"></i>Ver C.V. completo
+              </a>
+            </article>
+          </div>
+
+          <!-- Desarrollador 2 -->
+          <div class="col-md-6 col-xl-4">
+            <article class="dev-card">
+              <div class="dev-top">
+                <img
+                  src="img/equipo/Anónimo.jpg"
+                  alt="Foto del desarrollador 2"
+                  class="dev-foto"
+                />
+                <div>
+                  <h3>Gerardo Meza</h3>
+                  <span class="dev-rol">Desarrollador(a) Backend</span>
+                </div>
+              </div>
+              <div class="dev-cv">
+                <div>
+                  <h4><i class="bi bi-window-stack"></i>Programas</h4>
+                  <ul>
+                    <li>IntelliJ IDEA</li>
+                    <li>Postman</li>
+                    <li>MySQL Workbench</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4><i class="bi bi-code-slash"></i>Lenguajes</h4>
+                  <ul>
+                    <li>Java</li>
+                    <li>SQL</li>
+                    <li>Python</li>
+                  </ul>
+                </div>
+              </div>
+              <h4><i class="bi bi-people"></i>Habilidades blandas</h4>
+              <div class="dev-chips">
+                <span>Liderazgo</span><span>Resolución de problemas</span
+                ><span>Organización</span><span>Adaptabilidad</span
+                ><span>Empatía</span>
+              </div>
+              <a
+                href="docs/CV-GERARDO MEZA.pdf"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-primary rounded-pill dev-btn"
+              >
+                <i class="bi bi-file-earmark-pdf me-2"></i>Ver C.V. completo
+              </a>
+            </article>
+          </div>
+
+          <!-- Desarrollador 3 -->
+          <div class="col-md-6 col-xl-4">
+            <article class="dev-card">
+              <div class="dev-top">
+                <img
+                  src="img/equipo/Anónimo.jpg"
+                  alt="Foto del desarrollador 3"
+                  class="dev-foto"
+                />
+                <div>
+                  <h3>Jose Tunqui</h3>
+                  <span class="dev-rol">Base de datos</span>
+                </div>
+              </div>
+              <div class="dev-cv">
+                <div>
+                  <h4><i class="bi bi-window-stack"></i>Programas</h4>
+                  <ul>
+                    <li>MySQL Workbench</li>
+                    <li>XAMPP</li>
+                    <li>Draw.io</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4><i class="bi bi-code-slash"></i>Lenguajes</h4>
+                  <ul>
+                    <li>SQL</li>
+                    <li>Java</li>
+                    <li>JavaScript</li>
+                  </ul>
+                </div>
+              </div>
+              <h4><i class="bi bi-people"></i>Habilidades blandas</h4>
+              <div class="dev-chips">
+                <span>Pensamiento crítico</span><span>Trabajo en equipo</span
+                ><span>Paciencia</span><span>Comunicación</span
+                ><span>Proactividad</span>
+              </div>
+              <a
+                href="docs/CV-JOSE TUNQUI.pdf"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-primary rounded-pill dev-btn"
+              >
+                <i class="bi bi-file-earmark-pdf me-2"></i>Ver C.V. completo
+              </a>
+            </article>
+          </div>
+
+          <!-- Desarrollador 4 -->
+          <div class="col-md-6 col-xl-4">
+            <article class="dev-card">
+              <div class="dev-top">
+                <img
+                  src="img/equipo/Sebastian-Lopez.jpg"
+                  alt="Foto del desarrollador 4"
+                  class="dev-foto"
+                />
+                <div>
+                  <h3>Sebastian Lopez</h3>
+                  <span class="dev-rol">Diseño UI / UX</span>
+                </div>
+              </div>
+              <div class="dev-cv">
+                <div>
+                  <h4><i class="bi bi-window-stack"></i>Programas</h4>
+                  <ul>
+                    <li>Figma</li>
+                    <li>Canva</li>
+                    <li>Photoshop</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4><i class="bi bi-code-slash"></i>Lenguajes</h4>
+                  <ul>
+                    <li>HTML</li>
+                    <li>CSS</li>
+                    <li>JavaScript</li>
+                  </ul>
+                </div>
+              </div>
+              <h4><i class="bi bi-people"></i>Habilidades blandas</h4>
+              <div class="dev-chips">
+                <span>Creatividad</span><span>Atención al detalle</span
+                ><span>Escucha activa</span><span>Trabajo en equipo</span
+                ><span>Compromiso</span>
+              </div>
+              <a
+                href="docs/CV-SEBASTIAN LOPEZ.pdf"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-primary rounded-pill dev-btn"
+              >
+                <i class="bi bi-file-earmark-pdf me-2"></i>Ver C.V. completo
+              </a>
+            </article>
+          </div>
+
+          <!-- Desarrollador 5 -->
+          <div class="col-md-6 col-xl-4">
+            <article class="dev-card">
+              <div class="dev-top">
+                <img
+                  src="img/equipo/Fabrizio-Montañez.jpg"
+                  alt="Foto del desarrollador 5"
+                  class="dev-foto"
+                />
+                <div>
+                  <h3>Fabrizio Montañez</h3>
+                  <span class="dev-rol">Desarrollador(a) Full Stack</span>
+                </div>
+              </div>
+              <div class="dev-cv">
+                <div>
+                  <h4><i class="bi bi-window-stack"></i>Programas</h4>
+                  <ul>
+                    <li>Visual Studio Code</li>
+                    <li>IntelliJ IDEA</li>
+                    <li>GitHub Desktop</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4><i class="bi bi-code-slash"></i>Lenguajes</h4>
+                  <ul>
+                    <li>JavaScript</li>
+                    <li>Java</li>
+                    <li>SQL</li>
+                  </ul>
+                </div>
+              </div>
+              <h4><i class="bi bi-people"></i>Habilidades blandas</h4>
+              <div class="dev-chips">
+                <span>Autoaprendizaje</span><span>Trabajo bajo presión</span
+                ><span>Comunicación</span><span>Iniciativa</span
+                ><span>Colaboración</span>
+              </div>
+              <a
+                href="docs/CV-FABRIZIO MONTAÑEZ.pdf"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-primary rounded-pill dev-btn"
+              >
+                <i class="bi bi-file-earmark-pdf me-2"></i>Ver C.V. completo
+              </a>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5. METODOLOGÍA DE PROGRAMACIÓN (todas sus fases) ===== -->
+    <section id="metodologia" class="py-5">
+      <div class="container">
+        <div class="section-head">
+          <span class="badge-label">Cómo trabajamos</span>
+          <h2>Metodología de programación: Scrum</h2>
+          <p class="text-muted mx-auto metodo-intro">
+            Usamos Scrum, una metodología ágil: el trabajo se divide en ciclos
+            cortos llamados
+            <em>sprints</em> y al final de cada uno se entrega una parte de la
+            web funcionando.
+          </p>
+        </div>
+
+        <ol class="metodo-fases">
+          <li>
+            <span class="metodo-num">1</span>
+            <h3>Inicio</h3>
+            <p>
+              Reunión con la empresa para entender su necesidad y definir el
+              objetivo del proyecto.
+            </p>
+          </li>
+          <li>
+            <span class="metodo-num">2</span>
+            <h3>Planificación</h3>
+            <p>
+              Armamos el Product Backlog (lista de funciones) y elegimos qué
+              hacer en cada sprint.
+            </p>
+          </li>
+          <li>
+            <span class="metodo-num">3</span>
+            <h3>Diseño</h3>
+            <p>
+              Mapa de sitio, wireframes y diseño visual de cada página antes de
+              programar.
+            </p>
+          </li>
+          <li>
+            <span class="metodo-num">4</span>
+            <h3>Desarrollo</h3>
+            <p>
+              Programamos el frontend y el backend en sprints, con reuniones
+              diarias cortas (Daily).
+            </p>
+          </li>
+          <li>
+            <span class="metodo-num">5</span>
+            <h3>Pruebas y revisión</h3>
+            <p>
+              Probamos lo construido y lo mostramos a la empresa en el Sprint
+              Review.
+            </p>
+          </li>
+          <li>
+            <span class="metodo-num">6</span>
+            <h3>Retrospectiva y entrega</h3>
+            <p>
+              Vemos qué mejorar para el siguiente sprint y publicamos la versión
+              final.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
+      <div class="container">
+        <div class="footer-grid">
+          <!-- Redes sociales -->
+          <div class="text-center text-md-start">
+            <h5 class="fw-bold mb-3">Redes Sociales</h5>
+            <div
+              class="d-flex justify-content-center justify-content-md-start gap-3"
+            >
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook"
+                class="social-icon"
+                ><i class="bi bi-facebook"></i
+              ></a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                class="social-icon"
+                ><i class="bi bi-instagram"></i
+              ></a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Twitter"
+                class="social-icon"
+                ><i class="bi bi-twitter-x"></i
+              ></a>
+            </div>
+            <p class="small text-secondary mt-2 mb-0 footer-social-text">
+              Síguenos en nuestras redes oficiales para noticias y ofertas.
+            </p>
+          </div>
+
+          <!-- Logo UTP (centrado real) -->
+          <div class="text-center">
+            <a
+              href="https://www.utp.edu.pe/"
+              target="_blank"
+              rel="noreferrer"
+              class="d-inline-block"
+            >
+              <div class="bg-white footer-logo-box">
+                <img
+                  src="img/logo-utp.webp"
+                  alt="Universidad Tecnológica del Perú"
+                  class="footer-logo"
+                />
+              </div>
+            </a>
+          </div>
+
+          <!-- Contacto corporativo -->
+          <div class="text-center text-md-end">
+            <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
+            <p class="mb-0 fw-semibold">Nombre del Responsable</p>
+            <p class="small text-secondary mb-2">
+              Encargado(a) de Farmacia y Desarrollo
+            </p>
+            <p class="mb-1">
+              <a
+                href="mailto:contacto@portusalud.com"
+                class="text-light text-decoration-none"
+                ><i class="bi bi-envelope me-2"></i>contacto@portusalud.com</a
+              >
+            </p>
+            <p class="small text-secondary mb-0">
+              +51 987 654 321 | Lima, Perú
+            </p>
+          </div>
+        </div>
+
+        <hr class="border-secondary mt-4" />
+        <p class="text-center small text-secondary mb-0">
+          © 2026 PorTuSalud - Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
+
+    <!-- PANEL DEL CARRITO -->
+    <div
+      class="offcanvas offcanvas-end cart-panel"
+      tabindex="-1"
+      id="carritoPanel"
+      aria-labelledby="carritoTitulo"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="carritoTitulo">
+          <i class="bi bi-cart3"></i>Mi carrito
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <div id="carritoItems" class="cart-items"></div>
+        <div class="cart-footer" id="carritoPie">
+          <div class="cart-subtotal">
+            <span>Subtotal</span><span id="carritoTotal">S/ 0.00</span>
+          </div>
+          <div class="cart-actions">
+            <button type="button" class="cart-link" id="btnIrCarrito">
+              Ir a mi carrito
+            </button>
+            <button type="button" class="cart-buy" id="btnPagar">
+              Comprar ahora
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/main.js"></script>
-</body>
+    <!-- AVISO (toast) -->
+    <div
+      class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3"
+      style="z-index: 2000"
+    >
+      <div
+        id="toastAviso"
+        class="toast toast-farma border-0"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <div class="toast-body" id="toastTexto"></div>
+      </div>
+    </div>
+
+    <!-- AVISO EN LA ESQUINA (al quitar un producto desde una tarjeta) -->
+    <div
+      class="toast-container position-fixed bottom-0 start-0 p-3"
+      style="z-index: 2000"
+    >
+      <div
+        id="toastEsquina"
+        class="toast toast-esquina"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <div class="toast-esquina-cuerpo">
+          <span class="toast-esquina-ico"><i class="bi bi-check-lg"></i></span>
+          <span id="toastEsquinaTexto"></span>
+        </div>
+        <div class="text-end">
+          <button
+            type="button"
+            class="toast-esquina-ok"
+            data-bs-dismiss="toast"
+          >
+            Ok
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL LOGIN -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 p-2">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Iniciar Sesión</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="loginError" class="alert alert-danger d-none"></div>
+            <form id="loginForm">
+              <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="loginCorreo"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="loginContrasena"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                Ingresar
+              </button>
+            </form>
+            <p class="text-center small mt-3 mb-0">
+              ¿No tienes cuenta?
+              <a
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#registroModal"
+                data-bs-dismiss="modal"
+                >Regístrate aquí</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL REGISTRO -->
+    <div class="modal fade" id="registroModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 p-2">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Crear Cuenta</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="registroError" class="alert alert-danger d-none"></div>
+            <form id="registroForm">
+              <div class="row g-2">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Nombre</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="regNombre"
+                    required
+                  />
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Apellido</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="regApellido"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="regCorreo"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Teléfono</label>
+                <input type="text" class="form-control" id="regTelefono" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="regContrasena"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                Crear Cuenta
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>
