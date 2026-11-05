@@ -92,13 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn.dataset.accion === 'eliminar') eliminarDelCarrito(id);
     else cambiarCantidad(id, btn.dataset.accion === 'mas' ? 1 : -1);
   });
-  // "Ir a mi carrito": todavía sin página propia, solo muestra un aviso
-  document.getElementById('btnIrCarrito').addEventListener('click', () => {
-    mostrarAviso('La página de tu carrito estará disponible próximamente.');
-  });
-  document.getElementById('btnPagar').addEventListener('click', () => {
-    mostrarAviso('El pago en línea estará disponible próximamente.');
-  });
+  // "Ir a mi carrito": abre carrito.html arriba, para revisar productos y cantidades.
+  // "Comprar ahora": abre carrito.html directo en el formulario de datos y pago (paso 2).
+  const irAlCarrito = (directoAPagar) => {
+    if (location.pathname.endsWith('carrito.html')) {
+      bootstrap.Offcanvas.getInstance(document.getElementById('carritoPanel'))?.hide();
+      if (directoAPagar && typeof irAlFormularioDePago === 'function') irAlFormularioDePago();
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    irA(directoAPagar ? 'carrito.html#pagar' : 'carrito.html');
+  };
+  document.getElementById('btnIrCarrito').addEventListener('click', () => irAlCarrito(false));
+  document.getElementById('btnPagar').addEventListener('click', () => irAlCarrito(true));
 });
 
 /* ---------- Utilidades ---------- */
@@ -108,6 +114,26 @@ function esc(texto) {
   ));
 }
 function soles(n) { return 'S/ ' + Number(n).toFixed(2); }
+
+/* ---------- Ofertas (Avance Final) ---------- */
+// % de descuento del producto (0 si no está en oferta)
+function descuentoDe(p) { return Number(p?.descuento ?? 0) || 0; }
+function enOferta(p) { return descuentoDe(p) >= 5; }
+// Precio que paga el cliente. El backend ya lo manda como precioFinal; si no viene, se calcula aquí.
+function precioFinal(p) {
+  if (p?.precioFinal != null) return Number(p.precioFinal);
+  const d = descuentoDe(p);
+  return Math.round(Number(p.precio) * (100 - d)) / 100;
+}
+// Precio en oferta + precio normal tachado. "clase" es la clase del precio grande.
+function htmlPrecioOferta(p, clase = 'price') {
+  if (!enOferta(p)) return `<span class="${clase}">${soles(p.precio)}</span>`;
+  return `<span class="${clase} precio-oferta">${soles(precioFinal(p))}</span>` +
+         `<del class="precio-antes">${soles(p.precio)}</del>`;
+}
+function htmlBadgeOferta(p) {
+  return enOferta(p) ? `<span class="badge-oferta">-${descuentoDe(p)}%</span>` : '';
+}
 
 // La base de datos puede guardar la ruta como '/img/...' o 'img/...'. Una ruta que empieza con '/'
 // apunta a la raíz del disco (o del servidor) y no encuentra la imagen al abrir index.html;
@@ -145,6 +171,7 @@ async function cargarProductos() {
   const cache = leerCacheProductos();
   if (Array.isArray(cache) && cache.length) {
     productos = cache;
+    refrescarPreciosCarrito();
     if (contenedor) renderMasVendidos();
     document.dispatchEvent(new CustomEvent('productos:cargados'));
   }
@@ -155,6 +182,7 @@ async function cargarProductos() {
     guardarCacheProductos(nuevos);
     if (cache && JSON.stringify(cache) === JSON.stringify(nuevos)) return;   // nada cambió
     productos = nuevos;
+    refrescarPreciosCarrito();
     if (contenedor) renderMasVendidos();
     // Avisa a las otras páginas (productos.js, producto.js) que el catálogo ya llegó
     document.dispatchEvent(new CustomEvent('productos:cargados'));
@@ -198,6 +226,7 @@ function htmlTarjeta(p, { nombreHtml, etiqueta } = {}) {
       <article class="pcard" data-id="${p.id}">
         <a href="${enlace}" class="pcard-img" aria-label="Ver detalle de ${esc(p.nombre)}">
           ${etiqueta ? `<span class="pcard-badge">${esc(etiqueta)}</span>` : ''}
+          ${htmlBadgeOferta(p)}
           <img src="${esc(rutaImagen(p.imagenUrl))}" alt="${esc(p.nombre)}" loading="lazy"
                onerror="this.onerror=null;this.src='${IMG_VACIA}'">
         </a>
@@ -206,7 +235,7 @@ function htmlTarjeta(p, { nombreHtml, etiqueta } = {}) {
         <p class="pcard-desc">${esc(p.descripcion)}</p>
         <div class="pcard-status">${chipStock}</div>
         <div class="pcard-price">
-          <span class="price">${soles(p.precio)}</span><small>Precio online</small>
+          ${htmlPrecioOferta(p)}<small>${enOferta(p) ? `Ahorras ${soles(p.precio - precioFinal(p))}` : 'Precio online'}</small>
         </div>
         <div class="pcard-actions">
           <button type="button" class="btn-add" data-id="${p.id}" ${stock <= 0 ? 'disabled' : ''}>
@@ -256,10 +285,31 @@ function agregarAlCarrito(id) {
     mostrarAviso('No hay más unidades disponibles de este producto.');
     return;
   }
-  carrito[id] = carrito[id] || { id, nombre: p.nombre, precio: Number(p.precio), imagen: rutaImagen(p.imagenUrl), categoria: p.categoria || '', cantidad: 0 };
+  carrito[id] = carrito[id] || { id, nombre: p.nombre, imagen: rutaImagen(p.imagenUrl), categoria: p.categoria || '', cantidad: 0 };
+  ponerPreciosEnCarrito(carrito[id], p);
   carrito[id].cantidad++;
   guardarCarrito();
   actualizarCarritoUI();
+}
+
+// Guarda en el producto del carrito el precio con descuento (precio) y el precio normal (precioNormal)
+function ponerPreciosEnCarrito(item, p) {
+  item.precio = precioFinal(p);
+  item.precioNormal = Number(p.precio);
+  item.descuento = descuentoDe(p);
+}
+
+// Si el administrador cambió un precio o una oferta, el carrito se actualiza al cargar el catálogo
+function refrescarPreciosCarrito() {
+  let cambio = false;
+  Object.values(carrito).forEach(item => {
+    const p = productos.find(x => x.id === item.id);
+    if (!p) return;
+    const antes = JSON.stringify(item);
+    ponerPreciosEnCarrito(item, p);
+    if (JSON.stringify(item) !== antes) cambio = true;
+  });
+  if (cambio) { guardarCarrito(); actualizarCarritoUI(); }
 }
 
 function cambiarCantidad(id, delta) {
@@ -321,6 +371,7 @@ function actualizarCarritoUI() {
           </div>
           <div class="cart-side">
             <div class="cart-price">${soles(i.cantidad * i.precio)}</div>
+            ${i.descuento >= 5 ? `<del class="cart-price-antes">${soles(i.cantidad * i.precioNormal)}</del><span class="cart-oferta">-${i.descuento}%</span>` : ''}
             <button type="button" class="cart-del" data-accion="eliminar" data-id="${i.id}">Eliminar</button>
           </div>
         </div>`).join('')

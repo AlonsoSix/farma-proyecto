@@ -2,6 +2,7 @@ package com.farma.backend.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -48,6 +49,10 @@ public class Producto {
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
+    // Avance Final: % de descuento de la oferta. 0 = sin oferta; si hay oferta va de 5 a 90.
+    @Column(nullable = false)
+    private Integer descuento = 0;
+
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
@@ -75,4 +80,16 @@ public class Producto {
     public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public Integer getDescuento() { return descuento; }
+    public void setDescuento(Integer descuento) { this.descuento = descuento; }
+
+    // Precio con el descuento aplicado (no se guarda en la base de datos; se calcula).
+    // Se envía al frontend como "precioFinal".
+    public BigDecimal getPrecioFinal() {
+        if (precio == null) return null;
+        if (descuento == null || descuento <= 0) return precio;
+        BigDecimal factor = BigDecimal.valueOf(100 - descuento).divide(BigDecimal.valueOf(100));
+        return precio.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+    }
 }

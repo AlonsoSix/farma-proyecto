@@ -85,7 +85,7 @@ public class ProductoService {
     /* ---------------- Apoyo ---------------- */
 
     // El frontend envía el id del usuario que inició sesión; aquí se comprueba que sea ADMIN
-    private void verificarAdmin(Integer idUsuario) {
+    public void verificarAdmin(Integer idUsuario) {
         if (idUsuario == null) {
             throw new SecurityException("Debes iniciar sesión como administrador.");
         }
@@ -120,6 +120,11 @@ public class ProductoService {
         if (d.getCategoria() == null || d.getCategoria().isBlank()) {
             throw new IllegalArgumentException("La categoría es obligatoria.");
         }
+        // Ofertas: 0 = sin oferta. Si hay oferta, el descuento mínimo es 5% (pedido del Avance Final)
+        Integer desc = d.getDescuento();
+        if (desc != null && desc != 0 && (desc < 5 || desc > 90)) {
+            throw new IllegalArgumentException("El descuento debe ser 0 (sin oferta) o estar entre 5% y 90%.");
+        }
     }
 
     private void copiarDatos(ProductoRequest d, Producto p) {
@@ -131,6 +136,7 @@ public class ProductoService {
         p.setImagenUrl(vacioANull(d.getImagenUrl()));
         p.setStock(d.getStock());
         p.setFechaVencimiento(d.getFechaVencimiento());
+        p.setDescuento(d.getDescuento() == null ? 0 : d.getDescuento());
     }
 
     private String vacioANull(String texto) {

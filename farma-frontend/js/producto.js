@@ -93,8 +93,9 @@ function pintarDetalle(p) {
             </div>
 
             <div class="detalle-precio">
-              <span class="detalle-precio-label">Precio online</span>
-              <span class="detalle-precio-valor">${soles(p.precio)}</span>
+              <span class="detalle-precio-label">${enOferta(p) ? `Oferta online ${htmlBadgeOferta(p)}` : 'Precio online'}</span>
+              <span class="detalle-precio-valor ${enOferta(p) ? 'precio-oferta' : ''}">${soles(precioFinal(p))}</span>
+              ${enOferta(p) ? `<span class="detalle-precio-antes">Antes <del>${soles(p.precio)}</del> · Ahorras ${soles(p.precio - precioFinal(p))}</span>` : ''}
               <span class="detalle-precio-nota">Incluye IGV</span>
             </div>
 
@@ -166,6 +167,7 @@ function pintarDetalle(p) {
               <tr><th>Categoría</th><td>${categoria}</td></tr>
               <tr><th>Fecha de vencimiento</th><td>${vence ?? 'No aplica'}</td></tr>
               <tr><th>Precio</th><td>${soles(p.precio)}</td></tr>
+              ${enOferta(p) ? `<tr><th>Oferta</th><td>${descuentoDe(p)}% de descuento: ${soles(precioFinal(p))}</td></tr>` : ''}
               <tr><th>Código</th><td>${codigoProducto(p)}</td></tr>
               <tr><th>Stock disponible</th><td>${stock} ${stock === 1 ? 'unidad' : 'unidades'}</td></tr>
             </tbody>

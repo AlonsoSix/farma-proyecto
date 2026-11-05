@@ -19,9 +19,13 @@
   <div class="container d-flex align-items-center gap-3">
     <a href="index.html" aria-label="Ir a la tienda"><img src="img/logo-farma3.png" alt="PorTuSalud" class="admin-logo"></a>
     <span class="admin-etiqueta d-none d-sm-inline-flex"><i class="bi bi-shield-lock me-1"></i>Administrador</span>
+    <nav class="admin-nav" aria-label="Secciones del panel">
+      <a href="admin.html" class="activo" aria-current="page"><i class="bi bi-box-seam me-1"></i>Productos</a>
+      <a href="reportes.html"><i class="bi bi-bar-chart-line me-1"></i>Reportes</a>
+    </nav>
     <div class="ms-auto d-flex align-items-center gap-2">
-      <a href="index.html" class="btn btn-outline-primary rounded-pill px-3 d-none d-md-inline-block"><i class="bi bi-shop me-1"></i>Ver tienda</a>
-      <span class="admin-usuario d-none d-md-inline"><i class="bi bi-person-circle me-1"></i><span id="adminNombre">Administrador</span></span>
+      <a href="index.html" class="btn btn-outline-primary rounded-pill px-3 d-none d-lg-inline-block"><i class="bi bi-shop me-1"></i>Ver tienda</a>
+      <span class="admin-usuario d-none d-xl-inline"><i class="bi bi-person-circle me-1"></i><span id="adminNombre">Administrador</span></span>
       <button type="button" class="btn btn-primary rounded-pill px-3" id="btnSalir"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
     </div>
   </div>
@@ -159,6 +163,15 @@
             <label class="form-label" for="fStock">Stock *</label>
             <input type="number" id="fStock" class="form-control" min="0" step="1" required>
             <div class="invalid-feedback">El stock debe ser 0 o más (número entero).</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fDescuento">Descuento de oferta (%)</label>
+            <div class="input-group">
+              <input type="number" id="fDescuento" class="form-control" min="0" max="90" step="1" placeholder="Sin oferta">
+              <span class="input-group-text">%</span>
+              <div class="invalid-feedback">Pon 0 (sin oferta) o un número entero entre 5 y 90.</div>
+            </div>
+            <small class="text-muted" id="fDescuentoAyuda">Déjalo vacío si no está en oferta.</small>
           </div>
           <div class="col-md-4">
             <label class="form-label" for="fVencimiento">Fecha de vencimiento</label>

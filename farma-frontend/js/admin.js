@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('fImagen').addEventListener('input', actualizarPreview);
   // El stock debe ser un número entero (0, 1, 2...)
   $('fStock').addEventListener('input', validarStock);
+  $('fDescuento').addEventListener('input', () => { validarDescuento(); actualizarPrecioOferta(); });
+  $('fPrecio').addEventListener('input', actualizarPrecioOferta);
   $('fNoVence').addEventListener('change', (e) => {
     $('fVencimiento').disabled = e.target.checked;
     if (e.target.checked) $('fVencimiento').value = '';
@@ -259,7 +261,7 @@ function pintarTabla(mensajeVacio) {
           </div>
         </td>
         <td>${resaltar(p.categoria || '—', q)}</td>
-        <td class="fw-semibold text-nowrap">${soles(p.precio)}</td>
+        <td class="fw-semibold text-nowrap">${precioAdmin(p)}</td>
         <td><span class="chip ${chip}">${stock}</span></td>
         <td class="text-nowrap">${formatoFecha(p.fechaVencimiento) ?? '<span class="text-muted">No aplica</span>'}</td>
         <td>${activo
@@ -276,7 +278,30 @@ function pintarTabla(mensajeVacio) {
   }).join('');
 }
 
+// Precio en la tabla: si está en oferta, muestra el precio con descuento y la etiqueta -X%
+function precioAdmin(p) {
+  const d = Number(p.descuento ?? 0);
+  if (d < 5) return soles(p.precio);
+  const final = p.precioFinal != null ? Number(p.precioFinal) : Math.round(Number(p.precio) * (100 - d)) / 100;
+  return `${soles(final)} <span class="badge-oferta badge-oferta-sm">-${d}%</span><br><del class="text-muted small fw-normal">${soles(p.precio)}</del>`;
+}
+
 /* ---------- Registrar / Editar ---------- */
+// Descuento: vacío o 0 = sin oferta; si se pone, debe ser un entero entre 5 y 90
+function validarDescuento() {
+  const v = $('fDescuento').value;
+  const ok = v === '' || v === '0' || (/^\d+$/.test(v) && Number(v) >= 5 && Number(v) <= 90);
+  $('fDescuento').setCustomValidity(ok ? '' : 'descuento');
+}
+function actualizarPrecioOferta() {
+  const precio = Number($('fPrecio').value);
+  const d = Number($('fDescuento').value);
+  const ayuda = $('fDescuentoAyuda');
+  ayuda.textContent = precio > 0 && d >= 5 && d <= 90
+    ? `Precio en oferta: ${soles(Math.round(precio * (100 - d)) / 100)}`
+    : 'Déjalo vacío si no está en oferta.';
+}
+
 function validarStock() {
   $('fStock').setCustomValidity(/^\d+$/.test($('fStock').value) ? '' : 'entero');
 }
@@ -296,6 +321,8 @@ function abrirFormulario(p) {
   $('fCategoria').value = p?.categoria ?? '';
   $('fPrecio').value = p ? Number(p.precio).toFixed(2) : '';
   $('fStock').value = p?.stock ?? '';
+  $('fDescuento').value = p?.descuento ? p.descuento : '';
+  actualizarPrecioOferta();
   $('fVencimiento').value = p?.fechaVencimiento ? String(p.fechaVencimiento).slice(0, 10) : '';
   $('fNoVence').checked = !!p && !p.fechaVencimiento;
   $('fVencimiento').disabled = $('fNoVence').checked;
@@ -316,6 +343,7 @@ async function guardar(e) {
   const f = $('formProducto');
   $('formError').classList.add('d-none');
   validarStock();
+  validarDescuento();
   if (!f.checkValidity()) { f.classList.add('was-validated'); return; }
 
   const datos = {
@@ -324,6 +352,7 @@ async function guardar(e) {
     categoria: $('fCategoria').value.trim(),
     precio: Number($('fPrecio').value),
     stock: Number($('fStock').value),
+    descuento: $('fDescuento').value === '' ? 0 : Number($('fDescuento').value),
     fechaVencimiento: $('fNoVence').checked ? null : ($('fVencimiento').value || null),
     imagenUrl: $('fImagen').value.trim(),
     descripcion: $('fDescripcion').value.trim()

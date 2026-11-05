@@ -4584,3 +4584,755 @@ a.cto-rapido-item:hover {
     padding: 1.25rem;
   }
 }
+/* =====================================================================
+   OFERTAS (Avance Final): etiqueta -X%, precio en oferta y precio tachado
+   ===================================================================== */
+.badge-oferta {
+  display: inline-block;
+  background: #c8102e;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50rem;
+  padding: .3rem .55rem;
+  vertical-align: middle;
+}
+
+.badge-oferta-sm {
+  font-size: .62rem;
+  padding: .2rem .4rem;
+}
+
+/* En la tarjeta va en la esquina superior derecha de la imagen */
+.pcard-img .badge-oferta {
+  position: absolute;
+  top: .25rem;
+  right: .25rem;
+  z-index: 1;
+}
+
+.pcard-price {
+  flex-wrap: wrap;
+  row-gap: .1rem;
+}
+
+.precio-oferta {
+  color: #c8102e !important;
+}
+
+.precio-antes,
+.cart-price-antes {
+  color: #8a94a3;
+  font-size: .82rem;
+  white-space: nowrap;
+}
+
+.pcard-price small {
+  flex-basis: 100%;
+}
+
+.detalle-precio-antes {
+  width: 100%;
+  font-size: .85rem;
+  color: #5b6b82;
+}
+
+.dest-precio .precio-antes {
+  margin-left: .35rem;
+  font-weight: 400;
+}
+
+.cart-price-antes {
+  display: block;
+  font-size: .75rem;
+}
+
+.cart-oferta {
+  display: block;
+  margin-top: .15rem;
+  font-size: .68rem;
+  font-weight: 700;
+  color: #c8102e;
+}
+
+/* =====================================================================
+   CARRITO CON BOLETA (carrito.html) - Avance Final
+   ===================================================================== */
+.carrito-pagina {
+  background: var(--farma-bg);
+  padding: 1.5rem 0 3rem;
+  flex: 1 0 auto;
+}
+
+.ck-caja {
+  background: #fff;
+  border: 1px solid var(--farma-border);
+  border-radius: 18px;
+  padding: 1.25rem 1.4rem;
+}
+
+.ck-titulo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--farma-dark);
+  margin-bottom: 1rem;
+}
+
+/* Pasos 1-2-3 */
+.ck-pasos {
+  display: flex;
+  gap: .5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  flex-wrap: wrap;
+}
+
+.ck-pasos li {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .88rem;
+  font-weight: 600;
+  color: #7b8794;
+  background: #fff;
+  border: 1px solid var(--farma-border);
+  border-radius: 50rem;
+  padding: .3rem .85rem .3rem .35rem;
+}
+
+.ck-pasos li span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #e8edf3;
+  font-size: .8rem;
+}
+
+.ck-pasos li.activo {
+  color: var(--farma-primary);
+  border-color: var(--farma-primary);
+}
+
+.ck-pasos li.activo span {
+  background: var(--farma-primary);
+  color: #fff;
+}
+
+.ck-pasos li.hecho span {
+  background: #1f9d55;
+  color: #fff;
+}
+
+/* Productos del carrito */
+.ck-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: .9rem 0;
+  border-top: 1px solid #edf1f6;
+}
+
+.ck-item img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #edf1f6;
+  flex: 0 0 auto;
+}
+
+.ck-item-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ck-item-nombre {
+  font-weight: 600;
+  color: var(--farma-dark);
+  line-height: 1.3;
+}
+
+.ck-item-precio {
+  font-size: .85rem;
+  color: #5b6b82;
+  margin: .2rem 0 .45rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  align-items: center;
+}
+
+.ck-item-precio del {
+  color: #8a94a3;
+}
+
+.ck-item-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid var(--farma-border);
+  border-radius: 50rem;
+  padding: .1rem .3rem;
+}
+
+.ck-item-qty button {
+  border: 0;
+  background: none;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  color: var(--farma-primary);
+}
+
+.ck-item-qty button:hover:not(:disabled) {
+  background: var(--farma-primary-soft);
+}
+
+.ck-item-qty button:disabled {
+  color: #b8c2cf;
+}
+
+.ck-item-lado {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .4rem;
+  white-space: nowrap;
+}
+
+.ck-item-quitar {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: .82rem;
+  color: #b42318;
+}
+
+/* Métodos de pago */
+.ck-metodos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+}
+
+.ck-metodo {
+  cursor: pointer;
+}
+
+.ck-metodo input {
+  position: absolute;
+  opacity: 0;
+}
+
+.ck-metodo span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .15rem;
+  border: 2px solid var(--farma-border);
+  border-radius: 14px;
+  padding: .8rem .5rem;
+  font-weight: 600;
+  color: var(--farma-dark);
+  height: 100%;
+}
+
+.ck-metodo span i {
+  font-size: 1.4rem;
+  color: var(--farma-primary);
+}
+
+.ck-metodo small {
+  font-weight: 400;
+  font-size: .75rem;
+  color: #6b7480;
+}
+
+.ck-metodo input:checked + span {
+  border-color: var(--farma-primary);
+  background: var(--farma-primary-soft);
+}
+
+.ck-metodo input:focus-visible + span {
+  outline: 3px solid rgba(11, 114, 179, .35);
+}
+
+/* Resumen */
+.ck-resumen {
+  position: sticky;
+  top: 140px;
+}
+
+.ck-totales {
+  margin: 0 0 1rem;
+}
+
+.ck-totales > div,
+.boleta-totales > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .35rem 0;
+}
+
+.ck-totales dt,
+.boleta-totales dt {
+  font-weight: 400;
+}
+
+.ck-totales dd,
+.boleta-totales dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.ck-sub {
+  font-size: .85rem;
+  color: #6b7480;
+}
+
+.ck-ahorro,
+.boleta-ahorro {
+  color: #c8102e;
+  font-weight: 600;
+}
+
+.ck-total,
+.boleta-total {
+  border-top: 2px solid var(--farma-border);
+  margin-top: .4rem;
+  padding-top: .7rem !important;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--farma-dark);
+}
+
+.ck-total dt,
+.boleta-total dt {
+  font-weight: 700 !important;
+}
+
+.ck-btn-confirmar {
+  width: 100%;
+  border: 0;
+  border-radius: 50rem;
+  background: var(--farma-accent-dark);
+  color: #fff;
+  font-weight: 600;
+  padding: .85rem 1rem;
+}
+
+.ck-btn-confirmar:hover:not(:disabled) {
+  background: var(--farma-accent-darker);
+}
+
+.ck-btn-confirmar:disabled {
+  opacity: .7;
+}
+
+.ck-vacio {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.ck-vacio > i {
+  font-size: 3rem;
+  color: var(--farma-primary);
+}
+
+/* Compra realizada */
+.ck-exito {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  background: #e8f7ee;
+  border: 1px solid #b7e4c7;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.ck-exito > i {
+  font-size: 2rem;
+  color: #1f9d55;
+}
+
+.ck-boleta-acciones {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+/* Boleta */
+.boleta {
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  max-width: 780px;
+  padding: 2rem;
+  color: #1f2933;
+  font-size: .92rem;
+}
+
+.boleta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 2px dashed #d9e2ec;
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.boleta-empresa img {
+  height: 46px;
+  margin-bottom: .5rem;
+}
+
+.boleta-empresa p {
+  font-size: .82rem;
+  color: #52606d;
+}
+
+.boleta-recuadro {
+  border: 2px solid var(--farma-dark);
+  border-radius: 10px;
+  padding: .8rem 1.2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .2rem;
+  min-width: 230px;
+}
+
+.boleta-recuadro strong {
+  font-size: .9rem;
+}
+
+.boleta-numero {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--farma-primary);
+}
+
+.boleta-cliente {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .6rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.boleta-cliente span {
+  display: block;
+  font-size: .75rem;
+  color: #7b8794;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.boleta-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.boleta-tabla th {
+  background: var(--farma-primary-soft);
+  font-size: .8rem;
+  padding: .55rem .6rem;
+}
+
+.boleta-tabla td {
+  border-bottom: 1px solid #edf1f6;
+  padding: .55rem .6rem;
+  vertical-align: top;
+}
+
+.boleta-tabla .text-end {
+  white-space: nowrap;
+}
+
+.boleta-totales {
+  margin: 0 0 1.2rem auto;
+  max-width: 320px;
+}
+
+.boleta-pie {
+  border-top: 2px dashed #d9e2ec;
+  padding-top: 1rem;
+  text-align: center;
+  color: #52606d;
+}
+
+@media (max-width: 575.98px) {
+  .ck-metodos {
+    grid-template-columns: 1fr;
+  }
+
+  .ck-metodo span {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: .6rem;
+    text-align: left;
+  }
+
+  .ck-item img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .boleta {
+    padding: 1.1rem;
+  }
+
+  .boleta-cliente {
+    grid-template-columns: 1fr;
+  }
+
+  .boleta-tabla th,
+  .boleta-tabla td {
+    padding: .5rem .3rem;
+    font-size: .82rem;
+  }
+
+  .boleta-recuadro {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Al imprimir (o "Guardar como PDF") solo sale la boleta */
+@media print {
+  .topbar,
+  .main-nav,
+  footer,
+  .pantalla-carga,
+  .toast-container,
+  .carrito-pagina nav[aria-label="breadcrumb"],
+  .ck-pasos,
+  .ck-exito,
+  .ck-boleta-acciones {
+    display: none !important;
+  }
+
+  .carrito-pagina {
+    background: #fff;
+    padding: 0;
+  }
+
+  #boleta {
+    max-width: none;
+    border: 0;
+    padding: 0;
+  }
+
+  .boleta-tabla th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* =====================================================================
+   REPORTES DEL ADMINISTRADOR (reportes.html) - Avance Final
+   ===================================================================== */
+.admin-nav {
+  display: flex;
+  gap: .25rem;
+}
+
+.admin-nav a {
+  text-decoration: none;
+  font-weight: 600;
+  font-size: .9rem;
+  color: #4a5668;
+  padding: .45rem .8rem;
+  border-radius: 50rem;
+  white-space: nowrap;
+}
+
+.admin-nav a:hover {
+  background: var(--farma-primary-soft);
+  color: var(--farma-primary);
+}
+
+.admin-nav a.activo {
+  background: var(--farma-primary);
+  color: #fff;
+}
+
+.rep-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .75rem 1rem;
+}
+
+.rep-filtro-nota {
+  flex-basis: 100%;
+}
+
+.rep-descargas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+
+.rep-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid;
+  background: #fff;
+  border-radius: 50rem;
+  font-size: .85rem;
+  font-weight: 600;
+  padding: .4rem .85rem;
+  min-width: 4.5rem;
+  justify-content: center;
+}
+
+.rep-descargas-sm .rep-btn {
+  font-size: .75rem;
+  padding: .25rem .6rem;
+  min-width: 3.8rem;
+}
+
+.rep-btn-pdf { color: #b42318; border-color: #f3b4ae; }
+.rep-btn-pdf:hover { background: #fdecea; }
+.rep-btn-excel { color: #137a3f; border-color: #a7dbbd; }
+.rep-btn-excel:hover { background: #e8f7ee; }
+.rep-btn-word { color: #1d4fa3; border-color: #b3c8ee; }
+.rep-btn-word:hover { background: #eaf1fc; }
+
+.rep-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rep-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: .6rem;
+}
+
+.rep-titulo {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--farma-dark);
+  margin: 0;
+}
+
+.rep-titulo i {
+  color: var(--farma-primary);
+}
+
+.rep-num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--farma-primary-soft);
+  color: var(--farma-primary);
+  font-size: .85rem;
+}
+
+.rep-grafico {
+  position: relative;
+}
+
+.rep-resultados {
+  background: #f6f9fc;
+  border-left: 4px solid var(--farma-primary);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+  font-size: .9rem;
+  color: #334155;
+  margin-top: auto;
+}
+
+.rep-resultados h3 {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--farma-dark);
+  margin-bottom: .35rem;
+}
+
+.rep-detalle summary {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--farma-primary);
+  cursor: pointer;
+  margin-bottom: .5rem;
+}
+
+.rep-tabla {
+  font-size: .82rem;
+}
+
+.rep-tabla th {
+  background: var(--farma-primary-soft);
+  white-space: nowrap;
+}
+
+.rep-extra-titulo {
+  font-size: .85rem;
+  font-weight: 700;
+  margin: .9rem 0 .4rem;
+}
+
+@media (max-width: 767.98px) {
+  .admin-nav a {
+    padding: .4rem .6rem;
+    font-size: .82rem;
+  }
+
+  .admin-nav a i {
+    display: none;
+  }
+}
+
+#repResumen .admin-stat strong {
+  font-size: 1.15rem;
+  white-space: nowrap;
+}
+
+/* En celular, las pestañas Productos / Reportes bajan a una segunda fila */
+@media (max-width: 575.98px) {
+  .admin-topbar .container {
+    flex-wrap: wrap;
+    row-gap: .5rem !important;
+  }
+
+  .admin-nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .admin-nav a {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* "Comprar ahora" baja hasta el formulario sin que lo tape el menú fijo */
+#formCompra {
+  scroll-margin-top: 150px;
+}
