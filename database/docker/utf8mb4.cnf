@@ -1,0 +1,6 @@
+# Para que las tildes y la ñ del script SQL se guarden bien
+[client]
+default-character-set = utf8mb4
+
+[mysql]
+default-character-set = utf8mb4

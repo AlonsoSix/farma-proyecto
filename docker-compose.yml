@@ -1,0 +1,63 @@
+# =====================================================================
+#  PorTuSalud con Docker: base de datos + backend + página web
+#
+#  Levantar todo:   docker compose up -d --build
+#  Abrir la web:    http://localhost:8080
+#  Apagar:          docker compose down
+#  Reiniciar la base desde cero (vuelve a ejecutar farma_db_completo.sql):
+#                   docker compose down -v   y luego   docker compose up -d --build
+# =====================================================================
+services:
+
+  # MySQL 8 con la base farma_db. La primera vez ejecuta database/farma_db_completo.sql
+  db:
+    image: mysql:8.0
+    container_name: farma-db
+    environment:
+      MYSQL_ROOT_PASSWORD: farma123
+      TZ: America/Lima
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./database/farma_db_completo.sql:/docker-entrypoint-initdb.d/01-farma_db_completo.sql:ro
+      - ./database/docker/utf8mb4.cnf:/etc/mysql/conf.d/utf8mb4.cnf:ro
+      - farma-datos:/var/lib/mysql
+    ports:
+      - "3307:3306"     # 3307 para no chocar con el MySQL que ya tienes instalado
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pfarma123"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Backend Spring Boot (puerto 8081, igual que siempre)
+  backend:
+    build: ./farma-backend
+    container_name: farma-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/farma_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: farma123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_SHOW_SQL: "false"
+      TZ: America/Lima
+    ports:
+      - "8081:8081"
+    restart: on-failure
+
+  # Página web (HTML, CSS y JS) servida con nginx en http://localhost:8080
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: farma-frontend
+    depends_on:
+      - backend
+    volumes:
+      - ./farma-frontend:/usr/share/nginx/html:ro   # si cambias un archivo, solo recarga la página (F5)
+    ports:
+      - "8090:80"
+
+volumes:
+  farma-datos:

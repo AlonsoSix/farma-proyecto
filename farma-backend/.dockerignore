@@ -1,0 +1,7 @@
+target/
+.mvn/
+.idea/
+.vscode/
+# La configuración local de cada uno (con su contraseña) no entra a la imagen:
+# en Docker los datos de conexión vienen de docker-compose.yml
+src/main/resources/application.properties
