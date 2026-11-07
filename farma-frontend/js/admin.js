@@ -157,7 +157,8 @@ const cargarCatalogoAdmin = () => api('/productos/admin', { headers: cabecerasAd
 const estaActivo = (p) => p.activo !== false;
 async function cargarTodo() {
   try {
-    todos = await cargarCatalogoAdmin();
+    const res = await cargarCatalogoAdmin();
+    todos = Array.isArray(res) ? res : [];
     pintarResumen();
     await refrescarVista();
   } catch (e) {
@@ -214,19 +215,21 @@ async function buscarDinamico(texto) {
 
 /* ---------- Pintar ---------- */
 function pintarResumen() {
-  $('statTotal').textContent = todos.length;
-  $('statBaja').textContent = todos.filter(p => !estaActivo(p)).length;
-  $('statBajo').textContent = todos.filter(p => p.stock > 0 && p.stock <= 5).length;
-  $('statAgotados').textContent = todos.filter(p => p.stock <= 0).length;
+  const lista = Array.isArray(todos) ? todos : [];
+  $('statTotal').textContent = lista.length;
+  $('statBaja').textContent = lista.filter(p => !estaActivo(p)).length;
+  $('statBajo').textContent = lista.filter(p => p.stock > 0 && p.stock <= 5).length;
+  $('statAgotados').textContent = lista.filter(p => p.stock <= 0).length;
   // Categorías existentes como sugerencias en el formulario
-  const cats = [...new Set(todos.map(p => p.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const cats = [...new Set(lista.map(p => p.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
   $('listaCategorias').innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join('');
 }
 
 function pintarTabla(mensajeVacio) {
   const q = modo.tipo === 'dinamica' ? modo.valor : '';
+  const base = Array.isArray(vista) ? vista : [];
   // Filtro "Mostrar": todos / solo activos / solo dados de baja
-  const lista = vista.filter(p => filtroEstado === 'todos' || (filtroEstado === 'activos') === estaActivo(p));
+  const lista = base.filter(p => filtroEstado === 'todos' || (filtroEstado === 'activos') === estaActivo(p));
   $('resultadoTexto').innerHTML = modo.tipo === 'todos' && filtroEstado === 'todos'
     ? `<strong>${lista.length}</strong> productos registrados`
     : `<strong>${lista.length}</strong> ${lista.length === 1 ? 'resultado' : 'resultados'} de ${todos.length} productos`;

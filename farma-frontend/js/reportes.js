@@ -138,7 +138,7 @@ const SIN_VENTAS = 'No hay ventas registradas en el periodo seleccionado.';
 
 // 1. Ventas por mes
 function reporteVentasMes() {
-  const lista = datos.ventasPorMes;
+  const lista = Array.isArray(datos.ventasPorMes) ? datos.ventasPorMes : [];
   let descripcion = SIN_VENTAS;
   if (lista.length) {
     const total = lista.reduce((s, m) => s + Number(m.total), 0);
@@ -187,7 +187,7 @@ function reporteVentasMes() {
 
 // 2. Productos más vendidos
 function reporteTopProductos() {
-  const lista = datos.productosMasVendidos;
+  const lista = Array.isArray(datos.productosMasVendidos) ? datos.productosMasVendidos : [];
   let descripcion = SIN_VENTAS;
   if (lista.length) {
     const unidades = lista.reduce((s, p) => s + p.unidades, 0);
@@ -217,7 +217,7 @@ function reporteTopProductos() {
 
 // 3. Ventas por categoría
 function reporteCategorias() {
-  const lista = datos.ventasPorCategoria;
+  const lista = Array.isArray(datos.ventasPorCategoria) ? datos.ventasPorCategoria : [];
   let descripcion = SIN_VENTAS;
   if (lista.length) {
     const total = lista.reduce((s, c) => s + Number(c.total), 0);
@@ -248,7 +248,7 @@ function reporteCategorias() {
 
 // 4. Métodos de pago
 function reporteMetodosPago() {
-  const lista = datos.metodosPago;
+  const lista = Array.isArray(datos.metodosPago) ? datos.metodosPago : [];
   let descripcion = SIN_VENTAS;
   if (lista.length) {
     const boletas = lista.reduce((s, m) => s + m.ventas, 0);
@@ -277,24 +277,29 @@ function reporteMetodosPago() {
 
 // 5. Estado del inventario
 function reporteInventario() {
-  const inv = datos.inventario;
-  const activos = inv.disponibles + inv.stockBajo + inv.agotados;
-  const reponer = inv.criticos.map(c => `${c.nombre} (${c.stock === 0 ? 'agotado' : c.stock + ' u.'})`);
-  const descripcion = `De ${activos} productos activos, ${inv.disponibles} tienen stock suficiente (${pct(inv.disponibles, activos)}), ` +
-    `${inv.stockBajo} tienen stock bajo (5 unidades o menos) y ${inv.agotados} ${inv.agotados === 1 ? 'está agotado' : 'están agotados'}. ` +
-    `Además hay ${inv.deBaja} producto(s) dados de baja. El inventario activo vale ${soles(inv.valorInventario)} a precio de venta.` +
+  const inv = datos.inventario || {};
+  const disponibles = Number(inv.disponibles || 0);
+  const stockBajo = Number(inv.stockBajo || 0);
+  const agotados = Number(inv.agotados || 0);
+  const deBaja = Number(inv.deBaja || 0);
+  const criticos = Array.isArray(inv.criticos) ? inv.criticos : (Array.isArray(inv.alertas) ? inv.alertas : []);
+  const activos = disponibles + stockBajo + agotados;
+  const reponer = criticos.map(c => `${c.nombre} (${c.stock === 0 ? 'agotado' : c.stock + ' u.'})`);
+  const descripcion = `De ${activos} productos activos, ${disponibles} tienen stock suficiente (${pct(disponibles, activos)}), ` +
+    `${stockBajo} tienen stock bajo (5 unidades o menos) y ${agotados} ${agotados === 1 ? 'está agotado' : 'están agotados'}. ` +
+    `Además hay ${deBaja} producto(s) dados de baja. El inventario activo vale ${soles(inv.valorInventario || inv.valorizado || 0)} a precio de venta.` +
     (reponer.length ? ` Se recomienda reponer pronto: ${reponer.join(', ')}.` : ' No hay productos que necesiten reposición.');
   return {
     id: 'inventario', numero: 5, titulo: 'Estado del inventario', icono: 'bi-box-seam', ancho: 'col-lg-6',
     descripcion,
     columnas: ['Estado', 'Productos'],
-    filas: [['Stock suficiente (más de 5)', inv.disponibles], ['Stock bajo (1 a 5)', inv.stockBajo], ['Agotados', inv.agotados], ['Dados de baja', inv.deBaja]],
-    extra: inv.criticos.length ? { titulo: 'Productos para reponer', columnas: ['Código', 'Producto', 'Stock'], filas: inv.criticos.map(c => [c.codigo, c.nombre, c.stock]) } : null,
+    filas: [['Stock suficiente (más de 5)', disponibles], ['Stock bajo (1 a 5)', stockBajo], ['Agotados', agotados], ['Dados de baja', deBaja]],
+    extra: criticos.length ? { titulo: 'Productos para reponer', columnas: ['Código', 'Producto', 'Stock'], filas: criticos.map(c => [c.codigo, c.nombre, c.stock]) } : null,
     grafico: {
       type: 'bar',
       data: {
         labels: ['Stock suficiente', 'Stock bajo', 'Agotados', 'De baja'],
-        datasets: [{ label: 'Productos', data: [inv.disponibles, inv.stockBajo, inv.agotados, inv.deBaja], backgroundColor: [COLORES[2], COLORES[6], COLORES[3], COLORES[7]], borderRadius: 6 }]
+        datasets: [{ label: 'Productos', data: [disponibles, stockBajo, agotados, deBaja], backgroundColor: [COLORES[2], COLORES[6], COLORES[3], COLORES[7]], borderRadius: 6 }]
       },
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
     }
@@ -303,26 +308,29 @@ function reporteInventario() {
 
 // 6. Productos por vencer
 function reporteVencimientos() {
-  const v = datos.vencimientos;
-  const [vencidos, tres, seis, doce, mas, noVence] = v.cantidades;
-  const prox = v.proximos[0];
+  const v = datos.vencimientos || {};
+  const cantidades = Array.isArray(v.cantidades) ? v.cantidades : [0, 0, 0, 0, 0, 0];
+  const [vencidos, tres, seis, doce, mas, noVence] = cantidades;
+  const etiquetas = Array.isArray(v.etiquetas) ? v.etiquetas : ['Vencidos', 'Hasta 3 meses', '3 a 6 meses', '6 a 12 meses', 'Más de 12 meses', 'No vence'];
+  const proximos = Array.isArray(v.proximos) ? v.proximos : (Array.isArray(v.porVencer) ? v.porVencer : []);
+  const prox = proximos[0];
   let descripcion = `Hay ${vencidos} producto(s) vencido(s) y ${tres} que vencen en los próximos 3 meses. ` +
     `${seis} vencen en 3 a 6 meses, ${doce} en 6 a 12 meses y ${mas} en más de un año. ${noVence} producto(s) no vencen (equipos médicos).`;
   if (prox) descripcion += ` El más próximo a vencer es ${prox.nombre} (${fechaCorta(prox.fechaVencimiento)}, ${prox.dias < 0 ? 'vencido hace ' + Math.abs(prox.dias) : 'en ' + prox.dias} días).`;
-  descripcion += vencidos + tres > 0
+  descripcion += (vencidos + tres > 0)
     ? ' Se recomienda retirar los vencidos y poner en oferta los que vencen pronto.'
     : ' No hay productos que requieran acción inmediata.';
   return {
     id: 'vencimientos', numero: 6, titulo: 'Productos por vencer', icono: 'bi-calendar-x', ancho: 'col-lg-6',
     descripcion,
     columnas: ['Rango', 'Productos'],
-    filas: v.etiquetas.map((e, i) => [e, v.cantidades[i]]),
-    extra: v.proximos.length ? { titulo: 'Próximos a vencer', columnas: ['Código', 'Producto', 'Vence', 'Días', 'Stock'], filas: v.proximos.map(p => [p.codigo, p.nombre, fechaCorta(p.fechaVencimiento), p.dias, p.stock]) } : null,
+    filas: etiquetas.map((e, i) => [e, cantidades[i] || 0]),
+    extra: proximos.length ? { titulo: 'Próximos a vencer', columnas: ['Código', 'Producto', 'Vence', 'Días', 'Stock'], filas: proximos.map(p => [p.codigo, p.nombre, fechaCorta(p.fechaVencimiento), p.dias ?? p.diasRestantes, p.stock]) } : null,
     grafico: {
       type: 'bar',
       data: {
-        labels: v.etiquetas,
-        datasets: [{ label: 'Productos', data: v.cantidades, backgroundColor: [COLORES[3], COLORES[1], COLORES[6], COLORES[0], COLORES[2], COLORES[7]], borderRadius: 6 }]
+        labels: etiquetas,
+        datasets: [{ label: 'Productos', data: cantidades, backgroundColor: [COLORES[3], COLORES[1], COLORES[6], COLORES[0], COLORES[2], COLORES[7]], borderRadius: 6 }]
       },
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
     }
