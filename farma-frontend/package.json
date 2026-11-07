@@ -1,0 +1,16 @@
+{
+  "name": "farma-frontend",
+  "version": "1.0.0",
+  "description": "Frontend de Boticas Por tu Salud - Arquitectura limpia y principios SOLID",
+  "scripts": {
+    "test": "node --test test/**/*.test.js"
+  },
+  "keywords": [
+    "farmacia",
+    "botica",
+    "solid",
+    "unit-tests"
+  ],
+  "author": "Fabrizio Montañez",
+  "license": "MIT"
+}

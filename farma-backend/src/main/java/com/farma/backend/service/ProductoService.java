@@ -5,50 +5,64 @@ import com.farma.backend.model.Producto;
 import com.farma.backend.model.Usuario;
 import com.farma.backend.repository.ProductoRepository;
 import com.farma.backend.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * Servicio del catálogo de productos y mantenimiento del inventario.
+ * Cumple con SOLID:
+ * - SRP: Se responsabiliza exclusivamente de la lógica de negocio y persistencia de productos.
+ * - DIP: Inyección de repositorios mediante constructor.
+ */
 @Service
 public class ProductoService {
 
     private static final String PREFIJO_CODIGO = "FAR-";
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    public ProductoService(ProductoRepository productoRepository, UsuarioRepository usuarioRepository) {
+        this.productoRepository = productoRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     /* ---------------- Consultas (públicas) ---------------- */
 
-    // Tienda: solo productos activos
+    /** Tienda: devuelve solo los productos activos. */
     public List<Producto> listar() {
         return productoRepository.findByActivoTrueOrderByCodigoAsc();
     }
 
-    // Panel de administración: todos (activos y dados de baja)
+    /** Panel de administración: todos los productos (activos y dados de baja). Requiere rol ADMIN. */
     public List<Producto> listarTodos(Integer idUsuario) {
         verificarAdmin(idUsuario);
         return productoRepository.findAllByOrderByCodigoAsc();
     }
 
+    /** Busca un producto por su código alfanumérico (ej: FAR-0001). */
     public Producto buscarPorCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new IllegalArgumentException("El código de producto no puede estar vacío.");
+        }
         return productoRepository.findByCodigoIgnoreCase(codigo.trim())
                 .orElseThrow(() -> new NoSuchElementException("No existe un producto con el código " + codigo.trim().toUpperCase() + "."));
     }
 
-    // Búsqueda del panel de administración (incluye los dados de baja)
+    /** Búsqueda por texto (código, nombre, marca o categoría). */
     public List<Producto> buscar(String texto) {
-        if (texto == null || texto.isBlank()) return productoRepository.findAllByOrderByCodigoAsc();
+        if (texto == null || texto.isBlank()) {
+            return productoRepository.findAllByOrderByCodigoAsc();
+        }
         return productoRepository.buscar(texto.trim());
     }
 
     /* ---------------- CRUD (solo administrador) ---------------- */
 
+    /** Registra un nuevo producto autogenerando el código consecutivo FAR-XXXX. */
     public Producto registrar(ProductoRequest datos, Integer idUsuario) {
         verificarAdmin(idUsuario);
         validar(datos);
@@ -58,15 +72,16 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
+    /** Actualiza la información de un producto existente. */
     public Producto actualizar(String codigo, ProductoRequest datos, Integer idUsuario) {
         verificarAdmin(idUsuario);
         validar(datos);
-        Producto producto = buscarPorCodigo(codigo);   // el código no cambia
+        Producto producto = buscarPorCodigo(codigo);
         copiarDatos(datos, producto);
         return productoRepository.save(producto);
     }
 
-    // Dar de baja (activo = false) o volver a activar (activo = true) sin borrar el producto
+    /** Activa o da de baja un producto sin eliminarlo de la base de datos. */
     public Producto cambiarEstado(String codigo, Boolean activo, Integer idUsuario) {
         verificarAdmin(idUsuario);
         if (activo == null) {
@@ -77,14 +92,15 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
+    /** Elimina un producto por código. */
     public void eliminar(String codigo, Integer idUsuario) {
         verificarAdmin(idUsuario);
         productoRepository.delete(buscarPorCodigo(codigo));
     }
 
-    /* ---------------- Apoyo ---------------- */
+    /* ---------------- Apoyo y Validaciones ---------------- */
 
-    // El frontend envía el id del usuario que inició sesión; aquí se comprueba que sea ADMIN
+    /** Valida que el usuario tenga privilegios de administrador. */
     public void verificarAdmin(Integer idUsuario) {
         if (idUsuario == null) {
             throw new SecurityException("Debes iniciar sesión como administrador.");
@@ -96,7 +112,7 @@ public class ProductoService {
         }
     }
 
-    // FAR-0020 -> FAR-0021. Si no hay productos, empieza en FAR-0001
+    /** Genera el siguiente código incremental (FAR-0001, FAR-0002, etc.). */
     private String siguienteCodigo() {
         int ultimo = productoRepository.findTopByOrderByCodigoDesc()
                 .map(p -> Integer.parseInt(p.getCodigo().replaceAll("\\D", "")))
@@ -104,7 +120,11 @@ public class ProductoService {
         return PREFIJO_CODIGO + String.format("%04d", ultimo + 1);
     }
 
+    /** Valida las reglas de negocio del producto. */
     private void validar(ProductoRequest d) {
+        if (d == null) {
+            throw new IllegalArgumentException("Los datos del producto son obligatorios.");
+        }
         if (d.getNombre() == null || d.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre es obligatorio.");
         }
@@ -120,7 +140,6 @@ public class ProductoService {
         if (d.getCategoria() == null || d.getCategoria().isBlank()) {
             throw new IllegalArgumentException("La categoría es obligatoria.");
         }
-        // Ofertas: 0 = sin oferta. Si hay oferta, el descuento mínimo es 5% (pedido del Avance Final)
         Integer desc = d.getDescuento();
         if (desc != null && desc != 0 && (desc < 5 || desc > 90)) {
             throw new IllegalArgumentException("El descuento debe ser 0 (sin oferta) o estar entre 5% y 90%.");

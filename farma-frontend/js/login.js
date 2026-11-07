@@ -6,9 +6,9 @@
    - Sin alert()/confirm(): los mensajes se muestran en la misma tarjeta.
    ===================================================================== */
 
-const API_URL = 'http://localhost:8081/api';
-const CLAVE_SESION = 'farma_sesion';
-const CLAVE_ULTIMO_CORREO = 'farma_ultimo_correo';
+const API_URL = (window.Farma && Farma.config) ? Farma.config.API_URL : 'http://localhost:8081/api';
+const CLAVE_SESION = (window.Farma && Farma.config) ? Farma.config.CLAVE_SESION : 'farma_sesion';
+const CLAVE_ULTIMO_CORREO = (window.Farma && Farma.config) ? Farma.config.CLAVE_ULTIMO_CORREO : 'farma_ultimo_correo';
 
 const $ = (id) => document.getElementById(id);
 

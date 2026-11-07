@@ -1,7 +1,6 @@
 package com.farma.backend.controller;
 
 import com.farma.backend.config.CulqiProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,16 +11,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Datos públicos que el frontend necesita para abrir Culqi Checkout.
- * Aquí se expone SOLO la llave pública; la llave secreta se queda en el servidor.
+ * Controlador REST para exponer la configuración pública de pagos.
+ * Solo expone la llave pública necesaria para Culqi Checkout en el frontend.
+ * Cumple con DIP mediante inyección por constructor.
  */
 @RestController
 @RequestMapping("/api/pagos")
 @CrossOrigin(origins = "*")
 public class PagoController {
 
-    @Autowired
-    private CulqiProperties culqi;
+    private final CulqiProperties culqi;
+
+    public PagoController(CulqiProperties culqi) {
+        this.culqi = culqi;
+    }
 
     @GetMapping("/config")
     public Map<String, Object> configuracion() {

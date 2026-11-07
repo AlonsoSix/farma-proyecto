@@ -1,21 +1,26 @@
 /* =====================================================================
-   Puerta de acceso de la tienda.
-   Se carga al inicio del <head> de todas las páginas protegidas.
-   - Sin sesión: redirige a login.html y guarda la página que se quería ver.
-   - admin.html y reportes.html: además exigen rol ADMIN.
-   La sesión se guarda en localStorage con la clave farma_sesion.
+   Puerta de acceso de la tienda (auth-guard.js)
+   Se carga en el <head> de todas las páginas protegidas.
+   - Sin sesión: redirige a login.html recordando la página solicitada.
+   - admin.html y reportes.html: requieren rol ADMIN obligatoriamente.
+   Utiliza Farma.leerSesion() de comun.js con respaldo local seguro.
    ===================================================================== */
 (function () {
   'use strict';
 
   var pagina = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   var soloAdmin = pagina === 'admin.html' || pagina === 'reportes.html';
-  var sesion = null;
+  var sesion = (window.Farma && typeof Farma.leerSesion === 'function')
+    ? Farma.leerSesion()
+    : null;
 
-  try {
-    sesion = JSON.parse(localStorage.getItem('farma_sesion'));
-  } catch (e) {
-    sesion = null;
+  if (!sesion) {
+    try {
+      var raw = localStorage.getItem('farma_sesion');
+      sesion = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      sesion = null;
+    }
   }
 
   if (!sesion || sesion.id == null) {

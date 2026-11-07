@@ -16,15 +16,23 @@ public class CulqiProperties {
     private String publicKey = "";
     private String secretKey = "";
     private String apiUrl = "https://api.culqi.com/v2";
+    private String modo;
 
     public boolean isConfigurado() {
         return publicKey != null && !publicKey.isBlank()
                 && secretKey != null && !secretKey.isBlank();
     }
 
-    /** sandbox / produccion, según el prefijo de la llave pública. */
+    /** sandbox / produccion, según el prefijo de la llave pública o configuración explícita. */
     public String getModo() {
+        if (modo != null && !modo.isBlank()) {
+            return modo;
+        }
         return publicKey != null && publicKey.startsWith("pk_test_") ? "sandbox" : "produccion";
+    }
+
+    public void setModo(String modo) {
+        this.modo = modo;
     }
 
     public String getPublicKey() { return publicKey; }

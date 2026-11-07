@@ -1,13 +1,13 @@
-const API_URL = 'http://localhost:8081/api';
+const API_URL = (window.Farma && Farma.config) ? Farma.config.API_URL : 'http://localhost:8081/api';
 // Los primeros productos del catálogo (id 1 al 6) son los "más vendidos": se muestran en el inicio
 // y en la página de productos llevan la etiqueta "Más vendido".
 const MAX_MAS_VENDIDOS = 6;
-const IMG_VACIA = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+const IMG_VACIA = (window.Farma && Farma.IMG_VACIA) ? Farma.IMG_VACIA : ('data:image/svg+xml;utf8,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="240" viewBox="0 0 300 240">' +
   '<rect width="300" height="240" fill="#eef3f8"/>' +
   '<g fill="none" stroke="#9fb3c8" stroke-width="8" stroke-linecap="round">' +
   '<rect x="105" y="70" width="90" height="110" rx="14"/><path d="M125 70v-16h50v16M150 105v50M125 130h50"/></g></svg>'
-);
+));
 
 let productos = [];   // todos los productos que devuelve el backend
 let carrito = {};     // { id: { id, nombre, precio, imagen, cantidad } }
@@ -112,11 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ---------- Utilidades ---------- */
 function esc(texto) {
-  return String(texto ?? '').replace(/[&<>"']/g, c => (
+  return (window.Farma && Farma.esc) ? Farma.esc(texto) : String(texto ?? '').replace(/[&<>"']/g, c => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
 }
-function soles(n) { return 'S/ ' + Number(n).toFixed(2); }
+function soles(n) { return (window.Farma && Farma.soles) ? Farma.soles(n) : ('S/ ' + Number(n).toFixed(2)); }
 
 /* ---------- Ofertas (Avance Final) ---------- */
 // % de descuento del producto (0 si no está en oferta)
@@ -142,6 +142,7 @@ function htmlBadgeOferta(p) {
 // apunta a la raíz del disco (o del servidor) y no encuentra la imagen al abrir index.html;
 // por eso se le quita esa barra inicial. Las URL completas (http, https, data) no se tocan.
 function rutaImagen(url) {
+  if (window.Farma && Farma.rutaImagen) return Farma.rutaImagen(url);
   if (!url) return IMG_VACIA;
   return /^(https?:|data:)/i.test(url) ? url : String(url).trim().replace(/^\/+/, '');
 }

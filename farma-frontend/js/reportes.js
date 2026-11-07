@@ -9,7 +9,7 @@
      - Word  -> docx (incluye el gráfico)
    ===================================================================== */
 
-const API = 'http://localhost:8081/api';
+const API = (window.Farma && Farma.config) ? Farma.config.API_URL : 'http://localhost:8081/api';
 const $ = (id) => document.getElementById(id);
 
 // Colores de la marca para los gráficos
@@ -22,16 +22,17 @@ let reportes = [];      // los 6 reportes ya armados (título, descripción, tab
 const graficos = {};    // instancias de Chart.js por id de reporte
 
 /* ---------- Sesión: solo entra el ADMIN ---------- */
-function leerSesion() {
-  try { return JSON.parse(localStorage.getItem('farma_sesion')); } catch (e) { return null; }
-}
-const sesion = leerSesion();
-const esAdmin = !!sesion && String(sesion.rol).toUpperCase() === 'ADMIN';
+const sesion = (window.Farma && typeof Farma.leerSesion === 'function') ? Farma.leerSesion() : null;
+const esAdmin = (window.Farma && typeof Farma.esAdmin === 'function') ? Farma.esAdmin() : (!!sesion && String(sesion.rol).toUpperCase() === 'ADMIN');
 
 document.addEventListener('DOMContentLoaded', () => {
   $('btnSalir').addEventListener('click', () => {
-    try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-    location.href = 'login.html?salir=1';
+    if (window.Farma && typeof Farma.cerrarSesion === 'function') {
+      Farma.cerrarSesion();
+    } else {
+      try { localStorage.removeItem('farma_sesion'); } catch (e) {}
+      location.href = 'login.html?salir=1';
+    }
   });
   if (!esAdmin) {
     $('sinAcceso').classList.remove('d-none');

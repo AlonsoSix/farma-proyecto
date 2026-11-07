@@ -7,45 +7,48 @@ import com.farma.backend.model.Producto;
 import com.farma.backend.model.Venta;
 import com.farma.backend.repository.ProductoRepository;
 import com.farma.backend.repository.VentaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * Servicio encargado del procesamiento y registro de ventas.
+ * Cumple con SOLID:
+ * - SRP: Orquesta la validación de carrito, cálculo fiscal (IGV), cobro y decremento de inventario.
+ * - DIP: Inyección de dependencias mediante constructor con abstracción PasarelaPago.
+ */
 @Service
 public class VentaService {
 
     private static final BigDecimal FACTOR_IGV = new BigDecimal("1.18");   // IGV 18 %
     private static final Set<String> METODOS = Set.of("EFECTIVO", "TARJETA", "YAPE");
 
-    @Autowired
-    private VentaRepository ventaRepository;
+    private final VentaRepository ventaRepository;
+    private final ProductoRepository productoRepository;
+    private final PasarelaPago pasarelaPago;
 
-    @Autowired
-    private ProductoRepository productoRepository;
-
-    @Autowired
-    private PasarelaPago pasarelaPago;
+    public VentaService(VentaRepository ventaRepository,
+                        ProductoRepository productoRepository,
+                        PasarelaPago pasarelaPago) {
+        this.ventaRepository = ventaRepository;
+        this.productoRepository = productoRepository;
+        this.pasarelaPago = pasarelaPago;
+    }
 
     /**
      * Registra la compra: valida los datos, calcula los precios con oferta, cobra con la
      * pasarela (Culqi o simulado), descuenta el stock y genera el número de boleta.
-     * Si algo falla, no se guarda nada (@Transactional).
+     * Si algo falla, la transacción revierte todos los cambios (@Transactional).
      */
     @Transactional
     public Venta registrar(VentaRequest datos) {
         validarCliente(datos);
         String metodo = datos.getMetodoPago().trim().toUpperCase();
 
-        // Junta cantidades si el mismo producto viene dos veces
+        // Agrupa cantidades si el mismo producto viene repetido en el pedido
         Map<Integer, Integer> cantidades = new LinkedHashMap<>();
         for (VentaRequest.Item item : datos.getItems()) {
             if (item.getIdProducto() == null || item.getCantidad() == null || item.getCantidad() <= 0) {
@@ -64,8 +67,7 @@ public class VentaService {
         BigDecimal sinDescuento = BigDecimal.ZERO;
         BigDecimal total = BigDecimal.ZERO;
 
-        // Se valida todo el carrito antes de cobrar y de tocar el stock.
-        // Así no se descuenta inventario si la tarjeta o Yape son rechazados.
+        // Se valida todo el inventario antes de procesar el pago para proteger el stock
         List<Producto> productos = new ArrayList<>();
         List<Integer> cantidadesCompradas = new ArrayList<>();
 
@@ -106,8 +108,7 @@ public class VentaService {
         venta.setOpGravada(opGravada);
         venta.setIgv(total.subtract(opGravada));
 
-        // Cobro real (Culqi) o simulado. Si la pasarela rechaza, se lanza PagoRechazadoException
-        // y el stock todavía no se ha descontado.
+        // Procesamiento del cobro (Culqi o Simulado). Si falla, lanza PagoRechazadoException
         ResultadoPago pago = pasarelaPago.cobrar(
                 metodo,
                 datos.getTokenPago(),
@@ -130,21 +131,28 @@ public class VentaService {
             }
 
             venta = ventaRepository.save(venta);
-            venta.setNumero(String.format("B001-%08d", venta.getId()));   // B001-00000001
+            venta.setNumero(String.format("B001-%08d", venta.getId()));
             return ventaRepository.save(venta);
         } catch (RuntimeException e) {
-            // Si el cargo ya se aprobó pero la venta no se guardó, se intenta devolver el dinero.
+            // Reembolso de seguridad si ocurre un fallo posterior a la aprobación del cargo
             pasarelaPago.reembolsar(pago.referencia());
             throw e;
         }
     }
 
+    /** Busca una boleta por su correlativo oficial (ej: B001-00000001). */
     public Venta buscarPorNumero(String numero) {
+        if (numero == null || numero.isBlank()) {
+            throw new IllegalArgumentException("El número de boleta es obligatorio.");
+        }
         return ventaRepository.findByNumeroIgnoreCase(numero.trim())
                 .orElseThrow(() -> new NoSuchElementException("No existe la boleta " + numero.trim().toUpperCase() + "."));
     }
 
     private void validarCliente(VentaRequest d) {
+        if (d == null) {
+            throw new IllegalArgumentException("Los datos de la venta son obligatorios.");
+        }
         if (d.getItems() == null || d.getItems().isEmpty()) {
             throw new IllegalArgumentException("Tu carrito está vacío.");
         }

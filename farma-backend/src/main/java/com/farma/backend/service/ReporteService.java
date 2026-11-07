@@ -3,9 +3,6 @@ package com.farma.backend.service;
 import com.farma.backend.model.Producto;
 import com.farma.backend.repository.ProductoRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -16,23 +13,29 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 /**
- * Avance Final: los 6 reportes del panel de administración.
- *   1. Ventas por mes                 4. Ventas por método de pago
- *   2. Productos más vendidos (top 10) 5. Estado del inventario
- *   3. Ventas por categoría           6. Productos por vencer
- * Los reportes de ventas (1 a 4) se pueden filtrar por fechas (desde / hasta).
+ * Servicio encargado de generar las métricas y los 6 reportes analíticos del panel de administración:
+ *   1. Ventas por mes
+ *   2. Productos más vendidos (Top 10)
+ *   3. Ventas por categoría
+ *   4. Ventas por método de pago
+ *   5. Estado del inventario (Stock bajo, sin stock, valorizado)
+ *   6. Productos por vencer (Próximos 60 días)
+ * Cumple con SRP y DIP (inyección por constructor).
  */
 @Service
 public class ReporteService {
 
-    @PersistenceContext
-    private EntityManager em;
+    private final EntityManager em;
+    private final ProductoRepository productoRepository;
+    private final ProductoService productoService;
 
-    @Autowired
-    private ProductoRepository productoRepository;
-
-    @Autowired
-    private ProductoService productoService;
+    public ReporteService(EntityManager em,
+                          ProductoRepository productoRepository,
+                          ProductoService productoService) {
+        this.em = em;
+        this.productoRepository = productoRepository;
+        this.productoService = productoService;
+    }
 
     public Map<String, Object> generar(LocalDate desde, LocalDate hasta, Integer idUsuario) {
         productoService.verificarAdmin(idUsuario);
@@ -58,7 +61,7 @@ public class ReporteService {
         return r;
     }
 
-    /* ---------- Resumen general (tarjetas de arriba) ---------- */
+    /* ---------- Resumen general (tarjetas de métricas superiores) ---------- */
     private Map<String, Object> resumen(LocalDateTime inicio, LocalDateTime fin) {
         Object[] v = em.createQuery("""
                 SELECT COUNT(v), COALESCE(SUM(v.total), 0), COALESCE(SUM(v.descuentoTotal), 0)
@@ -98,30 +101,32 @@ public class ReporteService {
             m.put("anio", ((Number) f[0]).intValue());
             m.put("mes", ((Number) f[1]).intValue());
             m.put("ventas", ((Number) f[2]).longValue());
-            m.put("total", dinero(f[3]));
+            m.put("ingresos", dinero(f[3]));
             m.put("descuentos", dinero(f[4]));
             lista.add(m);
         }
         return lista;
     }
 
-    /* ---------- 2. Productos más vendidos (top 10 por unidades) ---------- */
+    /* ---------- 2. Top 10 más vendidos ---------- */
     private List<Map<String, Object>> productosMasVendidos(LocalDateTime inicio, LocalDateTime fin) {
-        TypedQuery<Object[]> q = em.createQuery("""
-                SELECT d.codigo, d.nombre, SUM(d.cantidad), SUM(d.importe)
-                FROM DetalleVenta d WHERE d.venta.fecha >= :inicio AND d.venta.fecha < :fin
-                GROUP BY d.codigo, d.nombre
-                ORDER BY SUM(d.cantidad) DESC, SUM(d.importe) DESC
-                """, Object[].class);
-        List<Object[]> filas = q.setParameter("inicio", inicio).setParameter("fin", fin)
+        List<Object[]> filas = em.createQuery("""
+                SELECT d.codigo, d.nombre, d.categoria, SUM(d.cantidad), SUM(d.importe)
+                FROM DetalleVenta d
+                WHERE d.venta.fecha >= :inicio AND d.venta.fecha < :fin
+                GROUP BY d.codigo, d.nombre, d.categoria
+                ORDER BY SUM(d.cantidad) DESC
+                """, Object[].class)
+                .setParameter("inicio", inicio).setParameter("fin", fin)
                 .setMaxResults(10).getResultList();
         List<Map<String, Object>> lista = new ArrayList<>();
         for (Object[] f : filas) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("codigo", f[0]);
             m.put("nombre", f[1]);
-            m.put("unidades", ((Number) f[2]).longValue());
-            m.put("total", dinero(f[3]));
+            m.put("categoria", f[2]);
+            m.put("unidades", ((Number) f[3]).longValue());
+            m.put("ingresos", dinero(f[4]));
             lista.add(m);
         }
         return lista;
@@ -130,9 +135,10 @@ public class ReporteService {
     /* ---------- 3. Ventas por categoría ---------- */
     private List<Map<String, Object>> ventasPorCategoria(LocalDateTime inicio, LocalDateTime fin) {
         List<Object[]> filas = em.createQuery("""
-                SELECT COALESCE(d.categoria, 'Otros'), SUM(d.cantidad), SUM(d.importe)
-                FROM DetalleVenta d WHERE d.venta.fecha >= :inicio AND d.venta.fecha < :fin
-                GROUP BY COALESCE(d.categoria, 'Otros')
+                SELECT d.categoria, SUM(d.cantidad), SUM(d.importe)
+                FROM DetalleVenta d
+                WHERE d.venta.fecha >= :inicio AND d.venta.fecha < :fin
+                GROUP BY d.categoria
                 ORDER BY SUM(d.importe) DESC
                 """, Object[].class)
                 .setParameter("inicio", inicio).setParameter("fin", fin).getResultList();
@@ -141,17 +147,18 @@ public class ReporteService {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("categoria", f[0]);
             m.put("unidades", ((Number) f[1]).longValue());
-            m.put("total", dinero(f[2]));
+            m.put("ingresos", dinero(f[2]));
             lista.add(m);
         }
         return lista;
     }
 
-    /* ---------- 4. Ventas por método de pago ---------- */
+    /* ---------- 4. Métodos de pago ---------- */
     private List<Map<String, Object>> metodosPago(LocalDateTime inicio, LocalDateTime fin) {
         List<Object[]> filas = em.createQuery("""
                 SELECT v.metodoPago, COUNT(v), SUM(v.total)
-                FROM Venta v WHERE v.fecha >= :inicio AND v.fecha < :fin
+                FROM Venta v
+                WHERE v.fecha >= :inicio AND v.fecha < :fin
                 GROUP BY v.metodoPago
                 ORDER BY COUNT(v) DESC
                 """, Object[].class)
@@ -160,78 +167,106 @@ public class ReporteService {
         for (Object[] f : filas) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("metodo", f[0]);
-            m.put("ventas", ((Number) f[1]).longValue());
-            m.put("total", dinero(f[2]));
+            m.put("operaciones", ((Number) f[1]).longValue());
+            m.put("ingresos", dinero(f[2]));
             lista.add(m);
         }
         return lista;
     }
 
-    /* ---------- 5. Estado del inventario ---------- */
+    /* ---------- 5. Inventario ---------- */
     private Map<String, Object> inventario(List<Producto> productos) {
-        int disponibles = 0, stockBajo = 0, agotados = 0, deBaja = 0;
-        BigDecimal valor = BigDecimal.ZERO;
-        List<Map<String, Object>> criticos = new ArrayList<>();
+        int activos = 0;
+        int inactivos = 0;
+        int agotados = 0;
+        int stockBajo = 0;
+        int conOferta = 0;
+        BigDecimal valorizadoCosto = BigDecimal.ZERO;
+        List<Map<String, Object>> listaBajoStock = new ArrayList<>();
+
         for (Producto p : productos) {
-            if (!Boolean.TRUE.equals(p.getActivo())) { deBaja++; continue; }
-            int s = p.getStock() == null ? 0 : p.getStock();
-            if (s <= 0) agotados++;
-            else if (s <= 5) stockBajo++;
-            else disponibles++;
-            valor = valor.add(p.getPrecio().multiply(BigDecimal.valueOf(s)));
-            if (s <= 5) {
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("codigo", p.getCodigo());
-                m.put("nombre", p.getNombre());
-                m.put("stock", s);
-                criticos.add(m);
+            int st = p.getStock() != null ? p.getStock() : 0;
+            boolean activo = Boolean.TRUE.equals(p.getActivo());
+            if (activo) activos++; else inactivos++;
+            if (p.getDescuento() != null && p.getDescuento() > 0) conOferta++;
+
+            if (st == 0) {
+                agotados++;
+            } else if (st <= 10) {
+                stockBajo++;
+            }
+
+            if (p.getPrecio() != null) {
+                valorizadoCosto = valorizadoCosto.add(p.getPrecioFinal().multiply(BigDecimal.valueOf(st)));
+            }
+
+            if (st <= 10) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("codigo", p.getCodigo());
+                item.put("nombre", p.getNombre());
+                item.put("categoria", p.getCategoria());
+                item.put("stock", st);
+                item.put("estado", st == 0 ? "AGOTADO" : "STOCK_BAJO");
+                item.put("activo", activo);
+                listaBajoStock.add(item);
             }
         }
-        criticos.sort(Comparator.comparingInt(m -> (Integer) m.get("stock")));
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("disponibles", disponibles);
-        m.put("stockBajo", stockBajo);
-        m.put("agotados", agotados);
-        m.put("deBaja", deBaja);
-        m.put("valorInventario", valor.setScale(2, RoundingMode.HALF_UP));
-        m.put("criticos", criticos);
-        return m;
+
+        Map<String, Object> inv = new LinkedHashMap<>();
+        inv.put("totalProductos", productos.size());
+        inv.put("activos", activos);
+        inv.put("inactivos", inactivos);
+        inv.put("agotados", agotados);
+        inv.put("stockBajo", stockBajo);
+        inv.put("conOferta", conOferta);
+        inv.put("valorizado", valorizadoCosto.setScale(2, RoundingMode.HALF_UP));
+        inv.put("alertas", listaBajoStock);
+        return inv;
     }
 
-    /* ---------- 6. Productos por vencer ---------- */
+    /* ---------- 6. Vencimientos ---------- */
     private Map<String, Object> vencimientos(List<Producto> productos) {
         LocalDate hoy = LocalDate.now();
-        // Rangos: vencidos, hasta 3 meses, 3 a 6 meses, 6 a 12 meses, más de 12 meses, no vence
-        long[] rangos = new long[6];
-        List<Map<String, Object>> proximos = new ArrayList<>();
+        List<Map<String, Object>> vencidos = new ArrayList<>();
+        List<Map<String, Object>> porVencer = new ArrayList<>();
+
         for (Producto p : productos) {
-            if (!Boolean.TRUE.equals(p.getActivo())) continue;
-            if (p.getFechaVencimiento() == null) { rangos[5]++; continue; }
-            long dias = ChronoUnit.DAYS.between(hoy, p.getFechaVencimiento());
-            if (dias < 0) rangos[0]++;
-            else if (dias <= 90) rangos[1]++;
-            else if (dias <= 180) rangos[2]++;
-            else if (dias <= 365) rangos[3]++;
-            else rangos[4]++;
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("codigo", p.getCodigo());
-            m.put("nombre", p.getNombre());
-            m.put("fechaVencimiento", p.getFechaVencimiento());
-            m.put("dias", dias);
-            m.put("stock", p.getStock());
-            proximos.add(m);
+            LocalDate fv = p.getFechaVencimiento();
+            if (fv == null) continue;
+            long dias = ChronoUnit.DAYS.between(hoy, fv);
+
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("codigo", p.getCodigo());
+            item.put("nombre", p.getNombre());
+            item.put("categoria", p.getCategoria());
+            item.put("stock", p.getStock());
+            item.put("fechaVencimiento", fv);
+            item.put("diasRestantes", dias);
+
+            if (dias < 0) {
+                item.put("estado", "VENCIDO");
+                vencidos.add(item);
+            } else if (dias <= 60) {
+                item.put("estado", dias <= 30 ? "URGENTE" : "PROXIMO");
+                porVencer.add(item);
+            }
         }
-        proximos.sort(Comparator.comparingLong(m -> (Long) m.get("dias")));
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("etiquetas", List.of("Vencidos", "Hasta 3 meses", "3 a 6 meses", "6 a 12 meses", "Más de 12 meses", "No vence"));
-        m.put("cantidades", Arrays.stream(rangos).boxed().toList());
-        m.put("proximos", proximos.subList(0, Math.min(8, proximos.size())));
-        return m;
+
+        porVencer.sort(Comparator.comparingLong(a -> (Long) a.get("diasRestantes")));
+        vencidos.sort(Comparator.comparingLong(a -> (Long) a.get("diasRestantes")));
+
+        Map<String, Object> ven = new LinkedHashMap<>();
+        ven.put("totalVencidos", vencidos.size());
+        ven.put("totalPorVencer", porVencer.size());
+        ven.put("porVencer", porVencer);
+        ven.put("vencidos", vencidos);
+        return ven;
     }
 
-    private BigDecimal dinero(Object valor) {
-        if (valor == null) return BigDecimal.ZERO.setScale(2);
-        BigDecimal b = valor instanceof BigDecimal bd ? bd : new BigDecimal(valor.toString());
-        return b.setScale(2, RoundingMode.HALF_UP);
+    private BigDecimal dinero(Object val) {
+        if (val == null) return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        if (val instanceof BigDecimal b) return b.setScale(2, RoundingMode.HALF_UP);
+        if (val instanceof Number n) return BigDecimal.valueOf(n.doubleValue()).setScale(2, RoundingMode.HALF_UP);
+        return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     }
 }

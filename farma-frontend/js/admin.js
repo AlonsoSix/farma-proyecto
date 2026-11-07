@@ -8,8 +8,8 @@
    Cada producto se identifica por su CÓDIGO (FAR-0001), no por su id.
    ===================================================================== */
 
-const API = 'http://localhost:8081/api';
-const IMG_VACIA = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+const API = (window.Farma && Farma.config) ? Farma.config.API_URL : 'http://localhost:8081/api';
+const IMG_VACIA = (window.Farma && Farma.IMG_VACIA) ? Farma.IMG_VACIA : 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">' +
   '<rect width="80" height="80" fill="#eef3f8"/><g fill="none" stroke="#9fb3c8" stroke-width="3" stroke-linecap="round">' +
   '<rect x="27" y="22" width="26" height="36" rx="5"/><path d="M33 22v-5h14v5M40 33v14M33 40h14"/></g></svg>'
@@ -27,16 +27,17 @@ const $ = (id) => document.getElementById(id);
 let modalProducto, modalEliminar, modalEstado;
 
 /* ---------- Sesión: solo entra el ADMIN ---------- */
-function leerSesion() {
-  try { return JSON.parse(localStorage.getItem('farma_sesion')); } catch (e) { return null; }
-}
-const sesion = leerSesion();
-const esAdmin = !!sesion && String(sesion.rol).toUpperCase() === 'ADMIN';
+const sesion = (window.Farma && typeof Farma.leerSesion === 'function') ? Farma.leerSesion() : null;
+const esAdmin = (window.Farma && typeof Farma.esAdmin === 'function') ? Farma.esAdmin() : (!!sesion && String(sesion.rol).toUpperCase() === 'ADMIN');
 
 document.addEventListener('DOMContentLoaded', () => {
   $('btnSalir').addEventListener('click', () => {
-    try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-    location.href = 'login.html?salir=1';
+    if (window.Farma && typeof Farma.cerrarSesion === 'function') {
+      Farma.cerrarSesion();
+    } else {
+      try { localStorage.removeItem('farma_sesion'); } catch (e) {}
+      location.href = 'login.html?salir=1';
+    }
   });
 
   if (!esAdmin) {           // cliente o sin sesión: no se muestra el panel
