@@ -17,6 +17,7 @@ public class ProductoRequest {
     private String imagenUrl;
     private Integer stock;
     private LocalDate fechaVencimiento;
+    private Integer descuento;   // % de oferta: vacío o 0 = sin oferta, 5 a 90 = en oferta
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -34,4 +35,6 @@ public class ProductoRequest {
     public void setStock(Integer stock) { this.stock = stock; }
     public LocalDate getFechaVencimiento() { return fechaVencimiento; }
     public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
+    public Integer getDescuento() { return descuento; }
+    public void setDescuento(Integer descuento) { this.descuento = descuento; }
 }

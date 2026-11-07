@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi carrito | PorTuSalud</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
+<!-- Pantalla de carga: se muestra al llegar desde un enlace interno o al recargar la página (ver main.js) -->
+<script>
+try {
+  var nav = performance.getEntriesByType('navigation')[0];
+  var recarga = nav ? nav.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
+  if (recarga || sessionStorage.getItem('farma_cargando')) document.documentElement.classList.add('cargando-pagina');
+} catch (e) {}
+</script>
+</head>
+<body>
+
+<!-- PANTALLA DE CARGA -->
+<div id="pantallaCarga" class="pantalla-carga" aria-hidden="true">
+  <div class="carga-logo"><img src="img/favicon.png" alt=""></div>
+  <p class="carga-texto">Cargando...</p>
+</div>
+
+<!-- FRANJA SUPERIOR -->
+<div class="topbar">
+  <div class="container d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la zona</span>
+    <span class="d-none d-md-inline"><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654 321</span>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg bg-white sticky-top main-nav">
+  <div class="container">
+    <a class="navbar-brand" href="index.html" aria-label="PorTuSalud - volver al inicio">
+      <img src="img/logo-farma3.png" alt="PorTuSalud" class="brand-logo">
+    </a>
+
+    <div class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0">
+      <button class="btn-cart" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel" aria-label="Ver carrito">
+        <i class="bi bi-cart3"></i>
+        <span id="cartCount" class="cart-count">0</span>
+      </button>
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+
+    <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
+      <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría" autocomplete="off">
+      <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
+    </form>
+
+    <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
+      <div class="d-flex gap-2 py-3 py-lg-0">
+        <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar sesión</button>
+        <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#registroModal">Registrarse</button>
+      </div>
+    </div>
+  </div>
+  <div class="subnav">
+    <div class="container">
+      <a href="index.html">Inicio</a>
+      <a href="productos.html">Productos</a>
+      <a href="servicios.html">Servicios</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="contacto.html">Contacto</a>
+    </div>
+  </div>
+</nav>
+
+<!-- =====================================================================
+     CARRITO CON BOLETA (Avance Final)
+     1) Mi carrito: productos, cantidades y resumen con descuentos e IGV
+     2) Datos del cliente y método de pago (pago simulado)
+     3) Boleta de venta electrónica: se puede imprimir o guardar como PDF
+     La lógica está en js/carrito.js
+     ===================================================================== -->
+<main class="carrito-pagina">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="index.html">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mi carrito</li>
+      </ol>
+    </nav>
+
+    <!-- Pasos -->
+    <ol class="ck-pasos" id="ckPasos">
+      <li class="activo" data-paso="1"><span>1</span>Carrito</li>
+      <li data-paso="2"><span>2</span>Datos y pago</li>
+      <li data-paso="3"><span>3</span>Boleta</li>
+    </ol>
+
+    <!-- PASO 1 y 2: carrito + formulario -->
+    <section id="ckCompra">
+      <!-- Carrito vacío -->
+      <div id="ckVacio" class="ck-caja ck-vacio d-none">
+        <i class="bi bi-cart-x"></i>
+        <h1 class="h5 fw-bold mt-3">Tu carrito está vacío</h1>
+        <p class="text-muted">Agrega productos para generar tu boleta de compra.</p>
+        <a href="productos.html" class="btn btn-primary rounded-pill px-4">Ver productos</a>
+        <a href="productos.html?ofertas=1" class="btn btn-outline-primary rounded-pill px-4 ms-1"><i class="bi bi-tag-fill me-1"></i>Ver ofertas</a>
+      </div>
+
+      <div class="row g-4" id="ckContenido">
+        <div class="col-lg-7">
+          <div class="ck-caja">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <h1 class="ck-titulo mb-0"><i class="bi bi-cart3 me-2"></i>Mi carrito <span id="ckUnidades" class="text-muted fw-normal"></span></h1>
+              <a href="productos.html" class="small fw-semibold text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Seguir comprando</a>
+            </div>
+            <div id="ckItems"></div>
+          </div>
+
+          <!-- Datos del cliente -->
+          <form id="formCompra" class="ck-caja mt-4" novalidate>
+            <h2 class="ck-titulo"><i class="bi bi-person-vcard me-2"></i>Datos para la boleta</h2>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label" for="ckNombre">Nombres y apellidos *</label>
+                <input type="text" id="ckNombre" class="form-control" minlength="3" maxlength="150" required autocomplete="name">
+                <div class="invalid-feedback">Escribe tu nombre completo.</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="ckDni">DNI *</label>
+                <input type="text" id="ckDni" class="form-control" inputmode="numeric" pattern="\d{8}" maxlength="8" required placeholder="8 números">
+                <div class="invalid-feedback">El DNI debe tener 8 números.</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="ckCorreo">Correo (opcional)</label>
+                <input type="email" id="ckCorreo" class="form-control" maxlength="150" autocomplete="email">
+                <div class="invalid-feedback">Escribe un correo válido.</div>
+              </div>
+            </div>
+
+            <h2 class="ck-titulo mt-4"><i class="bi bi-wallet2 me-2"></i>Método de pago</h2>
+            <div class="ck-metodos" role="radiogroup" aria-label="Método de pago">
+              <label class="ck-metodo">
+                <input type="radio" name="metodoPago" value="EFECTIVO" checked>
+                <span><i class="bi bi-cash-coin"></i>Efectivo<small>Pagas al recibir</small></span>
+              </label>
+              <label class="ck-metodo">
+                <input type="radio" name="metodoPago" value="TARJETA">
+                <span><i class="bi bi-credit-card"></i>Tarjeta<small>Con POS al recibir</small></span>
+              </label>
+              <label class="ck-metodo">
+                <input type="radio" name="metodoPago" value="YAPE">
+                <span><i class="bi bi-phone"></i>Yape<small>Al número de la tienda</small></span>
+              </label>
+            </div>
+            <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Pago simulado: no se piden datos de tarjeta.</p>
+          </form>
+        </div>
+
+        <!-- Resumen -->
+        <div class="col-lg-5">
+          <aside class="ck-caja ck-resumen">
+            <h2 class="ck-titulo">Resumen de compra</h2>
+            <dl class="ck-totales">
+              <div><dt>Subtotal (precio normal)</dt><dd id="ckSubtotal">S/ 0.00</dd></div>
+              <div class="ck-ahorro" id="ckFilaAhorro"><dt><i class="bi bi-tag-fill me-1"></i>Descuento por ofertas</dt><dd id="ckAhorro">- S/ 0.00</dd></div>
+              <div class="ck-sub"><dt>Op. gravada</dt><dd id="ckGravada">S/ 0.00</dd></div>
+              <div class="ck-sub"><dt>IGV (18%)</dt><dd id="ckIgv">S/ 0.00</dd></div>
+              <div class="ck-total"><dt>Total a pagar</dt><dd id="ckTotal">S/ 0.00</dd></div>
+            </dl>
+            <div id="ckError" class="alert alert-danger d-none mb-3" role="alert"></div>
+            <button type="submit" form="formCompra" class="ck-btn-confirmar" id="btnConfirmar">
+              <i class="bi bi-receipt me-2"></i>Confirmar compra y generar boleta
+            </button>
+            <p class="small text-muted text-center mt-2 mb-0">Los precios incluyen IGV.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- PASO 3: boleta -->
+    <section id="ckBoletaZona" class="d-none">
+      <div class="ck-exito">
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <h1 class="h5 fw-bold mb-1">¡Compra realizada!</h1>
+          <p class="mb-0 text-muted">Tu boleta se generó correctamente. Puedes imprimirla o guardarla como PDF.</p>
+        </div>
+      </div>
+      <div class="ck-boleta-acciones">
+        <button type="button" class="btn btn-primary rounded-pill px-4" id="btnImprimir"><i class="bi bi-printer me-2"></i>Imprimir / Guardar PDF</button>
+        <a href="productos.html" class="btn btn-outline-primary rounded-pill px-4">Seguir comprando</a>
+      </div>
+      <article id="boleta" class="boleta"></article>
+    </section>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
+  <div class="container">
+    <div class="footer-grid">
+
+      <!-- Redes sociales -->
+      <div class="text-center text-md-start">
+        <h5 class="fw-bold mb-3">Redes Sociales</h5>
+        <div class="d-flex justify-content-center justify-content-md-start gap-3">
+          <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
+          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
+          <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+        </div>
+        <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para noticias y ofertas.</p>
+      </div>
+
+      <!-- Logo UTP (centrado real) -->
+      <div class="text-center">
+        <a href="https://www.utp.edu.pe/" target="_blank" rel="noreferrer" class="d-inline-block">
+          <div class="bg-white footer-logo-box">
+            <img src="img/logo-utp.webp" alt="Universidad Tecnológica del Perú" class="footer-logo">
+          </div>
+        </a>
+      </div>
+
+      <!-- Contacto corporativo -->
+      <div class="text-center text-md-end">
+        <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
+        <p class="mb-0 fw-semibold">Nombre del Responsable</p>
+        <p class="small text-secondary mb-2">Encargado(a) de Farmacia y Desarrollo</p>
+        <p class="mb-1"><a href="mailto:contacto@portusalud.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@portusalud.com</a></p>
+        <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
+      </div>
+
+    </div>
+
+    <hr class="border-secondary mt-4">
+    <p class="text-center small text-secondary mb-0">© 2026 PorTuSalud - Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+<!-- PANEL DEL CARRITO -->
+<div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="carritoTitulo"><i class="bi bi-cart3"></i>Mi carrito</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div id="carritoItems" class="cart-items"></div>
+    <div class="cart-footer" id="carritoPie">
+      <div class="cart-subtotal"><span>Subtotal</span><span id="carritoTotal">S/ 0.00</span></div>
+      <div class="cart-actions">
+        <button type="button" class="cart-link" id="btnIrCarrito">Ir a mi carrito</button>
+        <button type="button" class="cart-buy" id="btnPagar">Comprar ahora</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AVISO (toast) -->
+<div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
+  <div id="toastAviso" class="toast toast-farma border-0" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-body" id="toastTexto"></div>
+  </div>
+</div>
+
+<!-- AVISO EN LA ESQUINA (al quitar un producto desde una tarjeta) -->
+<div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index:2000">
+  <div id="toastEsquina" class="toast toast-esquina" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-esquina-cuerpo">
+      <span class="toast-esquina-ico"><i class="bi bi-check-lg"></i></span>
+      <span id="toastEsquinaTexto"></span>
+    </div>
+    <div class="text-end"><button type="button" class="toast-esquina-ok" data-bs-dismiss="toast">Ok</button></div>
+  </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 p-2">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Iniciar Sesión</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="loginError" class="alert alert-danger d-none"></div>
+        <form id="loginForm">
+          <div class="mb-3">
+            <label class="form-label">Correo</label>
+            <input type="email" class="form-control" id="loginCorreo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="loginContrasena" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 rounded-pill">Ingresar</button>
+        </form>
+        <p class="text-center small mt-3 mb-0">
+          ¿No tienes cuenta?
+          <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal">Regístrate aquí</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRO -->
+<div class="modal fade" id="registroModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 p-2">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Crear Cuenta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="registroError" class="alert alert-danger d-none"></div>
+        <form id="registroForm">
+          <div class="row g-2">
+            <div class="col-6 mb-3">
+              <label class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="regNombre" required>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Apellido</label>
+              <input type="text" class="form-control" id="regApellido" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Correo</label>
+            <input type="email" class="form-control" id="regCorreo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="regTelefono">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="regContrasena" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 rounded-pill">Crear Cuenta</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/main.js"></script>
+<script src="js/carrito.js"></script>
+</body>
+</html>

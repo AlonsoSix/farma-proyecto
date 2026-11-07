@@ -14,6 +14,7 @@ const filtros = {
   max: null,
   soloStock: false,
   soloVendidos: false,
+  soloOfertas: false,      // Avance Final: solo productos con descuento
   orden: 'relevancia'
 };
 
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('precioMax').addEventListener('input', leerPrecios);
   $('soloStock').addEventListener('change', (e) => { filtros.soloStock = e.target.checked; aplicarFiltros(); });
   $('soloVendidos').addEventListener('change', (e) => { filtros.soloVendidos = e.target.checked; aplicarFiltros(); });
+  $('soloOfertas').addEventListener('change', (e) => { filtros.soloOfertas = e.target.checked; aplicarFiltros(); });
   $('ordenar').addEventListener('change', (e) => { filtros.orden = e.target.value; aplicarFiltros(); });
   $('btnLimpiar').addEventListener('click', limpiarTodo);
 
@@ -76,7 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Si se llega desde otra página con productos.html?q=..., se aplica como búsqueda estática
-  const q = new URLSearchParams(location.search).get('q');
+  const parametros = new URLSearchParams(location.search);
+  // productos.html?ofertas=1 (botón "Ver ofertas" del inicio): abre el catálogo solo con ofertas
+  if (parametros.get('ofertas') === '1') {
+    filtros.soloOfertas = true;
+    $('soloOfertas').checked = true;
+    if (catalogoListo) { aplicarFiltros(); $('catalogo').scrollIntoView(); }
+  }
+  const q = parametros.get('q');
   if (q) {
     filtros.estatica = q.trim();
     $('busquedaEstatica').value = filtros.estatica;
@@ -92,7 +101,7 @@ document.addEventListener('productos:cargados', () => {
   construirFiltros();
   pintarDestacados();
   aplicarFiltros();
-  if (filtros.estatica) $('catalogo').scrollIntoView();
+  if (filtros.estatica || filtros.soloOfertas) $('catalogo').scrollIntoView();
 });
 document.addEventListener('productos:error', () => {
   $('resultadoTexto').textContent = 'Sin conexión con el servidor';
@@ -197,14 +206,16 @@ function aplicarFiltros() {
     coincide(p, tDinamica) &&
     (!filtros.categorias.size || filtros.categorias.has(p.categoria || 'Otros')) &&
     (!filtros.marcas.size || filtros.marcas.has(p.marca || 'Otros')) &&
-    (filtros.min === null || Number(p.precio) >= filtros.min) &&
-    (filtros.max === null || Number(p.precio) <= filtros.max) &&
+    (filtros.min === null || precioFinal(p) >= filtros.min) &&
+    (filtros.max === null || precioFinal(p) <= filtros.max) &&
+    (!filtros.soloOfertas || enOferta(p)) &&
     (!filtros.soloStock || Number(p.stock) > 0) &&
     (!filtros.soloVendidos || esMasVendido(p))
   );
 
-  if (filtros.orden === 'precio-asc') lista.sort((a, b) => a.precio - b.precio);
-  else if (filtros.orden === 'precio-desc') lista.sort((a, b) => b.precio - a.precio);
+  if (filtros.orden === 'precio-asc') lista.sort((a, b) => precioFinal(a) - precioFinal(b));
+  else if (filtros.orden === 'precio-desc') lista.sort((a, b) => precioFinal(b) - precioFinal(a));
+  else if (filtros.orden === 'descuento') lista.sort((a, b) => descuentoDe(b) - descuentoDe(a));
   else if (filtros.orden === 'nombre') lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   // "relevancia": se respeta el orden del backend (los más vendidos van primero)
 
@@ -245,6 +256,7 @@ function pintarChips() {
   }
   if (filtros.soloStock) chips.push(chip('Con stock', 'stock'));
   if (filtros.soloVendidos) chips.push(chip('Más vendidos', 'vendidos'));
+  if (filtros.soloOfertas) chips.push(chip('En oferta', 'ofertas'));
 
   $('filtrosActivos').innerHTML = chips.join('');
 }
@@ -268,6 +280,7 @@ function quitarFiltro(tipo, valor) {
       return;
     case 'stock': filtros.soloStock = false; $('soloStock').checked = false; break;
     case 'vendidos': filtros.soloVendidos = false; $('soloVendidos').checked = false; break;
+    case 'ofertas': filtros.soloOfertas = false; $('soloOfertas').checked = false; break;
   }
   aplicarFiltros();
 }
@@ -277,12 +290,12 @@ function limpiarTodo() {
   filtros.categorias.clear();
   filtros.marcas.clear();
   filtros.min = filtros.max = null;
-  filtros.soloStock = filtros.soloVendidos = false;
+  filtros.soloStock = filtros.soloVendidos = filtros.soloOfertas = false;
   filtros.orden = 'relevancia';
   ['busquedaEstatica', 'busquedaDinamica', 'buscador', 'precioMin', 'precioMax'].forEach(id => { $(id).value = ''; });
   $('filtroCategorias').querySelectorAll('input').forEach(i => { i.checked = false; });
   $('filtroMarcas').querySelectorAll('input').forEach(i => { i.checked = false; });
-  $('soloStock').checked = $('soloVendidos').checked = false;
+  $('soloStock').checked = $('soloVendidos').checked = $('soloOfertas').checked = false;
   $('ordenar').value = 'relevancia';
   leerPrecios();   // quita el aviso de precio inválido y vuelve a pintar
 }
@@ -332,7 +345,7 @@ function pintarDestacados() {
             <span class="dest-cat">${esc(p.categoria || 'Farmacia')}</span>
             <a class="dest-nombre" href="${href}">${esc(p.nombre)}</a>
             ${p.marca ? `<span class="dest-marca"><i class="bi bi-patch-check-fill"></i>${esc(p.marca)}</span>` : ''}
-            <div class="dest-precio">${soles(p.precio)} <small>Precio online</small></div>
+            <div class="dest-precio">${htmlPrecioOferta(p, 'dest-precio-valor')} ${htmlBadgeOferta(p)}</div>
           </div>
         </div>
         <div class="dest-acciones">
