@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi carrito | PorTuSalud</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Finalizar compra | PorTuSalud</title>
 <script src="js/auth-guard.js"></script>
 <link rel="icon" type="image/png" href="img/favicon.png">
 
@@ -12,6 +12,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/checkout.css">
 <!-- Pantalla de carga: se muestra al llegar desde un enlace interno o al recargar la página (ver main.js) -->
 <script>
 try {
@@ -21,7 +22,7 @@ try {
 } catch (e) {}
 </script>
 </head>
-<body>
+<body class="ck-app">
 
 <!-- PANTALLA DE CARGA -->
 <div id="pantallaCarga" class="pantalla-carga" aria-hidden="true">
@@ -29,239 +30,316 @@ try {
   <p class="carga-texto">Cargando...</p>
 </div>
 
-<!-- FRANJA SUPERIOR -->
-<div class="topbar">
-  <div class="container d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-truck me-2"></i>Delivery a domicilio en toda la zona</span>
-    <span class="d-none d-md-inline"><i class="bi bi-whatsapp me-2"></i>Pedidos por WhatsApp: +51 987 654 321</span>
-  </div>
-</div>
-
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg bg-white sticky-top main-nav">
-  <div class="container">
-    <a class="navbar-brand" href="index.html" aria-label="PorTuSalud - volver al inicio">
-      <img src="img/logo-farma3.png" alt="PorTuSalud" class="brand-logo">
+<!-- BARRA SUPERIOR DEL CHECKOUT -->
+<header class="ck-header">
+  <div class="ck-header-inner">
+    <a class="ck-brand" href="index.html" aria-label="PorTuSalud - volver al inicio">
+      <img src="img/logo-farma3.png" alt="PorTuSalud">
     </a>
-
-    <div class="d-flex align-items-center gap-2 order-2 order-lg-4 ms-auto ms-lg-0">
-      <button class="btn-cart" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel" aria-label="Ver carrito">
+    <div class="ck-header-title">
+      <i class="bi bi-bag-check"></i>
+      <span>Finalizar compra</span>
+    </div>
+    <div class="ck-header-actions">
+      <span class="ck-secure-chip"><i class="bi bi-lock-fill"></i><span>Pago seguro</span></span>
+      <button class="ck-icon-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel" aria-label="Ver carrito">
         <i class="bi bi-cart3"></i>
-        <span id="cartCount" class="cart-count">0</span>
+        <span id="cartCount" class="ck-cart-count">0</span>
       </button>
-      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menú">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    </div>
-
-    <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
-      <input type="search" id="buscador" class="form-control" placeholder="Busca un producto o categoría" autocomplete="off">
-      <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
-    </form>
-
-    <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
-      <div class="d-flex gap-2 py-3 py-lg-0">
-        <a class="btn btn-outline-primary rounded-pill px-3 sesion-cargando" href="login.html">Iniciar sesión</a>
-      </div>
+      <div id="navMenu" class="ck-user"><div></div></div>
+      <a class="ck-icon-btn" href="productos.html" aria-label="Volver a la tienda"><i class="bi bi-x-lg"></i></a>
     </div>
   </div>
-  <div class="subnav">
-    <div class="container">
-      <a href="index.html">Inicio</a>
-      <a href="productos.html">Productos</a>
-      <a href="servicios.html">Servicios</a>
-      <a href="nosotros.html">Nosotros</a>
-      <a href="contacto.html">Contacto</a>
-    </div>
-  </div>
-</nav>
+  <!-- El buscador y el contador viven aquí para reutilizar main.js, pero no se muestran en el checkout -->
+  <form id="buscadorForm" class="d-none" role="search"><input id="buscador" type="search" tabindex="-1"></form>
+</header>
 
-<!-- =====================================================================
-     CARRITO CON BOLETA (Avance Final)
-     1) Mi carrito: productos, cantidades y resumen con descuentos e IGV
-     2) Datos del cliente y pago real con Culqi Checkout (tarjeta/Yape) o efectivo
-     3) Boleta de venta electrónica: se puede descargar en PDF o imprimir
-     La lógica está en js/carrito.js
-     ===================================================================== -->
-<main class="carrito-pagina">
-  <div class="container">
-    <nav aria-label="breadcrumb" class="mb-3">
-      <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="index.html">Inicio</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Mi carrito</li>
-      </ol>
-    </nav>
+<!-- CONTENIDO A PANTALLA COMPLETA -->
+<main class="ck-main">
+  <div class="ck-shell">
+    <div class="ck-grid" id="ckGrid" data-paso="1">
 
-    <!-- Pasos -->
-    <ol class="ck-pasos" id="ckPasos">
-      <li class="activo" data-paso="1"><span>1</span>Carrito</li>
-      <li data-paso="2"><span>2</span>Datos y pago</li>
-      <li data-paso="3"><span>3</span>Boleta</li>
-    </ol>
+      <!-- Columna principal: pasos -->
+      <section class="ck-stage">
+        <ol class="ck-pasos" id="ckPasos" aria-label="Progreso de la compra">
+          <li class="activo" data-paso="1"><span>1</span><em>Carrito</em></li>
+          <li data-paso="2"><span>2</span><em>Pago</em></li>
+          <li data-paso="3"><span>3</span><em>Boleta</em></li>
+        </ol>
 
-    <!-- PASO 1 y 2: carrito + formulario -->
-    <section id="ckCompra">
-      <!-- Carrito vacío -->
-      <div id="ckVacio" class="ck-caja ck-vacio d-none">
-        <i class="bi bi-cart-x"></i>
-        <h1 class="h5 fw-bold mt-3">Tu carrito está vacío</h1>
-        <p class="text-muted">Agrega productos para generar tu boleta de compra.</p>
-        <a href="productos.html" class="btn btn-primary rounded-pill px-4">Ver productos</a>
-        <a href="productos.html?ofertas=1" class="btn btn-outline-primary rounded-pill px-4 ms-1"><i class="bi bi-tag-fill me-1"></i>Ver ofertas</a>
-      </div>
+        <div class="ck-views">
 
-      <div class="row g-4" id="ckContenido">
-        <div class="col-lg-7">
-          <div class="ck-caja">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-              <h1 class="ck-titulo mb-0"><i class="bi bi-cart3 me-2"></i>Mi carrito <span id="ckUnidades" class="text-muted fw-normal"></span></h1>
-              <a href="productos.html" class="small fw-semibold text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Seguir comprando</a>
+          <!-- PASO 1: CARRITO -->
+          <section class="ck-view activa" data-paso="1" id="ckVistaCarrito" aria-labelledby="ckTituloCarrito">
+            <div class="ck-view-head">
+              <div>
+                <h1 id="ckTituloCarrito">Tu carrito</h1>
+                <p>Revisa tus productos antes de continuar.</p>
+              </div>
+              <a href="productos.html" class="ck-link"><i class="bi bi-plus-lg"></i>Agregar productos</a>
             </div>
-            <div id="ckItems"></div>
+
+            <div class="ck-surface ck-cart-surface">
+              <div id="ckItems" class="ck-items-scroll ck-scroll" aria-live="polite"></div>
+
+              <div id="ckVacio" class="ck-vacio d-none">
+                <span class="ck-vacio-icon"><i class="bi bi-cart3"></i></span>
+                <h2>Tu carrito está vacío</h2>
+                <p>Agrega productos para generar tu boleta de compra.</p>
+                <div class="ck-vacio-acciones">
+                  <a href="productos.html" class="ck-btn ck-btn-primary">Ver productos</a>
+                  <a href="productos.html?ofertas=1" class="ck-btn ck-btn-ghost"><i class="bi bi-tag-fill"></i>Ver ofertas</a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- PASO 2: DATOS Y PAGO -->
+          <section class="ck-view" data-paso="2" id="ckVistaPago" aria-labelledby="ckTituloPago">
+            <div class="ck-view-head">
+              <div class="ck-view-head-line">
+                <button type="button" class="ck-back" id="btnVolverPaso1" aria-label="Volver al carrito"><i class="bi bi-chevron-left"></i></button>
+                <div>
+                  <h1 id="ckTituloPago">Datos y pago</h1>
+                  <p>Completa tus datos para emitir la boleta.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="ck-subtabs" id="ckPagoTabs" role="tablist" aria-label="Datos y pago">
+              <button type="button" role="tab" data-tab="datos" class="activo" aria-selected="true">Tus datos</button>
+              <button type="button" role="tab" data-tab="pago" aria-selected="false">Pago</button>
+            </div>
+
+            <div class="ck-pay-scroll ck-scroll" id="ckPagoScroll">
+              <form id="formCompra" class="ck-form" novalidate>
+                <div id="ckError" class="ck-alert d-none" role="alert" aria-live="assertive"></div>
+
+                <!-- Datos del cliente -->
+                <div class="ck-surface ck-block" id="ckBloqueDatos">
+                  <h2 class="ck-block-title">Datos de la boleta</h2>
+                  <div class="ck-field-grid">
+                    <label class="ck-field ck-field-name" for="ckNombre">
+                      <span>Nombre completo <b>*</b></span>
+                      <input type="text" id="ckNombre" class="ck-input" minlength="3" maxlength="150" required autocomplete="name" placeholder="Nombres y apellidos">
+                      <small class="ck-field-error" id="errNombre"></small>
+                    </label>
+                    <label class="ck-field ck-field-dni" for="ckDni">
+                      <span>DNI <b>*</b></span>
+                      <input type="text" id="ckDni" class="ck-input" inputmode="numeric" pattern="\d{8}" maxlength="8" required placeholder="8 números" autocomplete="off">
+                      <small class="ck-field-error" id="errDni"></small>
+                    </label>
+                    <label class="ck-field ck-field-mail" for="ckCorreo">
+                      <span>Correo <b id="ckCorreoAyuda">(opcional)</b></span>
+                      <input type="email" id="ckCorreo" class="ck-input" maxlength="150" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+                      <small class="ck-field-error" id="errCorreo"></small>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Método de pago -->
+                <div class="ck-surface ck-block" id="ckBloquePago">
+                  <div class="ck-block-head">
+                    <h2 class="ck-block-title">Forma de pago</h2>
+                    <div id="pagoModo" class="ck-gateway" role="status" aria-live="polite">
+                      <i class="bi bi-shield-check"></i>
+                      <span id="pagoModoTexto">Consultando pasarela...</span>
+                    </div>
+                  </div>
+
+                  <div class="ck-metodos" role="radiogroup" aria-label="Método de pago">
+                    <label class="ck-metodo">
+                      <input type="radio" name="metodoPago" value="EFECTIVO" checked>
+                      <span><i class="bi bi-cash-coin"></i><b>Efectivo</b><small>Contra entrega</small></span>
+                    </label>
+                    <label class="ck-metodo">
+                      <input type="radio" name="metodoPago" value="TARJETA">
+                      <span><i class="bi bi-credit-card"></i><b>Tarjeta</b><small>Débito o crédito</small></span>
+                    </label>
+                    <label class="ck-metodo">
+                      <input type="radio" name="metodoPago" value="YAPE">
+                      <span><i class="bi bi-phone"></i><b>Yape</b><small>Hasta S/ 2,000</small></span>
+                    </label>
+                  </div>
+
+                  <div class="ck-pay-panels" id="ckPagoPaneles">
+
+                    <!-- EFECTIVO -->
+                    <div class="ck-panel activo" data-metodo="EFECTIVO">
+                      <div class="ck-info-row">
+                        <span class="ck-info-icon"><i class="bi bi-cash-stack"></i></span>
+                        <div>
+                          <strong>Paga cuando recibas tu pedido</strong>
+                          <p>La boleta quedará registrada con el pago pendiente hasta la entrega.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- TARJETA -->
+                    <div class="ck-panel" data-metodo="TARJETA">
+                      <div class="ck-real-solo">
+                        <div class="ck-info-row">
+                          <span class="ck-info-icon"><i class="bi bi-shield-lock"></i></span>
+                          <div>
+                            <strong>Pago seguro con Culqi</strong>
+                            <p>Al confirmar se abrirá el checkout de Culqi para ingresar los datos de tu tarjeta. No almacenamos información bancaria.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="ck-sim-solo">
+                        <div class="ck-card-layout">
+                          <div class="ck-card-preview" id="ckTarjetaPreview">
+                            <div class="ck-card-top">
+                              <span>PorTuSalud</span>
+                              <span class="ck-card-brand" id="ckPrevMarca">Tarjeta</span>
+                            </div>
+                            <span class="ck-card-chip" aria-hidden="true"></span>
+                            <div class="ck-card-num" id="ckPrevNumero">•••• •••• •••• ••••</div>
+                            <div class="ck-card-foot">
+                              <div><small>Titular</small><span id="ckPrevTitular">NOMBRE APELLIDO</span></div>
+                              <div><small>Vence</small><span id="ckPrevVence">MM/AA</span></div>
+                            </div>
+                          </div>
+
+                          <div class="ck-card-fields">
+                            <label class="ck-field" for="ckNumTarjeta">
+                              <span>Número de tarjeta <b>*</b></span>
+                              <div class="ck-input-wrap">
+                                <input type="text" id="ckNumTarjeta" class="ck-input" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="23">
+                                <i class="bi bi-credit-card-2-front ck-input-ico" aria-hidden="true"></i>
+                              </div>
+                              <small class="ck-field-error" id="errNumTarjeta"></small>
+                            </label>
+                            <label class="ck-field" for="ckTitular">
+                              <span>Titular de la tarjeta <b>*</b></span>
+                              <input type="text" id="ckTitular" class="ck-input ck-uppercase" autocomplete="cc-name" maxlength="60" placeholder="Como aparece en la tarjeta">
+                              <small class="ck-field-error" id="errTitular"></small>
+                            </label>
+                            <div class="ck-card-row">
+                              <label class="ck-field" for="ckVence">
+                                <span>Vencimiento <b>*</b></span>
+                                <input type="text" id="ckVence" class="ck-input" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA">
+                                <small class="ck-field-error" id="errVence"></small>
+                              </label>
+                              <label class="ck-field" for="ckCvv">
+                                <span>CVV <b>*</b></span>
+                                <div class="ck-input-wrap">
+                                  <input type="password" id="ckCvv" class="ck-input" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="123">
+                                  <button type="button" class="ck-input-btn" id="btnVerCvv" aria-label="Mostrar CVV"><i class="bi bi-eye"></i></button>
+                                </div>
+                                <small class="ck-field-error" id="errCvv"></small>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="ck-sim-foot">
+                          <span><i class="bi bi-cone-striped"></i> Simulación: no se realizará ningún cobro real.</span>
+                          <button type="button" class="ck-link" id="ckDatosPrueba">Usar tarjeta de prueba</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- YAPE -->
+                    <div class="ck-panel" data-metodo="YAPE">
+                      <div class="ck-real-solo">
+                        <div class="ck-info-row">
+                          <span class="ck-info-icon"><i class="bi bi-phone"></i></span>
+                          <div>
+                            <strong>Yape con Culqi</strong>
+                            <p>Al confirmar se abrirá Culqi para ingresar tu celular y el código de aprobación de Yape.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="ck-sim-solo">
+                        <div class="ck-yape-layout">
+                          <div class="ck-yape-mark" aria-hidden="true">
+                            <span><i class="bi bi-phone"></i></span>
+                            <b>Yape</b>
+                            <small>Pago inmediato</small>
+                          </div>
+                          <div class="ck-yape-fields">
+                            <label class="ck-field" for="ckYapeCelular">
+                              <span>Celular afiliado a Yape <b>*</b></span>
+                              <input type="text" id="ckYapeCelular" class="ck-input" inputmode="numeric" maxlength="11" placeholder="900 000 001">
+                              <small class="ck-field-error" id="errYapeCelular"></small>
+                            </label>
+                            <label class="ck-field" for="ckYapeCodigo">
+                              <span>Código de aprobación <b>*</b></span>
+                              <input type="text" id="ckYapeCodigo" class="ck-input ck-code-input" inputmode="numeric" maxlength="6" placeholder="000000">
+                              <small class="ck-field-error" id="errYapeCodigo"></small>
+                            </label>
+                          </div>
+                        </div>
+                        <div class="ck-note ck-note-warn d-none" id="ckYapeLimite">
+                          <i class="bi bi-exclamation-triangle"></i>
+                          <span>Tu compra supera el límite de Yape (S/ 2,000). Elige tarjeta o efectivo.</span>
+                        </div>
+                        <div class="ck-sim-foot">
+                          <span><i class="bi bi-cone-striped"></i> Simulación: usa cualquier código de 6 dígitos.</span>
+                          <button type="button" class="ck-link" id="ckYapePrueba">Usar datos de prueba</button>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- PASO 3: BOLETA -->
+          <section class="ck-view ck-view-boleta" data-paso="3" id="ckBoletaZona" aria-labelledby="ckTituloBoleta">
+            <div class="ck-success">
+              <span class="ck-success-check"><i class="bi bi-check-lg"></i></span>
+              <div>
+                <h1 id="ckTituloBoleta">Compra completada</h1>
+                <p>Tu boleta está lista para descargar o imprimir.</p>
+              </div>
+              <div class="ck-success-acciones">
+                <button type="button" class="ck-btn ck-btn-primary" id="btnPdf"><i class="bi bi-file-earmark-pdf"></i>Descargar PDF</button>
+                <button type="button" class="ck-btn ck-btn-ghost" id="btnImprimir"><i class="bi bi-printer"></i>Imprimir</button>
+                <a href="productos.html" class="ck-btn ck-btn-ghost"><i class="bi bi-bag"></i>Seguir comprando</a>
+              </div>
+            </div>
+            <div class="ck-receipt-scroll ck-scroll">
+              <article id="boleta" class="boleta"></article>
+            </div>
+          </section>
+
+        </div>
+      </section>
+
+      <!-- Resumen lateral / barra inferior en móvil -->
+      <aside class="ck-side" id="ckSide" aria-label="Resumen de compra">
+        <div class="ck-side-card">
+          <div class="ck-side-head">
+            <span>Resumen</span>
+            <span class="ck-pill" id="ckUnidades">0 productos</span>
           </div>
-
-          <!-- Datos del cliente -->
-          <form id="formCompra" class="ck-caja mt-4" novalidate>
-            <h2 class="ck-titulo"><i class="bi bi-person-vcard me-2"></i>Datos para la boleta</h2>
-            <div class="row g-3">
-              <div class="col-md-8">
-                <label class="form-label" for="ckNombre">Nombres y apellidos *</label>
-                <input type="text" id="ckNombre" class="form-control" minlength="3" maxlength="150" required autocomplete="name">
-                <div class="invalid-feedback">Escribe tu nombre completo.</div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label" for="ckDni">DNI *</label>
-                <input type="text" id="ckDni" class="form-control" inputmode="numeric" pattern="\d{8}" maxlength="8" required placeholder="8 números">
-                <div class="invalid-feedback">El DNI debe tener 8 números.</div>
-              </div>
-              <div class="col-12">
-                <label class="form-label" for="ckCorreo">Correo electrónico <span id="ckCorreoAyuda" class="text-muted fw-normal">(opcional)</span></label>
-                <input type="email" id="ckCorreo" class="form-control" maxlength="150" autocomplete="email">
-                <div class="invalid-feedback">Escribe un correo válido. Es necesario para pagar con tarjeta o Yape.</div>
-              </div>
-            </div>
-
-            <h2 class="ck-titulo mt-4"><i class="bi bi-wallet2 me-2"></i>Método de pago</h2>
-
-            <!-- Estado de la pasarela: Culqi real o modo de prueba (lo llena carrito.js) -->
-            <div id="pagoModo" class="pago-modo" role="status" aria-live="polite">
-              <i class="bi bi-shield-check"></i>
-              <div>
-                <strong>Pasarela segura</strong>
-                <span id="pagoModoTexto">Cargando formas de pago...</span>
-              </div>
-            </div>
-
-            <div class="ck-metodos" role="radiogroup" aria-label="Método de pago">
-              <label class="ck-metodo">
-                <input type="radio" name="metodoPago" value="EFECTIVO" checked>
-                <span><i class="bi bi-cash-coin"></i>Efectivo<small>Pago contra entrega</small></span>
-              </label>
-              <label class="ck-metodo">
-                <input type="radio" name="metodoPago" value="TARJETA">
-                <span><i class="bi bi-credit-card"></i>Tarjeta<small>Visa, Mastercard, Amex</small></span>
-              </label>
-              <label class="ck-metodo">
-                <input type="radio" name="metodoPago" value="YAPE">
-                <span><i class="bi bi-phone"></i>Yape<small>Hasta S/ 2,000</small></span>
-              </label>
-            </div>
-
-            <!-- Detalle del método elegido (lo actualiza carrito.js) -->
-            <div id="ckPagoDetalle" class="pago-detalle" aria-live="polite">
-              <i class="bi bi-cash-stack"></i>
-              <div>
-                <strong>Pago contra entrega</strong>
-                <p>Paga en efectivo cuando recibas tu pedido.</p>
-              </div>
-            </div>
-
-            <p class="pago-seguro"><i class="bi bi-lock-fill me-1"></i>No almacenamos los datos de tu tarjeta: el cobro lo procesa Culqi Checkout.</p>
-          </form>
+          <dl class="ck-totales">
+            <div class="ck-sub"><dt>Subtotal</dt><dd id="ckSubtotal">S/ 0.00</dd></div>
+            <div class="ck-sub ck-ahorro" id="ckFilaAhorro"><dt>Ahorro por ofertas</dt><dd id="ckAhorro">- S/ 0.00</dd></div>
+            <div class="ck-sub"><dt>IGV incluido (18%)</dt><dd id="ckIgv">S/ 0.00</dd></div>
+            <div class="ck-total"><dt>Total</dt><dd id="ckTotal">S/ 0.00</dd></div>
+          </dl>
+          <div class="ck-side-action" id="ckAccion1">
+            <button type="button" class="ck-btn ck-btn-primary" id="btnContinuar">Continuar al pago</button>
+          </div>
+          <div class="ck-side-action d-none" id="ckAccion2">
+            <button type="submit" form="formCompra" class="ck-btn ck-btn-primary" id="btnConfirmar">Confirmar compra</button>
+          </div>
+          <p class="ck-side-note"><i class="bi bi-shield-lock"></i> Pago protegido y cifrado</p>
         </div>
+      </aside>
 
-        <!-- Resumen -->
-        <div class="col-lg-5">
-          <aside class="ck-caja ck-resumen">
-            <h2 class="ck-titulo">Resumen de compra</h2>
-            <dl class="ck-totales">
-              <div><dt>Subtotal (precio normal)</dt><dd id="ckSubtotal">S/ 0.00</dd></div>
-              <div class="ck-ahorro" id="ckFilaAhorro"><dt><i class="bi bi-tag-fill me-1"></i>Descuento por ofertas</dt><dd id="ckAhorro">- S/ 0.00</dd></div>
-              <div class="ck-sub"><dt>Op. gravada</dt><dd id="ckGravada">S/ 0.00</dd></div>
-              <div class="ck-sub"><dt>IGV (18%)</dt><dd id="ckIgv">S/ 0.00</dd></div>
-              <div class="ck-total"><dt>Total a pagar</dt><dd id="ckTotal">S/ 0.00</dd></div>
-            </dl>
-            <div id="ckError" class="alert alert-danger d-none mb-3" role="alert"></div>
-            <button type="submit" form="formCompra" class="ck-btn-confirmar" id="btnConfirmar">
-              <i class="bi bi-receipt me-2"></i>Confirmar compra y generar boleta
-            </button>
-            <p class="small text-muted text-center mt-2 mb-0">Los precios incluyen IGV.</p>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <!-- PASO 3: boleta -->
-    <section id="ckBoletaZona" class="d-none">
-      <div class="ck-exito">
-        <i class="bi bi-check-circle-fill"></i>
-        <div>
-          <h1 class="h5 fw-bold mb-1">¡Compra realizada!</h1>
-          <p class="mb-0 text-muted">Tu boleta se generó correctamente. Puedes imprimirla o guardarla como PDF.</p>
-        </div>
-      </div>
-      <div class="ck-boleta-acciones">
-        <button type="button" class="btn btn-primary rounded-pill px-4" id="btnPdf"><i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF</button>
-        <button type="button" class="btn btn-outline-primary rounded-pill px-4" id="btnImprimir"><i class="bi bi-printer me-2"></i>Imprimir</button>
-        <a href="productos.html" class="btn btn-outline-secondary rounded-pill px-4">Seguir comprando</a>
-      </div>
-      <article id="boleta" class="boleta"></article>
-    </section>
+    </div>
   </div>
 </main>
 
-<!-- FOOTER -->
-<footer id="contacto" class="bg-dark text-light pt-5 pb-3 mt-auto">
-  <div class="container">
-    <div class="footer-grid">
-
-      <!-- Redes sociales -->
-      <div class="text-center text-md-start">
-        <h5 class="fw-bold mb-3">Redes Sociales</h5>
-        <div class="d-flex justify-content-center justify-content-md-start gap-3">
-          <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" class="social-icon"><i class="bi bi-facebook"></i></a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" class="social-icon"><i class="bi bi-instagram"></i></a>
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" class="social-icon"><i class="bi bi-twitter-x"></i></a>
-        </div>
-        <p class="small text-secondary mt-2 mb-0 footer-social-text">Síguenos en nuestras redes oficiales para noticias y ofertas.</p>
-      </div>
-
-      <!-- Logo UTP (centrado real) -->
-      <div class="text-center">
-        <a href="https://www.utp.edu.pe/" target="_blank" rel="noreferrer" class="d-inline-block">
-          <div class="bg-white footer-logo-box">
-            <img src="img/logo-utp.webp" alt="Universidad Tecnológica del Perú" class="footer-logo">
-          </div>
-        </a>
-      </div>
-
-      <!-- Contacto corporativo -->
-      <div class="text-center text-md-end">
-        <h5 class="fw-bold mb-1">Contacto Corporativo</h5>
-        <p class="mb-0 fw-semibold">Nombre del Responsable</p>
-        <p class="small text-secondary mb-2">Encargado(a) de Farmacia y Desarrollo</p>
-        <p class="mb-1"><a href="mailto:contacto@portusalud.com" class="text-light text-decoration-none"><i class="bi bi-envelope me-2"></i>contacto@portusalud.com</a></p>
-        <p class="small text-secondary mb-0">+51 987 654 321 | Lima, Perú</p>
-      </div>
-
-    </div>
-
-    <hr class="border-secondary mt-4">
-    <p class="text-center small text-secondary mb-0">© 2026 PorTuSalud - Todos los derechos reservados.</p>
-  </div>
-</footer>
-
-<!-- PANEL DEL CARRITO -->
+<!-- PANEL DEL CARRITO (se conserva para main.js) -->
 <div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="carritoPanel" aria-labelledby="carritoTitulo">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="carritoTitulo"><i class="bi bi-cart3"></i>Mi carrito</h5>
@@ -279,14 +357,12 @@ try {
   </div>
 </div>
 
-<!-- AVISO (toast) -->
+<!-- AVISOS -->
 <div class="toast-container toast-aviso position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:2000">
   <div id="toastAviso" class="toast toast-farma border-0" role="status" aria-live="polite" aria-atomic="true">
     <div class="toast-body" id="toastTexto"></div>
   </div>
 </div>
-
-<!-- AVISO EN LA ESQUINA (al quitar un producto desde una tarjeta) -->
 <div class="toast-container position-fixed bottom-0 start-0 p-3" style="z-index:2000">
   <div id="toastEsquina" class="toast toast-esquina" role="status" aria-live="polite" aria-atomic="true">
     <div class="toast-esquina-cuerpo">
@@ -297,9 +373,7 @@ try {
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- PDF de la boleta (jsPDF) -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/carrito.js"></script>
