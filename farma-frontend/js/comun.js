@@ -41,8 +41,15 @@
   'use strict';
 
   /* ---------- Configuración Global ---------- */
+  // El backend se sirve siempre en el puerto 8081 del mismo host que abre la web.
+  // Así funciona en localhost y también al probar desde el móvil por la red local.
+  var hostAPI = 'localhost';
+  try {
+    if (typeof location !== 'undefined' && location.hostname) hostAPI = location.hostname;
+  } catch (e) { /* entorno Node.js para pruebas */ }
+
   var config = {
-    API_URL: 'http://localhost:8081/api',
+    API_URL: 'http://' + hostAPI + ':8081/api',
     CLAVE_SESION: 'farma_sesion',
     CLAVE_CARRITO: 'farma_carrito',
     CLAVE_ULTIMO_CORREO: 'farma_ultimo_correo',
