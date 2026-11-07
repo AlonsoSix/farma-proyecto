@@ -1,5 +1,6 @@
 package com.farma.backend.service;
 
+import com.farma.backend.dto.ResultadoPago;
 import com.farma.backend.dto.VentaRequest;
 import com.farma.backend.model.DetalleVenta;
 import com.farma.backend.model.Producto;
@@ -12,7 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -29,13 +32,18 @@ public class VentaService {
     @Autowired
     private ProductoRepository productoRepository;
 
+    @Autowired
+    private PasarelaPago pasarelaPago;
+
     /**
-     * Registra la compra: valida los datos, calcula los precios con oferta, descuenta el stock
-     * y genera el número de boleta. Si algo falla, no se guarda nada (@Transactional).
+     * Registra la compra: valida los datos, calcula los precios con oferta, cobra con la
+     * pasarela (Culqi o simulado), descuenta el stock y genera el número de boleta.
+     * Si algo falla, no se guarda nada (@Transactional).
      */
     @Transactional
     public Venta registrar(VentaRequest datos) {
         validarCliente(datos);
+        String metodo = datos.getMetodoPago().trim().toUpperCase();
 
         // Junta cantidades si el mismo producto viene dos veces
         Map<Integer, Integer> cantidades = new LinkedHashMap<>();
@@ -50,11 +58,16 @@ public class VentaService {
         venta.setClienteNombre(datos.getClienteNombre().trim());
         venta.setClienteDni(datos.getClienteDni().trim());
         venta.setClienteCorreo(vacioANull(datos.getClienteCorreo()));
-        venta.setMetodoPago(datos.getMetodoPago().trim().toUpperCase());
+        venta.setMetodoPago(metodo);
         venta.setIdUsuario(datos.getIdUsuario());
 
         BigDecimal sinDescuento = BigDecimal.ZERO;
         BigDecimal total = BigDecimal.ZERO;
+
+        // Se valida todo el carrito antes de cobrar y de tocar el stock.
+        // Así no se descuenta inventario si la tarjeta o Yape son rechazados.
+        List<Producto> productos = new ArrayList<>();
+        List<Integer> cantidadesCompradas = new ArrayList<>();
 
         for (Map.Entry<Integer, Integer> e : cantidades.entrySet()) {
             Producto p = productoRepository.findById(e.getKey())
@@ -82,8 +95,8 @@ public class VentaService {
             sinDescuento = sinDescuento.add(p.getPrecio().multiply(BigDecimal.valueOf(cantidad)));
             total = total.add(d.getImporte());
 
-            p.setStock(p.getStock() - cantidad);   // se descuenta el stock
-            productoRepository.save(p);
+            productos.add(p);
+            cantidadesCompradas.add(cantidad);
         }
 
         BigDecimal opGravada = total.divide(FACTOR_IGV, 2, RoundingMode.HALF_UP);
@@ -93,9 +106,37 @@ public class VentaService {
         venta.setOpGravada(opGravada);
         venta.setIgv(total.subtract(opGravada));
 
-        venta = ventaRepository.save(venta);
-        venta.setNumero(String.format("B001-%08d", venta.getId()));   // B001-00000001
-        return ventaRepository.save(venta);
+        // Cobro real (Culqi) o simulado. Si la pasarela rechaza, se lanza PagoRechazadoException
+        // y el stock todavía no se ha descontado.
+        ResultadoPago pago = pasarelaPago.cobrar(
+                metodo,
+                datos.getTokenPago(),
+                total,
+                datos.getClienteCorreo(),
+                datos.getClienteNombre(),
+                datos.getClienteDni()
+        );
+        venta.setPagoEstado(pago.estado());
+        venta.setPagoPasarela(pago.pasarela());
+        venta.setPagoReferencia(pago.referencia());
+        venta.setTarjetaMarca(pago.marcaTarjeta());
+        venta.setTarjetaUltimos4(pago.ultimos4());
+
+        try {
+            for (int i = 0; i < productos.size(); i++) {
+                Producto p = productos.get(i);
+                p.setStock(p.getStock() - cantidadesCompradas.get(i));
+                productoRepository.save(p);
+            }
+
+            venta = ventaRepository.save(venta);
+            venta.setNumero(String.format("B001-%08d", venta.getId()));   // B001-00000001
+            return ventaRepository.save(venta);
+        } catch (RuntimeException e) {
+            // Si el cargo ya se aprobó pero la venta no se guardó, se intenta devolver el dinero.
+            pasarelaPago.reembolsar(pago.referencia());
+            throw e;
+        }
     }
 
     public Venta buscarPorNumero(String numero) {

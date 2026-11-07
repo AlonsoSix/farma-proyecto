@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi carrito | PorTuSalud</title>
+<script src="js/auth-guard.js"></script>
 <link rel="icon" type="image/png" href="img/favicon.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,8 +61,7 @@ try {
 
     <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
       <div class="d-flex gap-2 py-3 py-lg-0">
-        <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar sesión</button>
-        <button class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#registroModal">Registrarse</button>
+        <a class="btn btn-outline-primary rounded-pill px-3 sesion-cargando" href="login.html">Iniciar sesión</a>
       </div>
     </div>
   </div>
@@ -79,8 +79,8 @@ try {
 <!-- =====================================================================
      CARRITO CON BOLETA (Avance Final)
      1) Mi carrito: productos, cantidades y resumen con descuentos e IGV
-     2) Datos del cliente y método de pago (pago simulado)
-     3) Boleta de venta electrónica: se puede imprimir o guardar como PDF
+     2) Datos del cliente y pago real con Culqi Checkout (tarjeta/Yape) o efectivo
+     3) Boleta de venta electrónica: se puede descargar en PDF o imprimir
      La lógica está en js/carrito.js
      ===================================================================== -->
 <main class="carrito-pagina">
@@ -135,28 +135,48 @@ try {
                 <div class="invalid-feedback">El DNI debe tener 8 números.</div>
               </div>
               <div class="col-12">
-                <label class="form-label" for="ckCorreo">Correo (opcional)</label>
+                <label class="form-label" for="ckCorreo">Correo electrónico <span id="ckCorreoAyuda" class="text-muted fw-normal">(opcional)</span></label>
                 <input type="email" id="ckCorreo" class="form-control" maxlength="150" autocomplete="email">
-                <div class="invalid-feedback">Escribe un correo válido.</div>
+                <div class="invalid-feedback">Escribe un correo válido. Es necesario para pagar con tarjeta o Yape.</div>
               </div>
             </div>
 
             <h2 class="ck-titulo mt-4"><i class="bi bi-wallet2 me-2"></i>Método de pago</h2>
+
+            <!-- Estado de la pasarela: Culqi real o modo de prueba (lo llena carrito.js) -->
+            <div id="pagoModo" class="pago-modo" role="status" aria-live="polite">
+              <i class="bi bi-shield-check"></i>
+              <div>
+                <strong>Pasarela segura</strong>
+                <span id="pagoModoTexto">Cargando formas de pago...</span>
+              </div>
+            </div>
+
             <div class="ck-metodos" role="radiogroup" aria-label="Método de pago">
               <label class="ck-metodo">
                 <input type="radio" name="metodoPago" value="EFECTIVO" checked>
-                <span><i class="bi bi-cash-coin"></i>Efectivo<small>Pagas al recibir</small></span>
+                <span><i class="bi bi-cash-coin"></i>Efectivo<small>Pago contra entrega</small></span>
               </label>
               <label class="ck-metodo">
                 <input type="radio" name="metodoPago" value="TARJETA">
-                <span><i class="bi bi-credit-card"></i>Tarjeta<small>Con POS al recibir</small></span>
+                <span><i class="bi bi-credit-card"></i>Tarjeta<small>Visa, Mastercard, Amex</small></span>
               </label>
               <label class="ck-metodo">
                 <input type="radio" name="metodoPago" value="YAPE">
-                <span><i class="bi bi-phone"></i>Yape<small>Al número de la tienda</small></span>
+                <span><i class="bi bi-phone"></i>Yape<small>Hasta S/ 2,000</small></span>
               </label>
             </div>
-            <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Pago simulado: no se piden datos de tarjeta.</p>
+
+            <!-- Detalle del método elegido (lo actualiza carrito.js) -->
+            <div id="ckPagoDetalle" class="pago-detalle" aria-live="polite">
+              <i class="bi bi-cash-stack"></i>
+              <div>
+                <strong>Pago contra entrega</strong>
+                <p>Paga en efectivo cuando recibas tu pedido.</p>
+              </div>
+            </div>
+
+            <p class="pago-seguro"><i class="bi bi-lock-fill me-1"></i>No almacenamos los datos de tu tarjeta: el cobro lo procesa Culqi Checkout.</p>
           </form>
         </div>
 
@@ -191,8 +211,9 @@ try {
         </div>
       </div>
       <div class="ck-boleta-acciones">
-        <button type="button" class="btn btn-primary rounded-pill px-4" id="btnImprimir"><i class="bi bi-printer me-2"></i>Imprimir / Guardar PDF</button>
-        <a href="productos.html" class="btn btn-outline-primary rounded-pill px-4">Seguir comprando</a>
+        <button type="button" class="btn btn-primary rounded-pill px-4" id="btnPdf"><i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF</button>
+        <button type="button" class="btn btn-outline-primary rounded-pill px-4" id="btnImprimir"><i class="bi bi-printer me-2"></i>Imprimir</button>
+        <a href="productos.html" class="btn btn-outline-secondary rounded-pill px-4">Seguir comprando</a>
       </div>
       <article id="boleta" class="boleta"></article>
     </section>
@@ -276,77 +297,10 @@ try {
   </div>
 </div>
 
-<!-- MODAL LOGIN -->
-<div class="modal fade" id="loginModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-2">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Iniciar Sesión</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="loginError" class="alert alert-danger d-none"></div>
-        <form id="loginForm">
-          <div class="mb-3">
-            <label class="form-label">Correo</label>
-            <input type="email" class="form-control" id="loginCorreo" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="loginContrasena" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100 rounded-pill">Ingresar</button>
-        </form>
-        <p class="text-center small mt-3 mb-0">
-          ¿No tienes cuenta?
-          <a href="#" data-bs-toggle="modal" data-bs-target="#registroModal" data-bs-dismiss="modal">Regístrate aquí</a>
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL REGISTRO -->
-<div class="modal fade" id="registroModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-2">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Crear Cuenta</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="registroError" class="alert alert-danger d-none"></div>
-        <form id="registroForm">
-          <div class="row g-2">
-            <div class="col-6 mb-3">
-              <label class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="regNombre" required>
-            </div>
-            <div class="col-6 mb-3">
-              <label class="form-label">Apellido</label>
-              <input type="text" class="form-control" id="regApellido" required>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Correo</label>
-            <input type="email" class="form-control" id="regCorreo" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Teléfono</label>
-            <input type="text" class="form-control" id="regTelefono">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="regContrasena" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100 rounded-pill">Crear Cuenta</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- PDF de la boleta (jsPDF) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="js/main.js"></script>
 <script src="js/carrito.js"></script>
 </body>

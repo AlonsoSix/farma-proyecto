@@ -13,6 +13,7 @@ public class VentaRequest {
     private String clienteDni;
     private String clienteCorreo;
     private String metodoPago;      // EFECTIVO, TARJETA o YAPE
+    private String tokenPago;       // token de Culqi Checkout (tkn_..., ype_...); no es dato de tarjeta
     private Integer idUsuario;      // opcional: el usuario que inició sesión
     private List<Item> items;
 
@@ -34,6 +35,8 @@ public class VentaRequest {
     public void setClienteCorreo(String clienteCorreo) { this.clienteCorreo = clienteCorreo; }
     public String getMetodoPago() { return metodoPago; }
     public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+    public String getTokenPago() { return tokenPago; }
+    public void setTokenPago(String tokenPago) { this.tokenPago = tokenPago; }
     public Integer getIdUsuario() { return idUsuario; }
     public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
     public List<Item> getItems() { return items; }

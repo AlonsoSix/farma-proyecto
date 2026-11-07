@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ingresar | Boticas Por tu Salud</title>
+<link rel="icon" type="image/png" href="img/favicon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page">
+
+<main class="login-shell">
+
+  <!-- Lado de marca -->
+  <section class="login-marca" aria-label="Boticas Por tu Salud">
+    <div class="login-marca-contenido">
+      <a href="login.html" class="login-logo" aria-label="Boticas Por tu Salud">
+        <img src="img/logo-farma3.png" alt="Boticas Por tu Salud">
+      </a>
+
+      <p class="login-eyebrow"><i class="bi bi-shield-check me-2"></i>Tu botica de confianza, ahora en línea</p>
+      <h1>Bienvenido a<br><span>Boticas Por tu Salud</span></h1>
+      <p class="login-bajada">Ingresa para ver el catálogo, armar tu carrito y pagar de forma segura con tarjeta o Yape.</p>
+
+      <ul class="login-beneficios">
+        <li><span><i class="bi bi-bag-check"></i></span><div><strong>Compra sin salir de casa</strong><small>Catálogo con ofertas y stock actualizado.</small></div></li>
+        <li><span><i class="bi bi-credit-card-2-front"></i></span><div><strong>Pago seguro con Culqi</strong><small>Tarjeta y Yape con confirmación inmediata.</small></div></li>
+        <li><span><i class="bi bi-file-earmark-pdf"></i></span><div><strong>Boleta en PDF</strong><small>Descárgala o imprímela cuando la necesites.</small></div></li>
+      </ul>
+
+      <p class="login-marca-pie"><i class="bi bi-geo-alt me-1"></i>Lima, Perú · Delivery en toda la zona</p>
+    </div>
+    <div class="login-marca-decor" aria-hidden="true"></div>
+  </section>
+
+  <!-- Formulario -->
+  <section class="login-panel">
+    <div class="login-card">
+
+      <div class="login-card-cabecera">
+        <span class="login-chip"><i class="bi bi-lock-fill me-1"></i>Acceso seguro</span>
+        <h2 id="loginTitulo">Inicia sesión</h2>
+        <p>Usa tu cuenta para continuar en la tienda.</p>
+      </div>
+
+      <!-- Pestañas -->
+      <div class="login-tabs" role="tablist" aria-label="Ingresar o crear cuenta">
+        <button type="button" id="tabLogin" class="activo" role="tab" aria-selected="true" aria-controls="paneLogin">Ingresar</button>
+        <button type="button" id="tabRegistro" role="tab" aria-selected="false" aria-controls="paneRegistro">Crear cuenta</button>
+      </div>
+
+      <!-- Avisos -->
+      <div id="loginAviso" class="alert d-none" role="alert" aria-live="polite"></div>
+
+      <!-- INGRESAR -->
+      <div id="paneLogin" role="tabpanel" aria-labelledby="tabLogin">
+        <form id="formLogin" novalidate>
+          <div class="mb-3">
+            <label class="form-label" for="loginCorreo">Correo electrónico</label>
+            <div class="login-input">
+              <i class="bi bi-envelope"></i>
+              <input type="email" class="form-control" id="loginCorreo" placeholder="tucorreo@ejemplo.com" autocomplete="email" required>
+            </div>
+            <div class="invalid-feedback">Escribe un correo válido.</div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label" for="loginContrasena">Contraseña</label>
+            <div class="login-input login-input-password">
+              <i class="bi bi-key"></i>
+              <input type="password" class="form-control" id="loginContrasena" placeholder="Tu contraseña" autocomplete="current-password" required>
+              <button type="button" class="login-ojo" id="btnVerContrasena" aria-label="Mostrar contraseña"><i class="bi bi-eye"></i></button>
+            </div>
+            <div class="invalid-feedback">Escribe tu contraseña.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary login-btn" id="btnLogin">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar a la tienda
+          </button>
+        </form>
+
+        <div class="login-demo">
+          <div>
+            <strong><i class="bi bi-person-badge me-1"></i>Cuenta de administrador (demo)</strong>
+            <small>admin@farma.com · admin12345</small>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="btnUsarDemo">Usar</button>
+        </div>
+
+        <p class="login-cambiar">¿Aún no tienes cuenta? <button type="button" id="btnIrRegistro">Créala aquí</button></p>
+      </div>
+
+      <!-- REGISTRO -->
+      <div id="paneRegistro" class="d-none" role="tabpanel" aria-labelledby="tabRegistro">
+        <form id="formRegistro" novalidate>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="regNombre">Nombres *</label>
+              <input type="text" class="form-control" id="regNombre" maxlength="100" autocomplete="given-name" required>
+              <div class="invalid-feedback">Escribe tus nombres.</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="regApellido">Apellidos *</label>
+              <input type="text" class="form-control" id="regApellido" maxlength="100" autocomplete="family-name" required>
+              <div class="invalid-feedback">Escribe tus apellidos.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="regCorreo">Correo electrónico *</label>
+              <input type="email" class="form-control" id="regCorreo" maxlength="150" autocomplete="email" required>
+              <div class="invalid-feedback">Escribe un correo válido.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="regTelefono">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+              <input type="tel" class="form-control" id="regTelefono" maxlength="20" autocomplete="tel" placeholder="+51 987 654 321">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="regContrasena">Contraseña *</label>
+              <div class="login-input login-input-password">
+                <i class="bi bi-key"></i>
+                <input type="password" class="form-control" id="regContrasena" minlength="8" autocomplete="new-password" required>
+                <button type="button" class="login-ojo" id="btnVerContrasenaReg" aria-label="Mostrar contraseña"><i class="bi bi-eye"></i></button>
+              </div>
+              <div class="invalid-feedback">Usa al menos 8 caracteres.</div>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="regContrasena2">Repetir contraseña *</label>
+              <input type="password" class="form-control" id="regContrasena2" minlength="8" autocomplete="new-password" required>
+              <div class="invalid-feedback">Las contraseñas deben coincidir.</div>
+            </div>
+          </div>
+
+          <p class="login-legal"><i class="bi bi-info-circle me-1"></i>Tus datos se usan solo para gestionar tu cuenta y tus compras. Proyecto académico UTP.</p>
+
+          <button type="submit" class="btn btn-primary login-btn" id="btnRegistro">
+            <i class="bi bi-person-plus me-2"></i>Crear mi cuenta
+          </button>
+        </form>
+
+        <p class="login-cambiar">¿Ya tienes cuenta? <button type="button" id="btnIrLogin">Ingresa aquí</button></p>
+      </div>
+
+      <p class="login-pie">
+        <i class="bi bi-shield-lock me-1"></i>Conexión protegida · Boticas Por tu Salud
+      </p>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

@@ -39,9 +39,27 @@ public class Venta {
     @Column(name = "cliente_correo", length = 150)
     private String clienteCorreo;
 
-    // EFECTIVO, TARJETA o YAPE (pago simulado)
+    // EFECTIVO, TARJETA o YAPE
     @Column(name = "metodo_pago", nullable = false, length = 20)
     private String metodoPago;
+
+    // Estado del cobro: APROBADO (tarjeta/Yape o simulado) o PENDIENTE (efectivo contra entrega)
+    @Column(name = "pago_estado", nullable = false, length = 20)
+    private String pagoEstado = "PENDIENTE";
+
+    // CULQI, SIMULADO o EFECTIVO
+    @Column(name = "pago_pasarela", length = 20)
+    private String pagoPasarela;
+
+    // chr_... del cargo en Culqi o SIM-... en modo de prueba
+    @Column(name = "pago_referencia", length = 64)
+    private String pagoReferencia;
+
+    @Column(name = "tarjeta_marca", length = 30)
+    private String tarjetaMarca;
+
+    @Column(name = "tarjeta_ultimos4", length = 4)
+    private String tarjetaUltimos4;
 
     // Total de los precios normales, sin ofertas
     @Column(name = "subtotal_sin_descuento", nullable = false, precision = 10, scale = 2)
@@ -88,6 +106,16 @@ public class Venta {
     public void setClienteCorreo(String clienteCorreo) { this.clienteCorreo = clienteCorreo; }
     public String getMetodoPago() { return metodoPago; }
     public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+    public String getPagoEstado() { return pagoEstado; }
+    public void setPagoEstado(String pagoEstado) { this.pagoEstado = pagoEstado; }
+    public String getPagoPasarela() { return pagoPasarela; }
+    public void setPagoPasarela(String pagoPasarela) { this.pagoPasarela = pagoPasarela; }
+    public String getPagoReferencia() { return pagoReferencia; }
+    public void setPagoReferencia(String pagoReferencia) { this.pagoReferencia = pagoReferencia; }
+    public String getTarjetaMarca() { return tarjetaMarca; }
+    public void setTarjetaMarca(String tarjetaMarca) { this.tarjetaMarca = tarjetaMarca; }
+    public String getTarjetaUltimos4() { return tarjetaUltimos4; }
+    public void setTarjetaUltimos4(String tarjetaUltimos4) { this.tarjetaUltimos4 = tarjetaUltimos4; }
     public BigDecimal getSubtotalSinDescuento() { return subtotalSinDescuento; }
     public void setSubtotalSinDescuento(BigDecimal v) { this.subtotalSinDescuento = v; }
     public BigDecimal getDescuentoTotal() { return descuentoTotal; }

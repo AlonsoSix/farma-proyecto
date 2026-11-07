@@ -42,6 +42,8 @@ public class AuthController {
             resp.put("mensaje", "Bienvenido " + usuario.getNombre());
             resp.put("id", usuario.getId());
             resp.put("nombre", usuario.getNombre());
+            resp.put("apellido", usuario.getApellido());
+            resp.put("correo", usuario.getCorreo());
             resp.put("rol", usuario.getRol());
             return ResponseEntity.ok(resp);
         } catch (RuntimeException e) {
