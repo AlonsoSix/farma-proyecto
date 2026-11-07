@@ -2,6 +2,7 @@ package com.farma.backend.controller;
 
 import com.farma.backend.dto.VentaRequest;
 import com.farma.backend.model.Venta;
+import com.farma.backend.service.PagoRechazadoException;
 import com.farma.backend.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,5 +42,10 @@ public class VentaController {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Map<String, String>> noEncontrado(NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(PagoRechazadoException.class)
+    public ResponseEntity<Map<String, String>> pagoRechazado(PagoRechazadoException e) {
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of("error", e.getMessage()));
     }
 }

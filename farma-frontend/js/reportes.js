@@ -31,7 +31,7 @@ const esAdmin = !!sesion && String(sesion.rol).toUpperCase() === 'ADMIN';
 document.addEventListener('DOMContentLoaded', () => {
   $('btnSalir').addEventListener('click', () => {
     try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-    location.href = 'index.html';
+    location.href = 'login.html?salir=1';
   });
   if (!esAdmin) {
     $('sinAcceso').classList.remove('d-none');

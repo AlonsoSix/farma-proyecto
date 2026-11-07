@@ -1,7 +1,7 @@
 # Copia este archivo como application.properties y pon tu propia contraseña de MySQL.
 spring.application.name=farma-backend
 
-spring.datasource.url=jdbc:mysql://localhost:3306/farma_db?useSSL=false&serverTimezone=America/Lima
+spring.datasource.url=jdbc:mysql://localhost:3306/farma_db?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=TU_CONTRASEÑA_DE_MYSQL
 
@@ -9,3 +9,13 @@ spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 
 server.port=8081
+
+# ---------------------------------------------------------------------------
+# Culqi (sandbox)
+# ---------------------------------------------------------------------------
+# Copia tus llaves de https://panel.culqi.com (Desarrollo -> API Keys).
+# NO subas este archivo ni las llaves al repositorio.
+# Si dejas las llaves vacías, la tienda funciona en modo de pago simulado.
+culqi.public-key=${CULQI_PUBLIC_KEY:}
+culqi.secret-key=${CULQI_SECRET_KEY:}
+culqi.api-url=https://api.culqi.com/v2

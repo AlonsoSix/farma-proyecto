@@ -1,0 +1,455 @@
+/* =====================================================================
+   Pantalla de acceso (login.html)
+   Usa las variables de marca definidas en css/style.css.
+   ===================================================================== */
+
+.login-page {
+  min-height: 100vh;
+  background: #eef4fa;
+  color: var(--farma-dark);
+}
+
+.login-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  min-height: 100vh;
+}
+
+/* ---------- Lado de marca ---------- */
+.login-marca {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 3.5rem clamp(2rem, 5vw, 5.5rem);
+  color: #fff;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(255, 255, 255, .16), transparent 32%),
+    linear-gradient(145deg, #0b72b3 0%, #08548a 52%, #062f4f 100%);
+}
+
+.login-marca-contenido {
+  position: relative;
+  z-index: 2;
+  max-width: 560px;
+  width: 100%;
+}
+
+.login-logo {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 18px;
+  padding: .65rem 1rem;
+  margin-bottom: 2.4rem;
+  box-shadow: 0 14px 34px rgba(3, 26, 45, .28);
+}
+
+.login-logo img {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+
+.login-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #c9e8ff;
+  margin-bottom: 1rem;
+}
+
+.login-marca h1 {
+  font-size: clamp(2.1rem, 3.4vw, 3.35rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  margin-bottom: 1.1rem;
+}
+
+.login-marca h1 span {
+  color: #ffd8a8;
+}
+
+.login-bajada {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: #d7ebfb;
+  max-width: 44ch;
+  margin-bottom: 2.2rem;
+}
+
+.login-beneficios {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.login-beneficios li {
+  display: flex;
+  align-items: flex-start;
+  gap: .9rem;
+}
+
+.login-beneficios li > span {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .13);
+  border: 1px solid rgba(255, 255, 255, .18);
+  color: #ffd8a8;
+  font-size: 1.15rem;
+}
+
+.login-beneficios strong {
+  display: block;
+  font-size: .95rem;
+  font-weight: 600;
+}
+
+.login-beneficios small {
+  display: block;
+  color: #c3ddf1;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.login-marca-pie {
+  margin: 0;
+  font-size: .82rem;
+  color: #b9d6ec;
+}
+
+/* Círculos decorativos */
+.login-marca-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.login-marca-decor::before,
+.login-marca-decor::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+
+.login-marca-decor::before {
+  width: 460px;
+  height: 460px;
+  right: -170px;
+  bottom: -180px;
+  box-shadow: inset 0 0 0 36px rgba(255, 255, 255, .035);
+}
+
+.login-marca-decor::after {
+  width: 250px;
+  height: 250px;
+  right: 8%;
+  top: -90px;
+  background: rgba(255, 216, 168, .08);
+  border-color: rgba(255, 216, 168, .18);
+}
+
+/* ---------- Panel del formulario ---------- */
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(11, 114, 179, .12), transparent 30%),
+    #eef4fa;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  border: 1px solid #dbe9f5;
+  border-radius: 26px;
+  padding: clamp(1.5rem, 3vw, 2.4rem);
+  box-shadow: 0 24px 70px rgba(11, 42, 69, .14);
+}
+
+.login-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--farma-primary);
+  background: var(--farma-primary-soft);
+  border-radius: 50rem;
+  padding: .35rem .7rem;
+  margin-bottom: .9rem;
+}
+
+.login-card-cabecera h2 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: .35rem;
+}
+
+.login-card-cabecera p {
+  color: #66788a;
+  font-size: .9rem;
+  margin-bottom: 1.25rem;
+}
+
+.login-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .35rem;
+  background: #f1f6fb;
+  border: 1px solid #e0edf8;
+  border-radius: 14px;
+  padding: .3rem;
+  margin-bottom: 1.15rem;
+}
+
+.login-tabs button {
+  border: 0;
+  background: transparent;
+  border-radius: 11px;
+  padding: .55rem .75rem;
+  font-size: .87rem;
+  font-weight: 600;
+  color: #5f7288;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.login-tabs button:hover {
+  color: var(--farma-primary);
+}
+
+.login-tabs button.activo {
+  background: #fff;
+  color: var(--farma-primary);
+  box-shadow: 0 2px 8px rgba(11, 42, 69, .12);
+}
+
+.login-card .form-label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: .35rem;
+}
+
+.login-card .form-control {
+  border-radius: 12px;
+  border-color: #cfe0ef;
+  padding-top: .62rem;
+  padding-bottom: .62rem;
+  font-size: .92rem;
+}
+
+.login-card .form-control:focus {
+  border-color: var(--farma-primary);
+  box-shadow: 0 0 0 .2rem rgba(11, 114, 179, .14);
+}
+
+.login-input {
+  position: relative;
+}
+
+.login-input > i {
+  position: absolute;
+  left: .95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8aa0b4;
+  font-size: .95rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.login-input .form-control {
+  padding-left: 2.55rem;
+}
+
+.login-input-password .form-control {
+  padding-right: 2.8rem;
+}
+
+.login-ojo {
+  position: absolute;
+  right: .35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #7d93a8;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.login-ojo:hover,
+.login-ojo:focus-visible {
+  color: var(--farma-primary);
+  background: var(--farma-primary-soft);
+}
+
+.login-btn {
+  width: 100%;
+  border-radius: 50rem;
+  padding: .7rem 1rem;
+  font-weight: 600;
+  margin-top: .55rem;
+}
+
+.login-card .invalid-feedback {
+  font-size: .78rem;
+}
+
+.login-card .was-validated .form-control:invalid,
+.login-card .form-control.is-invalid {
+  border-color: #dc3545;
+}
+
+.login-demo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  background: #fff8ed;
+  border: 1px dashed #f0c48a;
+  border-radius: 14px;
+  padding: .7rem .85rem;
+  margin-top: 1.15rem;
+}
+
+.login-demo strong {
+  display: block;
+  font-size: .78rem;
+  color: #8a4b06;
+}
+
+.login-demo small {
+  display: block;
+  font-size: .76rem;
+  color: #9a6a2f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.login-cambiar {
+  text-align: center;
+  font-size: .86rem;
+  color: #60758a;
+  margin: 1.15rem 0 0;
+}
+
+.login-cambiar button {
+  border: 0;
+  background: transparent;
+  color: var(--farma-primary);
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-legal {
+  font-size: .76rem;
+  line-height: 1.5;
+  color: #7a8ea2;
+  background: #f6fafd;
+  border-radius: 12px;
+  padding: .65rem .8rem;
+  margin: 1rem 0 .35rem;
+}
+
+.login-pie {
+  text-align: center;
+  font-size: .75rem;
+  color: #8ba0b3;
+  margin: 1.5rem 0 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991.98px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-marca {
+    padding: 2rem 1.5rem 2.4rem;
+  }
+
+  .login-logo {
+    margin-bottom: 1.4rem;
+  }
+
+  .login-logo img {
+    height: 44px;
+  }
+
+  .login-marca h1 {
+    font-size: 2rem;
+  }
+
+  .login-bajada {
+    margin-bottom: 0;
+  }
+
+  .login-beneficios,
+  .login-marca-pie,
+  .login-eyebrow {
+    display: none;
+  }
+
+  .login-panel {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .login-card {
+    margin-top: -2.2rem;
+    position: relative;
+    z-index: 3;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .login-marca {
+    padding-top: 1.4rem;
+  }
+
+  .login-marca h1 {
+    font-size: 1.65rem;
+  }
+
+  .login-bajada {
+    font-size: .9rem;
+  }
+
+  .login-card {
+    border-radius: 20px;
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

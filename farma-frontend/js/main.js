@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
   pintarSesion();
   iniciarSugerencias();   // buscador del navbar con productos sugeridos
 
+  // Si llegó aquí después de intentar entrar a una zona de administrador sin permiso
+  if (new URLSearchParams(location.search).get('sinPermiso') === '1') {
+    mostrarAviso('Esa sección es solo para administradores.');
+    history.replaceState(null, '', location.pathname);
+  }
+
   // Formulario de contacto (contacto.html): por ahora solo valida y muestra un aviso, no envía nada
   const formContacto = document.getElementById('formContacto');
   if (formContacto) {
@@ -31,9 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   actualizarCarritoUI();
   cargarProductos();
-
-  document.getElementById('loginForm').addEventListener('submit', manejarLogin);
-  document.getElementById('registroForm').addEventListener('submit', manejarRegistro);
 
   // Buscador del navbar: en la página de productos lo maneja productos.js;
   // en cualquier otra página lleva a productos.html?q=lo-que-escribiste
@@ -383,7 +386,7 @@ function actualizarCarritoUI() {
 }
 
 /* ---------- Sesión ---------- */
-// Se guarda en el navegador: { id, nombre, rol }. El rol ADMIN da acceso a admin.html
+// Se guarda en el navegador: { id, nombre, apellido, correo, rol }. El rol ADMIN da acceso a admin.html/reportes.html
 function leerSesion() {
   try { return JSON.parse(localStorage.getItem('farma_sesion')); } catch (e) { return null; }
 }
@@ -392,11 +395,11 @@ function guardarSesion(sesion) {
 }
 function cerrarSesion() {
   try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-  pintarSesion();
-  mostrarAviso('Cerraste sesión correctamente.');
+  // La tienda completa está detrás del login: al salir se vuelve a la pantalla de acceso.
+  location.href = 'login.html?salir=1';
 }
 
-// Cambia los botones "Iniciar sesión / Registrarse" por el menú del usuario
+// Cambia los botones de acceso por el menú del usuario
 function pintarSesion() {
   const zona = document.querySelector('#navMenu > div');
   if (!zona) return;
@@ -410,72 +413,13 @@ function pintarSesion() {
         <i class="bi bi-person-circle me-1"></i>Hola, ${esc(sesion.nombre)}
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-        ${esAdmin ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-speedometer2 me-2"></i>Panel de administración</a></li><li><hr class="dropdown-divider"></li>' : ''}
+        <li><a class="dropdown-item" href="carrito.html"><i class="bi bi-bag-check me-2"></i>Mi carrito</a></li>
+        ${esAdmin ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-speedometer2 me-2"></i>Panel de administración</a></li><li><a class="dropdown-item" href="reportes.html"><i class="bi bi-bar-chart-line me-2"></i>Reportes</a></li>' : ''}
+        <li><hr class="dropdown-divider"></li>
         <li><button class="dropdown-item" type="button" id="btnCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</button></li>
       </ul>
     </div>`;
   document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
-}
-
-/* ---------- Login / Registro ---------- */
-async function manejarLogin(e) {
-  e.preventDefault();
-  const correo = document.getElementById('loginCorreo').value;
-  const contrasena = document.getElementById('loginContrasena').value;
-  const errorBox = document.getElementById('loginError');
-  errorBox.classList.add('d-none');
-
-  try {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo, contrasena })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión');
-
-    // Se guarda la sesión (id, nombre y rol) para el resto de páginas
-    guardarSesion({ id: data.id, nombre: data.nombre, rol: data.rol });
-    if (String(data.rol).toUpperCase() === 'ADMIN') {
-      location.href = 'admin.html';      // el administrador va directo a su panel
-      return;
-    }
-    bootstrap.Modal.getInstance(document.getElementById('loginModal')).hide();
-    e.target.reset();
-    pintarSesion();
-    mostrarAviso(data.mensaje);
-  } catch (err) {
-    errorBox.textContent = err.message;
-    errorBox.classList.remove('d-none');
-  }
-}
-
-async function manejarRegistro(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('regNombre').value;
-  const apellido = document.getElementById('regApellido').value;
-  const correo = document.getElementById('regCorreo').value;
-  const contrasena = document.getElementById('regContrasena').value;
-  const telefono = document.getElementById('regTelefono').value;
-  const errorBox = document.getElementById('registroError');
-  errorBox.classList.add('d-none');
-
-  try {
-    const res = await fetch(`${API_URL}/auth/registro`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, apellido, correo, contrasena, telefono })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al registrarse');
-
-    alert('¡Cuenta creada correctamente! Ahora puedes iniciar sesión.');
-    bootstrap.Modal.getInstance(document.getElementById('registroModal')).hide();
-    e.target.reset();
-  } catch (err) {
-    errorBox.textContent = err.message;
-    errorBox.classList.remove('d-none');
-  }
 }
 
 /* ---------- Buscador del navbar: productos sugeridos ----------

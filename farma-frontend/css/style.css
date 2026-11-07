@@ -5336,3 +5336,184 @@ a.cto-rapido-item:hover {
 #formCompra {
   scroll-margin-top: 150px;
 }
+
+/* =====================================================================
+   PAGOS CON CULQI (carrito.html)
+   ===================================================================== */
+.sesion-cargando {
+  visibility: hidden;
+}
+
+.pago-modo {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  border: 1px solid var(--farma-border);
+  background: #f6fafd;
+  border-radius: 14px;
+  padding: .7rem .85rem;
+  margin-bottom: .9rem;
+  font-size: .84rem;
+  color: #4a5c70;
+}
+
+.pago-modo > i {
+  font-size: 1.1rem;
+  color: var(--farma-primary);
+  margin-top: .1rem;
+}
+
+.pago-modo strong {
+  display: block;
+  color: var(--farma-dark);
+  font-size: .84rem;
+}
+
+.pago-modo span {
+  display: block;
+  line-height: 1.45;
+}
+
+.pago-modo-real {
+  background: #eaf8f0;
+  border-color: #b7e4c7;
+}
+
+.pago-modo-real > i {
+  color: #1f9d55;
+}
+
+.pago-modo-prueba {
+  background: #fff8ed;
+  border-color: #f0c48a;
+}
+
+.pago-modo-prueba > i {
+  color: #b2690a;
+}
+
+.pago-modo-error {
+  background: #fdf1f0;
+  border-color: #f2b8b5;
+}
+
+.pago-modo-error > i {
+  color: #b42318;
+}
+
+.pago-detalle {
+  display: flex;
+  align-items: flex-start;
+  gap: .8rem;
+  border: 1px dashed #c7dcee;
+  border-radius: 14px;
+  padding: .8rem .9rem;
+  margin-top: .85rem;
+  background: #fff;
+}
+
+.pago-detalle > i {
+  font-size: 1.35rem;
+  color: var(--farma-primary);
+  margin-top: .05rem;
+}
+
+.pago-detalle strong {
+  display: block;
+  font-size: .9rem;
+  color: var(--farma-dark);
+}
+
+.pago-detalle p {
+  margin: .15rem 0 0;
+  font-size: .82rem;
+  line-height: 1.5;
+  color: #5b6b82;
+}
+
+.pago-detalle ul {
+  margin: .35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: .8rem;
+  color: #5b6b82;
+}
+
+.pago-detalle .pago-test {
+  display: inline-block;
+  margin-top: .4rem;
+  font-size: .76rem;
+  color: #8a4b06;
+  background: #fff8ed;
+  border: 1px solid #f0c48a;
+  border-radius: 8px;
+  padding: .25rem .45rem;
+}
+
+.pago-seguro {
+  font-size: .76rem;
+  color: #72859a;
+  margin: .8rem 0 0;
+}
+
+/* Datos de pago dentro de la boleta */
+.boleta-pago {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .9rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.boleta-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border-radius: 50rem;
+  padding: .18rem .55rem;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.boleta-estado-ok {
+  background: #e8f7ee;
+  color: #167a43;
+  border: 1px solid #b7e4c7;
+}
+
+.boleta-estado-pendiente {
+  background: #fff8ed;
+  color: #8a4b06;
+  border: 1px solid #f0c48a;
+}
+
+.boleta-referencia,
+.boleta-tarjeta {
+  font-size: .78rem;
+  color: #5b6b82;
+}
+
+.boleta-referencia code {
+  font-size: .76rem;
+  color: #33475b;
+  background: #f1f6fb;
+  border-radius: 5px;
+  padding: .1rem .3rem;
+}
+
+.boleta-pago-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px dashed #d9e2ec;
+  margin-top: 1rem;
+  padding-top: .75rem;
+}
+
+.boleta-pago-linea > span {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #52606d;
+}
