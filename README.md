@@ -41,11 +41,11 @@ cd farma-proyecto
 1. Abre **MySQL Workbench** y conéctate a tu servidor local.
 2. Abre **`database/farma_db_completo.sql`** (File → Open SQL Script).
 3. Ejecútalo completo con el **rayo ⚡** (o Ctrl+Shift+Enter), sin seleccionar nada.
-4. Al final debe mostrar **20 productos** y **1 usuario (el administrador)**.
+4. Al final debe mostrar **500 productos**, **1 usuario (el administrador)** y **182 ventas** de ejemplo.
 
-> Si ya tenías la base creada con una versión anterior del proyecto, ejecuta
-> **`database/migracion_pagos_culqi.sql`**. Agrega las columnas de pago que exige
-> `spring.jpa.hibernate.ddl-auto=validate` (estado, pasarela, referencia y tarjeta).
+> Es el **único** script de base de datos. Si ya tenías `farma_db` de una versión anterior,
+> vuelve a ejecutarlo: la borra y la crea de nuevo con todas las columnas que exige
+> `spring.jpa.hibernate.ddl-auto=validate` (se pierden los datos que hayas agregado a mano).
 
 ---
 
@@ -185,9 +185,7 @@ para los reportes.
 ```
 farma-proyecto/
 ├── database/
-│   ├── farma_db_completo.sql        # Base completa (incluye columnas de pago)
-│   ├── migracion_pagos_culqi.sql    # Migración para bases ya creadas
-│   └── cambiar_contrasena_admin.sql
+│   └── farma_db_completo.sql        # Único script: tablas, 500 productos, admin y ventas
 ├── farma-backend/                   # API REST con Spring Boot (puerto 8081)
 │   └── src/main/java/com/farma/backend/
 │       ├── config/CulqiProperties.java
