@@ -276,6 +276,16 @@ function reporteMetodosPago() {
 }
 
 // 5. Estado del inventario
+// Con muchos productos la lista de reposición se vuelve un párrafo enorme:
+// se nombran los primeros 5 y el resto queda en la tabla "Productos para reponer".
+const MAX_NOMBRES_REPONER = 5;
+function textoReponer(reponer) {
+  if (!reponer.length) return ' No hay productos que necesiten reposición.';
+  if (reponer.length <= MAX_NOMBRES_REPONER) return ` Se recomienda reponer pronto: ${reponer.join(', ')}.`;
+  const resto = reponer.length - MAX_NOMBRES_REPONER;
+  return ` Se recomienda reponer pronto ${reponer.length} productos, entre ellos ${reponer.slice(0, MAX_NOMBRES_REPONER).join(', ')} ` +
+    `y ${resto} más. La lista completa está en la tabla "Productos para reponer".`;
+}
 function reporteInventario() {
   const inv = datos.inventario || {};
   const disponibles = Number(inv.disponibles || 0);
@@ -288,7 +298,7 @@ function reporteInventario() {
   const descripcion = `De ${activos} productos activos, ${disponibles} tienen stock suficiente (${pct(disponibles, activos)}), ` +
     `${stockBajo} tienen stock bajo (5 unidades o menos) y ${agotados} ${agotados === 1 ? 'está agotado' : 'están agotados'}. ` +
     `Además hay ${deBaja} producto(s) dados de baja. El inventario activo vale ${soles(inv.valorInventario || inv.valorizado || 0)} a precio de venta.` +
-    (reponer.length ? ` Se recomienda reponer pronto: ${reponer.join(', ')}.` : ' No hay productos que necesiten reposición.');
+    textoReponer(reponer);
   return {
     id: 'inventario', numero: 5, titulo: 'Estado del inventario', icono: 'bi-box-seam', ancho: 'col-lg-6',
     descripcion,

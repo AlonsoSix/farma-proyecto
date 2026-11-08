@@ -22,6 +22,8 @@ let editando = null;       // código del producto que se edita (null = registra
 let porEliminar = null;    // producto que se va a eliminar
 let porCambiar = null;     // producto que se va a dar de baja o activar
 let filtroEstado = 'todos';   // 'todos' | 'activos' | 'inactivos'
+const POR_PAGINA = 20;        // filas de la tabla por página
+let paginaActual = 1;
 
 const $ = (id) => document.getElementById(id);
 let modalProducto, modalEliminar, modalEstado;
@@ -68,6 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   $('btnTodos').addEventListener('click', verTodos);
+  // Paginación de la tabla
+  $('paginacionAdmin').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-pagina]');
+    if (!btn || btn.disabled) return;
+    paginaActual = Number(btn.dataset.pagina);
+    pintarTabla(undefined, true);
+    $('tablaCuerpo').closest('.admin-card, table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   $('filtroActivo').addEventListener('click', (e) => { if (e.target.closest('button')) verTodos(); });
 
   // Acciones de la tabla
@@ -172,7 +182,7 @@ async function refrescarVista() {
   if (modo.tipo === 'codigo') return buscarPorCodigo(modo.valor, true);
   if (modo.tipo === 'dinamica') return buscarDinamico(modo.valor);
   vista = todos;
-  pintarTabla();
+  pintarTabla(undefined, true);   // después de editar o eliminar se queda en la misma página
 }
 
 function verTodos() {
@@ -225,7 +235,9 @@ function pintarResumen() {
   $('listaCategorias').innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join('');
 }
 
-function pintarTabla(mensajeVacio) {
+// mantenerPagina = true al cambiar de página o al refrescar; una búsqueda o filtro nuevo vuelve a la página 1
+function pintarTabla(mensajeVacio, mantenerPagina = false) {
+  if (!mantenerPagina) paginaActual = 1;
   const q = modo.tipo === 'dinamica' ? modo.valor : '';
   const base = Array.isArray(vista) ? vista : [];
   // Filtro "Mostrar": todos / solo activos / solo dados de baja
@@ -239,6 +251,7 @@ function pintarTabla(mensajeVacio) {
     </button>`;
 
   if (!lista.length) {
+    $('paginacionAdmin').innerHTML = '';
     if (vista.length && !mensajeVacio) mensajeVacio = filtroEstado === 'activos' ? 'No hay productos activos con este filtro.' : 'No hay productos dados de baja con este filtro.';
     $('tablaCuerpo').innerHTML = `
       <tr><td colspan="8" class="admin-vacio">
@@ -248,7 +261,16 @@ function pintarTabla(mensajeVacio) {
     return;
   }
 
-  $('tablaCuerpo').innerHTML = lista.map(p => {
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+  paginaActual = Math.min(Math.max(1, paginaActual), totalPaginas);
+  const inicio = (paginaActual - 1) * POR_PAGINA;
+  const pagina = lista.slice(inicio, inicio + POR_PAGINA);
+  if (totalPaginas > 1) {
+    $('resultadoTexto').innerHTML += ` <span class="text-muted">· mostrando ${inicio + 1}–${inicio + pagina.length}</span>`;
+  }
+  $('paginacionAdmin').innerHTML = Farma.htmlPaginacion(paginaActual, totalPaginas);
+
+  $('tablaCuerpo').innerHTML = pagina.map(p => {
     const stock = Number(p.stock ?? 0);
     const chip = stock <= 0 ? 'chip-out' : stock <= 5 ? 'chip-warn' : 'chip-ok';
     const activo = estaActivo(p);

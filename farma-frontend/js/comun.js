@@ -262,6 +262,41 @@
     }
   }
 
+  /* ---------- Paginación (catálogo y panel admin) ---------- */
+
+  /** Números de página a mostrar: 1 … 4 5 6 … 21 ('…' marca un salto). */
+  function paginasVisibles(actual, total) {
+    if (total <= 7) return Array.from({ length: total }, function (_, i) { return i + 1; });
+    var set = [1, total, actual - 1, actual, actual + 1].filter(function (n) { return n >= 1 && n <= total; });
+    if (actual <= 3) set.push(2, 3, 4);
+    if (actual >= total - 2) set.push(total - 1, total - 2, total - 3);
+    var unicos = set.filter(function (n, i) { return set.indexOf(n) === i; }).sort(function (a, b) { return a - b; });
+    var res = [];
+    unicos.forEach(function (n, i) {
+      if (i > 0 && n - unicos[i - 1] > 1) res.push('…');
+      res.push(n);
+    });
+    return res;
+  }
+
+  /** HTML de una barra de paginación Bootstrap. Cada botón lleva data-pagina. Vacío si hay una sola página. */
+  function htmlPaginacion(actual, total) {
+    if (total <= 1) return '';
+    var item = function (pag, texto, extra, aria) {
+      return '<li class="page-item ' + (extra || '') + '"><button type="button" class="page-link" data-pagina="' + pag + '"' +
+        (aria ? ' aria-label="' + aria + '"' : '') + (extra === 'active' ? ' aria-current="page"' : '') +
+        (extra === 'disabled' ? ' disabled' : '') + '>' + texto + '</button></li>';
+    };
+    var html = item(actual - 1, '&laquo;', actual <= 1 ? 'disabled' : '', 'Página anterior');
+    paginasVisibles(actual, total).forEach(function (n) {
+      html += n === '…'
+        ? '<li class="page-item disabled"><span class="page-link">…</span></li>'
+        : item(n, n, n === actual ? 'active' : '');
+    });
+    html += item(actual + 1, '&raquo;', actual >= total ? 'disabled' : '', 'Página siguiente');
+    return '<ul class="pagination justify-content-center flex-wrap mb-0">' + html + '</ul>';
+  }
+
   return {
     config: config,
     IMG_VACIA: IMG_VACIA,
@@ -280,6 +315,8 @@
     esAdmin: esAdmin,
     obtenerIdUsuario: obtenerIdUsuario,
     obtenerCabeceraAuth: obtenerCabeceraAuth,
-    mostrarToast: mostrarToast
+    mostrarToast: mostrarToast,
+    paginasVisibles: paginasVisibles,
+    htmlPaginacion: htmlPaginacion
   };
 });

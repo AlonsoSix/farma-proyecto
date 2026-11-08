@@ -133,3 +133,26 @@ test('comun.js - Cálculos de negocio del Carrito de Compras (SRP / Pure Functio
     assert.equal(totales.totalUnidades, 0);
   });
 });
+
+test('comun.js - Paginación', async (t) => {
+  await t.test('muestra todas las páginas cuando son 7 o menos', () => {
+    assert.deepEqual(Farma.paginasVisibles(3, 5), [1, 2, 3, 4, 5]);
+  });
+
+  await t.test('usa "…" para saltar páginas lejanas', () => {
+    assert.deepEqual(Farma.paginasVisibles(1, 21), [1, 2, 3, 4, '…', 21]);
+    assert.deepEqual(Farma.paginasVisibles(10, 21), [1, '…', 9, 10, 11, '…', 21]);
+    assert.deepEqual(Farma.paginasVisibles(21, 21), [1, '…', 18, 19, 20, 21]);
+  });
+
+  await t.test('no dibuja nada si hay una sola página', () => {
+    assert.equal(Farma.htmlPaginacion(1, 1), '');
+  });
+
+  await t.test('marca la página actual y desactiva "anterior" en la primera', () => {
+    const html = Farma.htmlPaginacion(1, 3);
+    assert.match(html, /page-item active"><button[^>]*data-pagina="1"/);
+    assert.match(html, /page-item disabled"><button[^>]*data-pagina="0"[^>]*disabled/);
+    assert.match(html, /data-pagina="2"/);
+  });
+});

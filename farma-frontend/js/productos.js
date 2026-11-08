@@ -21,6 +21,10 @@ const filtros = {
 const $ = (id) => document.getElementById(id);
 let catalogoListo = false;
 
+// Paginación del catálogo: 24 tarjetas por página (4 filas de 6 o 6 de 4)
+const POR_PAGINA = 24;
+let paginaActual = 1;
+
 document.addEventListener('DOMContentLoaded', () => {
   // ---- Búsqueda ESTÁTICA: solo se aplica al enviar el formulario (botón o Enter) ----
   $('formBusquedaEstatica').addEventListener('submit', (e) => {
@@ -65,6 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $('catalogo-grid').addEventListener('click', (e) => {
     if (e.target.closest('#btnLimpiarVacio')) limpiarTodo();
+  });
+  // Cambiar de página: se conservan los filtros y se sube al inicio del catálogo
+  $('paginacion').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-pagina]');
+    if (!btn || btn.disabled) return;
+    paginaActual = Number(btn.dataset.pagina);
+    aplicarFiltros(true);
+    $('catalogo').scrollIntoView({ behavior: 'smooth' });
   });
 
   iniciarDestacados();
@@ -195,8 +207,10 @@ function leerPrecios() {
   aplicarFiltros();
 }
 
-function aplicarFiltros() {
+// mantenerPagina = true solo al usar la paginación; cualquier filtro nuevo vuelve a la página 1
+function aplicarFiltros(mantenerPagina = false) {
   if (!catalogoListo) return;   // todavía no llegan los productos del backend
+  if (mantenerPagina !== true) paginaActual = 1;
   const tEstatica = palabras(filtros.estatica);
   const tDinamica = palabras(filtros.dinamica);
   const todos = [...tEstatica, ...tDinamica];
@@ -222,10 +236,18 @@ function aplicarFiltros() {
   $('resultadoTexto').innerHTML = lista.length === 1
     ? 'Encontramos <strong>1</strong> producto'
     : `Encontramos <strong>${lista.length}</strong> productos`;
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+  paginaActual = Math.min(Math.max(1, paginaActual), totalPaginas);
+  const inicio = (paginaActual - 1) * POR_PAGINA;
+  const pagina = lista.slice(inicio, inicio + POR_PAGINA);
+  if (totalPaginas > 1) {
+    $('resultadoTexto').innerHTML += ` <span class="text-muted">· mostrando ${inicio + 1}–${inicio + pagina.length}</span>`;
+  }
   pintarChips();
 
+  $('paginacion').innerHTML = Farma.htmlPaginacion(paginaActual, totalPaginas);
   $('catalogo-grid').innerHTML = lista.length
-    ? lista.map(p => htmlTarjeta(p, {
+    ? pagina.map(p => htmlTarjeta(p, {
         nombreHtml: resaltar(p.nombre, todos),
         etiqueta: esMasVendido(p) ? 'Más vendido' : ''
       })).join('')
