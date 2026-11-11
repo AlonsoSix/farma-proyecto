@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Productos | PorTuSalud</title>
 <script src="js/comun.js"></script>
-<script src="js/auth-guard.js"></script>
 <link rel="icon" type="image/png" href="img/favicon.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,9 +49,6 @@ try {
         <i class="bi bi-cart3"></i>
         <span id="cartCount" class="cart-count">0</span>
       </button>
-      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Menú">
-        <span class="navbar-toggler-icon"></span>
-      </button>
     </div>
 
     <form class="search-box order-3 order-lg-2 w-100 mt-3 mt-lg-0 mx-lg-4" id="buscadorForm" role="search">
@@ -60,9 +56,10 @@ try {
       <button type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button>
     </form>
 
-    <div class="collapse navbar-collapse order-4 order-lg-3 flex-grow-0" id="navMenu">
+    <div class="order-4 order-lg-3 flex-grow-0 d-flex align-items-center ms-lg-3" id="navMenu">
+      <a class="nav-pedidos" href="login.html"><i class="bi bi-bag-check"></i><span>Mis pedidos</span></a>
       <div class="d-flex gap-2 py-3 py-lg-0">
-        <a class="btn btn-outline-primary rounded-pill px-3 sesion-cargando" href="login.html">Iniciar sesión</a>
+        <a class="btn btn-outline-primary rounded-pill px-3" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a>
       </div>
     </div>
   </div>

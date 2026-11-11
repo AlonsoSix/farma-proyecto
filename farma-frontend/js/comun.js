@@ -212,7 +212,7 @@
       } catch (e) {}
     }
     if (typeof location !== 'undefined') {
-      location.replace('login.html?salir=1');
+      location.replace('index.html');
     }
   }
 

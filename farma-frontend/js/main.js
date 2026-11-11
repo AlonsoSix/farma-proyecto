@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
   pintarSesion();
   iniciarSugerencias();   // buscador del navbar con productos sugeridos
 
+  // "Mis pedidos": con sesión muestra un aviso (en construcción); sin sesión va al login
+  document.querySelectorAll('a.nav-pedidos').forEach((enlace) => {
+    enlace.addEventListener('click', (e) => {
+      if (leerSesion()) {
+        e.preventDefault();
+        mostrarAviso('"Mis pedidos" está en construcción. Pronto podrás ver aquí tus compras.');
+      }
+    });
+  });
+
   // Si llegó aquí después de intentar entrar a una zona de administrador sin permiso
   if (new URLSearchParams(location.search).get('sinPermiso') === '1') {
     mostrarAviso('Esa sección es solo para administradores.');
@@ -396,8 +406,8 @@ function guardarSesion(sesion) {
 }
 function cerrarSesion() {
   try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-  // La tienda completa está detrás del login: al salir se vuelve a la pantalla de acceso.
-  location.href = 'login.html?salir=1';
+  // La tienda es pública: al cerrar sesión se vuelve al inicio.
+  location.href = 'index.html';
 }
 
 // Cambia los botones de acceso por el menú del usuario
@@ -411,7 +421,7 @@ function pintarSesion() {
   zona.innerHTML = `
     <div class="dropdown">
       <button class="btn btn-outline-primary rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-person-circle me-1"></i>Hola, ${esc(sesion.nombre)}
+        <i class="bi bi-person-circle me-1"></i>Hola, ${esc(String(sesion.nombre).trim().split(/\s+/)[0])}
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow-sm">
         <li><a class="dropdown-item" href="carrito.html"><i class="bi bi-bag-check me-2"></i>Mi carrito</a></li>

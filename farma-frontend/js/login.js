@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btnVerContrasenaReg').addEventListener('click', () => alternarContrasena('regContrasena', 'btnVerContrasenaReg'));
   $('btnIrRegistro').addEventListener('click', () => cambiarPestana('registro'));
   $('btnIrLogin').addEventListener('click', () => cambiarPestana('login'));
+  // Pestañas de arriba (faltaba conectarlas)
+  $('tabLogin').addEventListener('click', () => cambiarPestana('login'));
+  $('tabRegistro').addEventListener('click', () => cambiarPestana('registro'));
   $('btnUsarDemo').addEventListener('click', () => {
     $('loginCorreo').value = 'admin@farma.com';
     $('loginContrasena').value = 'admin12345';
