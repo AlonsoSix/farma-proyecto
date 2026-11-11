@@ -5341,7 +5341,7 @@ a.cto-rapido-item:hover {
    PAGOS CON CULQI (carrito.html)
    ===================================================================== */
 .sesion-cargando {
-  visibility: hidden;
+  visibility: visible;
 }
 
 .pago-modo {
@@ -5509,11 +5509,31 @@ a.cto-rapido-item:hover {
   flex-wrap: wrap;
   border-top: 1px dashed #d9e2ec;
   margin-top: 1rem;
-  padding-top: .75rem;
+  padding-top: .9rem;
+  padding-bottom: .9rem;
 }
 
 .boleta-pago-linea > span {
   font-size: .8rem;
   font-weight: 600;
   color: #52606d;
+}
+
+
+/* Asegura que el botón "Iniciar sesión" del navbar se vea en escritorio */
+@media (min-width: 992px){
+  #navMenu{ display:flex !important; visibility:visible !important; }
+  #navMenu > div{ display:flex !important; }
+  #navMenu a[href="login.html"]{ display:inline-block !important; opacity:1 !important; }
+}
+
+
+/* Enlace "Mis pedidos" del navbar (estilo Inkafarma) */
+.nav-pedidos{display:inline-flex;align-items:center;gap:.5rem;color:#52606d;font-size:.92rem;font-weight:500;text-decoration:none;white-space:nowrap;}
+.nav-pedidos i{font-size:1.3rem;}
+.nav-pedidos:hover{color:var(--farma-primary,#0b72b3);}
+/* Espaciado del grupo de la derecha (Mis pedidos / Iniciar sesión / carrito) */
+@media (min-width: 992px){
+  #navMenu{ gap:1.75rem !important; align-items:center; margin-right:1.5rem; }
+  #navMenu > div{ gap:1.75rem !important; align-items:center; }
 }

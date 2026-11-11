@@ -55,7 +55,7 @@
 
 .ck-header-inner {
   max-width: 1180px;
-  height: 60px;
+  height: 78px;
   margin: 0 auto;
   padding: 0 22px;
   display: flex;
@@ -63,7 +63,7 @@
   gap: 16px;
 }
 
-.ck-brand img { height: 34px; width: auto; display: block; }
+.ck-brand img { height: 52px; width: auto; display: block; }
 
 .ck-header-title {
   display: flex;
@@ -71,11 +71,11 @@
   gap: 8px;
   margin: 0 auto;
   color: var(--ck-muted);
-  font-size: .82rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: .02em;
 }
-.ck-header-title i { color: var(--ck-brand); font-size: 1rem; }
+.ck-header-title i { color: var(--ck-brand); font-size: 1.3rem; }
 
 .ck-header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 
@@ -88,14 +88,14 @@
   border-radius: 999px;
   background: rgba(36, 138, 61, .09);
   color: var(--ck-green);
-  font-size: .72rem;
+  font-size: .85rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .ck-icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   border: 0;
   border-radius: 12px;
   background: transparent;
@@ -103,7 +103,7 @@
   display: inline-grid;
   place-items: center;
   position: relative;
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   transition: background .18s var(--ck-ease), transform .18s var(--ck-ease);
 }
 .ck-icon-btn:hover { background: rgba(60, 60, 67, .07); }
@@ -132,7 +132,7 @@
   border: 0 !important;
   background: transparent !important;
   color: var(--ck-ink-2) !important;
-  font-size: .8rem;
+  font-size: .95rem;
   font-weight: 600;
   padding: 8px 10px !important;
   border-radius: 12px !important;
@@ -173,6 +173,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 336px;
   gap: 22px;
+  align-items: center;   /* centra el contenido verticalmente (se veía flotando arriba) */
 }
 
 .ck-grid[data-paso="3"] { grid-template-columns: minmax(0, 1fr); }
@@ -839,6 +840,17 @@
 }
 .ck-yape-mark b { display: block; font-size: .85rem; }
 .ck-yape-mark small { display: block; color: #8d6a9c; font-size: .64rem; }
+/* Logo oficial de Yape (imagen) en vez del ícono de teléfono */
+.ck-yape-mark > span.ck-yape-logo {
+  width: 54px; height: 54px;
+  background: transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(112, 47, 138, .25);
+}
+.ck-yape-mark > span.ck-yape-logo img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
 .ck-yape-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .ck-note {
@@ -1157,3 +1169,37 @@
   .ck-receipt-scroll { overflow: visible !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; background: #fff !important; }
   .ck-receipt-scroll .boleta { max-width: none !important; border: 0 !important; padding: 0 !important; }
 }
+
+/* =====================================================================
+   Agranda todo el checkout de forma pareja (se veía muy pequeño).
+   Como este CSS solo se carga en carrito.html, el resto del sitio no cambia.
+   ===================================================================== */
+html { font-size: 18px; }
+.ck-app { overflow-y: auto; }
+
+/* =====================================================================
+   CHECKOUT COMO PÁGINA NORMAL CON SCROLL (estilo Inkafarma)
+   Convierte la "app a pantalla completa" en una página que fluye y scrollea,
+   limpia y espaciada. (Overrides al final para no tocar el resto del archivo.)
+   ===================================================================== */
+.ck-app{ height:auto !important; min-height:100vh !important; overflow:visible !important; display:block !important; }
+.ck-header{ position:sticky; top:0; z-index:1040; }
+.ck-main{ flex:none !important; padding:26px 0 56px !important; }
+.ck-shell{ height:auto !important; }
+.ck-grid{ height:auto !important; align-items:start !important; gap:28px; }
+.ck-stage, .ck-views, .ck-view, .ck-view.activa{ height:auto !important; min-height:0 !important; }
+/* desactivar los scrolls internos: que todo fluya en la página */
+.ck-cart-surface, .ck-items-scroll, .ck-pay-scroll, .ck-receipt-scroll{
+  overflow:visible !important; max-height:none !important; margin-right:0 !important;
+}
+/* el resumen de la derecha se queda fijo mientras bajas (como Inkafarma) */
+.ck-side{ align-self:start !important; }
+.ck-side-card{ position:sticky; top:100px; }
+
+/* Encabezado del checkout limpio como Inkafarma: sin carrito ni saludo de usuario */
+.ck-header-actions .ck-icon-btn[data-bs-target="#carritoPanel"]{ display:none !important; }
+.ck-header-actions #navMenu.ck-user{ display:none !important; }
+
+/* IGV como nota aclaratoria debajo del Total (no se suma, ya va incluido) */
+.ck-igv-nota{ margin-top:6px; font-size:.82rem; }
+.ck-igv-nota dt, .ck-igv-nota dd{ color:#8a94a6 !important; font-weight:500 !important; }
