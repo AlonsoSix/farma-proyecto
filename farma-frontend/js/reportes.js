@@ -99,7 +99,7 @@ async function cargar() {
     }
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(json.error || `Error del servidor (${res.status}).`);
-    datos = json;
+    datos = (json && typeof json === 'object') ? json : {};
     pintarResumen();
     armarReportes();
     pintarReportes();
@@ -111,12 +111,12 @@ async function cargar() {
 }
 
 function pintarResumen() {
-  const r = datos.resumen;
-  $('rIngresos').textContent = soles(r.ingresos);
-  $('rVentas').textContent = r.ventas;
-  $('rTicket').textContent = soles(r.ticketPromedio);
-  $('rUnidades').textContent = r.unidades;
-  $('rAhorro').textContent = soles(r.ahorroOfertas);
+  const r = (datos && datos.resumen) || {};
+  $('rIngresos').textContent = soles(r.ingresos ?? 0);
+  $('rVentas').textContent = r.ventas ?? 0;
+  $('rTicket').textContent = soles(r.ticketPromedio ?? 0);
+  $('rUnidades').textContent = r.unidades ?? 0;
+  $('rAhorro').textContent = soles(r.ahorroOfertas ?? 0);
 }
 
 /* =====================================================================
@@ -124,14 +124,18 @@ function pintarResumen() {
    titulo, descripcion (texto de resultados), columnas + filas (tabla) y grafico (config de Chart.js)
    ===================================================================== */
 function armarReportes() {
-  reportes = [
-    reporteVentasMes(),
-    reporteTopProductos(),
-    reporteCategorias(),
-    reporteMetodosPago(),
-    reporteInventario(),
-    reporteVencimientos()
+  const constructores = [
+    reporteVentasMes,
+    reporteTopProductos,
+    reporteCategorias,
+    reporteMetodosPago,
+    reporteInventario,
+    reporteVencimientos
   ];
+  // Si un reporte recibe datos incompletos, se omite ese reporte en lugar de romper toda la página.
+  reportes = constructores.map((crear) => {
+    try { return crear(); } catch (err) { console.error('No se pudo armar un reporte:', err); return null; }
+  }).filter(Boolean);
 }
 
 const SIN_VENTAS = 'No hay ventas registradas en el periodo seleccionado.';
@@ -343,20 +347,27 @@ function formatoCelda(valor, columna) {
 }
 
 function htmlTabla(columnas, filas) {
+  columnas = Array.isArray(columnas) ? columnas : [];
+  filas = Array.isArray(filas) ? filas : [];
   return `
     <div class="table-responsive">
       <table class="table table-sm rep-tabla mb-0">
         <thead><tr>${columnas.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
         <tbody>${filas.length
-          ? filas.map(f => `<tr>${f.map((v, i) => `<td>${formatoCelda(v, columnas[i])}</td>`).join('')}</tr>`).join('')
-          : `<tr><td colspan="${columnas.length}" class="text-muted text-center">Sin datos</td></tr>`}</tbody>
+          ? filas.map(f => `<tr>${(Array.isArray(f) ? f : [f]).map((v, i) => `<td>${formatoCelda(v, columnas[i])}</td>`).join('')}</tr>`).join('')
+          : `<tr><td colspan="${Math.max(1, columnas.length)}" class="text-muted text-center">Sin datos</td></tr>`}</tbody>
       </table>
     </div>`;
 }
 
 function pintarReportes() {
   Object.values(graficos).forEach(g => g.destroy());
-  $('repGrid').innerHTML = reportes.map(r => `
+  const lista = Array.isArray(reportes) ? reportes : [];
+  if (!lista.length) {
+    $('repGrid').innerHTML = '<div class="col-12 text-center text-muted py-5">No hay datos disponibles para generar los reportes.</div>';
+    return;
+  }
+  $('repGrid').innerHTML = lista.map(r => `
     <div class="col-12 ${r.ancho}">
       <article class="admin-card rep-card" id="rep-${r.id}">
         <header class="rep-cabecera">
@@ -380,7 +391,7 @@ function pintarReportes() {
       </article>
     </div>`).join('');
 
-  reportes.forEach(r => {
+  lista.forEach(r => {
     const cfg = r.grafico;
     cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: { duration: 400 } }, cfg.options);
     // Fondo blanco al exportar la imagen del gráfico (PDF / Word)
@@ -422,7 +433,12 @@ async function descargar(formato, id, boton) {
 }
 
 // Valores de la tabla como texto (para PDF y Word)
-const filasTexto = (columnas, filas) => filas.map(f => f.map((v, i) => typeof v === 'number' && /S\//.test(columnas[i]) ? Number(v).toFixed(2) : String(v)));
+const filasTexto = (columnas, filas) => {
+  columnas = Array.isArray(columnas) ? columnas : [];
+  filas = Array.isArray(filas) ? filas : [];
+  return filas.map(f => (Array.isArray(f) ? f : [f]).map((v, i) =>
+    typeof v === 'number' && /S\//.test(columnas[i] || '') ? Number(v).toFixed(2) : String(v)));
+};
 
 /* ---------- PDF ---------- */
 function descargarPdf(lista) {
@@ -466,12 +482,14 @@ function descargarPdf(lista) {
 
     // Tablas
     const estilo = { headStyles: { fillColor: [11, 114, 179] }, styles: { fontSize: 9 }, margin: { left: margen, right: margen } };
-    doc.autoTable({ ...estilo, startY: y, head: [r.columnas], body: filasTexto(r.columnas, r.filas) });
+    const columnas = Array.isArray(r.columnas) ? r.columnas : [];
+    doc.autoTable({ ...estilo, startY: y, head: [columnas], body: filasTexto(columnas, r.filas) });
     if (r.extra) {
       y = doc.lastAutoTable.finalY + 8;
       doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(11, 42, 69);
       doc.text(r.extra.titulo, margen, y);
-      doc.autoTable({ ...estilo, startY: y + 3, head: [r.extra.columnas], body: filasTexto(r.extra.columnas, r.extra.filas) });
+      const extraColumnas = Array.isArray(r.extra.columnas) ? r.extra.columnas : [];
+      doc.autoTable({ ...estilo, startY: y + 3, head: [extraColumnas], body: filasTexto(extraColumnas, r.extra.filas) });
     }
   });
 
@@ -489,23 +507,25 @@ function descargarPdf(lista) {
 function descargarExcel(lista) {
   const libro = XLSX.utils.book_new();
   if (lista.length > 1) {
-    const r = datos.resumen;
+    const r = (datos && datos.resumen) || {};
     const hoja = XLSX.utils.aoa_to_sheet([
       ['PorTuSalud - Informe de reportes'],
       [`Periodo: ${etiquetaPeriodo()}`],
       [`Generado: ${new Date().toLocaleString('es-PE')}`],
       [],
       ['Indicador', 'Valor'],
-      ['Ingresos (S/)', Number(r.ingresos)],
-      ['Boletas emitidas', r.ventas],
-      ['Ticket promedio (S/)', Number(r.ticketPromedio)],
-      ['Unidades vendidas', r.unidades],
-      ['Descuentos por ofertas (S/)', Number(r.ahorroOfertas)]
+      ['Ingresos (S/)', Number(r.ingresos ?? 0)],
+      ['Boletas emitidas', r.ventas ?? 0],
+      ['Ticket promedio (S/)', Number(r.ticketPromedio ?? 0)],
+      ['Unidades vendidas', r.unidades ?? 0],
+      ['Descuentos por ofertas (S/)', Number(r.ahorroOfertas ?? 0)]
     ]);
     hoja['!cols'] = [{ wch: 30 }, { wch: 16 }];
     XLSX.utils.book_append_sheet(libro, hoja, 'Resumen');
   }
   lista.forEach(r => {
+    const columnas = Array.isArray(r.columnas) ? r.columnas : [];
+    const filasReporte = Array.isArray(r.filas) ? r.filas : [];
     const filas = [
       [`Reporte ${r.numero}: ${r.titulo}`],
       [`Periodo: ${etiquetaPeriodo()}`],
@@ -513,12 +533,16 @@ function descargarExcel(lista) {
       ['Descripción de resultados'],
       [r.descripcion],
       [],
-      r.columnas,
-      ...r.filas
+      columnas,
+      ...filasReporte
     ];
-    if (r.extra) filas.push([], [r.extra.titulo], r.extra.columnas, ...r.extra.filas);
+    if (r.extra) {
+      const extraColumnas = Array.isArray(r.extra.columnas) ? r.extra.columnas : [];
+      const extraFilas = Array.isArray(r.extra.filas) ? r.extra.filas : [];
+      filas.push([], [r.extra.titulo], extraColumnas, ...extraFilas);
+    }
     const hoja = XLSX.utils.aoa_to_sheet(filas);
-    hoja['!cols'] = r.columnas.map((c, i) => ({ wch: i === 0 ? 34 : Math.max(14, c.length + 2) }));
+    hoja['!cols'] = columnas.map((c, i) => ({ wch: i === 0 ? 34 : Math.max(14, String(c).length + 2) }));
     XLSX.utils.book_append_sheet(libro, hoja, `${r.numero}. ${r.titulo}`.slice(0, 31));
   });
   XLSX.writeFile(libro, nombreArchivo(lista, 'xlsx'));
@@ -533,6 +557,7 @@ function base64ABytes(dataUrl) {
 }
 
 function tablaWord(columnas, filas) {
+  columnas = Array.isArray(columnas) ? columnas : [];
   const { Table, TableRow, TableCell, Paragraph, TextRun, WidthType, ShadingType } = docx;
   const celda = (texto, cabecera) => new TableCell({
     shading: cabecera ? { type: ShadingType.CLEAR, color: 'auto', fill: '0B72B3' } : undefined,

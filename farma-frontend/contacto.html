@@ -100,7 +100,7 @@
           class="order-4 order-lg-3 flex-grow-0 d-flex align-items-center ms-lg-3"
           id="navMenu"
         >
-          <a class="nav-pedidos" href="login.html"><i class="bi bi-bag-check"></i><span>Mis pedidos</span></a>
+          <a class="nav-pedidos" href="pedidos.html"><i class="bi bi-bag-check"></i><span>Mis pedidos</span></a>
           <div class="d-flex gap-2 py-3 py-lg-0">
           <a class="btn btn-outline-primary rounded-pill px-3" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a>
           </div>
@@ -227,7 +227,7 @@
             <div class="container">
               <span class="cto-slide-tag">Sucursales</span>
               <h2>Visítanos en tienda</h2>
-              <p>Tenemos 3 sucursales para atenderte de lunes a domingo.</p>
+              <p>Tenemos 3 sucursales en Villa El Salvador para atenderte de lunes a domingo.</p>
               <a
                 href="#sucursales"
                 class="btn btn-light rounded-pill px-4 fw-semibold"
@@ -409,9 +409,9 @@
                     <label class="form-label" for="cSucursal">Sucursal</label>
                     <select class="form-select" id="cSucursal">
                       <option>Cualquiera</option>
-                      <option>Sede Principal - Cercado de Lima</option>
-                      <option>Sucursal Miraflores</option>
-                      <option>Sucursal Los Olivos</option>
+                      <option>Villa El Salvador (Villa del Mar)</option>
+                      <option>Villa El Salvador (El Sol)</option>
+                      <option>Villa El Salvador (Chifa)</option>
                     </select>
                   </div>
                   <div class="col-12">
@@ -463,50 +463,50 @@
                 Elige una sucursal para verla en el mapa.
               </p>
 
-              <!-- Para cambiar una sucursal: edita su nombre, dirección y data-mapa (lo que buscarías en Google Maps) -->
+              <!-- Para cambiar una sucursal: edita su nombre, dirección y data-mapa (coordenadas o lugar en Google Maps) -->
               <div class="cto-sedes" role="tablist" aria-label="Sucursales">
                 <button
                   type="button"
                   class="cto-sede activa"
                   role="tab"
                   aria-selected="true"
-                  data-mapa="Plaza Mayor de Lima, Cercado de Lima"
-                  data-direccion="Jr. de la Unión 123, Cercado de Lima"
+                  data-mapa="-12.206019,-76.947706"
+                  data-direccion="Villa El Salvador, Lima (Villa del Mar)"
                   data-telefono="+51 933 073 403"
                   data-horario="Lun a dom: 7:00 a. m. – 11:00 p. m."
                 >
-                  <i class="bi bi-shop"></i>Sede Principal
+                  <i class="bi bi-shop"></i>Villa El Salvador (Villa del Mar)
                 </button>
                 <button
                   type="button"
                   class="cto-sede"
                   role="tab"
                   aria-selected="false"
-                  data-mapa="Parque Kennedy, Miraflores, Lima"
-                  data-direccion="Av. Larco 456, Miraflores"
-                  data-telefono="+51 987 654 322"
-                  data-horario="Lun a dom: 8:00 a. m. – 10:00 p. m."
+                  data-mapa="-12.204026,-76.948932"
+                  data-direccion="Villa El Salvador, Lima (El Sol)"
+                  data-telefono="+51 933 073 403"
+                  data-horario="Lun a dom: 7:00 a. m. – 11:00 p. m."
                 >
-                  <i class="bi bi-geo-alt"></i>Miraflores
+                  <i class="bi bi-geo-alt"></i>Villa El Salvador (El Sol)
                 </button>
                 <button
                   type="button"
                   class="cto-sede"
                   role="tab"
                   aria-selected="false"
-                  data-mapa="Plaza Norte, Independencia, Lima"
-                  data-direccion="Av. Alfredo Mendiola 789, Los Olivos"
-                  data-telefono="+51 987 654 323"
-                  data-horario="Lun a sáb: 8:00 a. m. – 9:00 p. m."
+                  data-mapa="-12.210788,-76.944894"
+                  data-direccion="Villa El Salvador, Lima (Chifa)"
+                  data-telefono="+51 933 073 403"
+                  data-horario="Lun a dom: 7:00 a. m. – 11:00 p. m."
                 >
-                  <i class="bi bi-geo-alt"></i>Los Olivos
+                  <i class="bi bi-geo-alt"></i>Villa El Salvador (Chifa)
                 </button>
               </div>
 
               <div class="contacto-mapa cto-mapa flex-grow-1">
                 <iframe
                   id="mapaSucursal"
-                  src="https://maps.google.com/maps?q=Plaza%20Mayor%20de%20Lima%2C%20Cercado%20de%20Lima&z=16&output=embed"
+                  src="https://maps.google.com/maps?q=-12.206019%2C-76.947706&z=16&output=embed"
                   title="Mapa de la sucursal seleccionada"
                   loading="lazy"
                   referrerpolicy="no-referrer-when-downgrade"
@@ -521,7 +521,7 @@
                   <div>
                     <strong>Dirección</strong
                     ><span id="sedeDireccion"
-                      >Jr. de la Unión 123, Cercado de Lima</span
+                      >Villa El Salvador, Lima (Villa del Mar)</span
                     >
                   </div>
                 </li>
@@ -531,7 +531,7 @@
                   ></span>
                   <div>
                     <strong>Teléfono</strong
-                    ><span id="sedeTelefono">+51 987 654 321</span>
+                    ><span id="sedeTelefono">+51 933 073 403</span>
                   </div>
                 </li>
                 <li>

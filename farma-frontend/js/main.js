@@ -18,16 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
   pintarSesion();
   iniciarSugerencias();   // buscador del navbar con productos sugeridos
 
-  // "Mis pedidos": con sesión muestra un aviso (en construcción); sin sesión va al login
-  document.querySelectorAll('a.nav-pedidos').forEach((enlace) => {
-    enlace.addEventListener('click', (e) => {
-      if (leerSesion()) {
-        e.preventDefault();
-        mostrarAviso('"Mis pedidos" está en construcción. Pronto podrás ver aquí tus compras.');
-      }
-    });
-  });
-
   // Si llegó aquí después de intentar entrar a una zona de administrador sin permiso
   if (new URLSearchParams(location.search).get('sinPermiso') === '1') {
     mostrarAviso('Esa sección es solo para administradores.');
@@ -416,6 +406,10 @@ function pintarSesion() {
   if (!zona) return;
   if (!zona.dataset.original) zona.dataset.original = zona.innerHTML;
   const sesion = leerSesion();
+  // El enlace "Mis pedidos" siempre lleva al historial de compras de la cuenta.
+  document.querySelectorAll('a.nav-pedidos').forEach((enlace) => {
+    enlace.href = sesion ? 'pedidos.html' : 'login.html?next=pedidos.html';
+  });
   if (!sesion) { zona.innerHTML = zona.dataset.original; return; }
   const esAdmin = String(sesion.rol).toUpperCase() === 'ADMIN';
   zona.innerHTML = `
@@ -424,7 +418,8 @@ function pintarSesion() {
         <i class="bi bi-person-circle me-1"></i>Hola, ${esc(String(sesion.nombre).trim().split(/\s+/)[0])}
       </button>
       <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-        <li><a class="dropdown-item" href="carrito.html"><i class="bi bi-bag-check me-2"></i>Mi carrito</a></li>
+        <li><a class="dropdown-item" href="pedidos.html"><i class="bi bi-bag-check me-2"></i>Mis pedidos</a></li>
+        <li><a class="dropdown-item" href="carrito.html"><i class="bi bi-cart3 me-2"></i>Mi carrito</a></li>
         ${esAdmin ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-speedometer2 me-2"></i>Panel de administración</a></li><li><a class="dropdown-item" href="reportes.html"><i class="bi bi-bar-chart-line me-2"></i>Reportes</a></li>' : ''}
         <li><hr class="dropdown-divider"></li>
         <li><button class="dropdown-item" type="button" id="btnCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</button></li>

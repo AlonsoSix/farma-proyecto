@@ -140,6 +140,14 @@ public class VentaService {
         }
     }
 
+    /** Historial de compras de un usuario, de la más reciente a la más antigua. */
+    public List<Venta> listarPorUsuario(Integer idUsuario) {
+        if (idUsuario == null) {
+            throw new IllegalArgumentException("El usuario es obligatorio.");
+        }
+        return ventaRepository.findByIdUsuarioOrderByFechaDescIdDesc(idUsuario);
+    }
+
     /** Busca una boleta por su correlativo oficial (ej: B001-00000001). */
     public Venta buscarPorNumero(String numero) {
         if (numero == null || numero.isBlank()) {
