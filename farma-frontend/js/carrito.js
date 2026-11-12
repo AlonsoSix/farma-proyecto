@@ -254,7 +254,7 @@ function marcarPaso(n) {
 
 async function cargarConfigPago() {
   try {
-    const res = await fetch(`${API_URL}/pagos/config`);
+    const res = await fetch(`${API_URL}/pagos/config`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Respuesta inválida');
     const data = await res.json();
     configPago = {
@@ -777,10 +777,9 @@ async function enviarCompra(datos) {
       venta.tarjetaUltimos4 = metaTarjetaSimulada.ultimos4;
     }
 
-    // Compra lista: se vacía el carrito y se borra la copia del catálogo (el stock cambió)
+    // Compra lista: se vacía el carrito (el stock cambió en el backend)
     carrito = {};
     guardarCarrito();
-    try { sessionStorage.removeItem('farma_productos'); } catch (err) { /* sin almacenamiento */ }
     mostrarBoleta(venta);
     actualizarCarritoUI();
     history.replaceState(null, '', `carrito.html?boleta=${encodeURIComponent(venta.numero)}`);
@@ -808,7 +807,7 @@ function ocultarError() {
 
 async function cargarBoleta(numero) {
   try {
-    const res = await fetch(`${API_URL}/ventas/${encodeURIComponent(numero)}`);
+    const res = await fetch(`${API_URL}/ventas/${encodeURIComponent(numero)}`, { cache: 'no-store' });
     const venta = await res.json();
     if (!res.ok) throw new Error(venta.error);
     mostrarBoleta(venta);

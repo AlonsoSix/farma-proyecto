@@ -93,7 +93,7 @@ async function cargar() {
   try {
     let res;
     try {
-      res = await fetch(`${API}/reportes?${q}`, { headers: { 'X-Usuario-Id': String(sesion.id) } });
+      res = await fetch(`${API}/reportes?${q}`, { cache: 'no-store', headers: { 'X-Usuario-Id': String(sesion.id) } });
     } catch (e) {
       throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.');
     }
