@@ -137,7 +137,7 @@ function resaltar(texto, q) {
 async function api(ruta, opciones = {}) {
   let res;
   try {
-    res = await fetch(API + ruta, opciones);
+    res = await fetch(API + ruta, { cache: 'no-store', ...opciones });
   } catch (e) {
     throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.');
   }

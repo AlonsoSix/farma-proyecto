@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function cargarPedidos() {
   try {
-    const res = await fetch(`${API_PEDIDOS}/ventas/usuario/${encodeURIComponent(sesion.id)}`);
+    const res = await fetch(`${API_PEDIDOS}/ventas/usuario/${encodeURIComponent(sesion.id)}`, { cache: 'no-store' });
     const json = await res.json().catch(() => null);
     if (!res.ok) {
       throw new Error((json && json.error) || `No se pudieron cargar tus pedidos (${res.status}).`);

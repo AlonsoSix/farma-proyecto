@@ -160,38 +160,25 @@ function mostrarAvisoEsquina(texto) {
 /* ---------- Productos ---------- */
 const MENSAJE_SIN_SERVIDOR = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo en el puerto 8081.';
 
-// Los productos se guardan en sessionStorage: al cambiar de página (por ejemplo, de un producto a otro)
-// se muestran al instante con la copia guardada, sin esperar al servidor ni ver "Cargando...".
-// Luego se consulta el backend y, si algo cambió, se vuelve a pintar.
-function leerCacheProductos() {
-  try { return JSON.parse(sessionStorage.getItem('farma_productos')); } catch (e) { return null; }
-}
-function guardarCacheProductos(lista) {
-  try { sessionStorage.setItem('farma_productos', JSON.stringify(lista)); } catch (e) { /* sin almacenamiento */ }
-}
-
+// El catálogo se consulta siempre al backend. Sin conexión no se muestran productos:
+// no se guarda ni se reutiliza ninguna copia en el navegador.
 async function cargarProductos() {
+  // Limpia la copia que guardaban versiones anteriores de la página.
+  try { sessionStorage.removeItem('farma_productos'); } catch (e) { /* sin almacenamiento */ }
   const contenedor = document.getElementById('productos-container');
-  const cache = leerCacheProductos();
-  if (Array.isArray(cache) && cache.length) {
-    productos = cache;
-    refrescarPreciosCarrito();
-    if (contenedor) renderMasVendidos();
-    document.dispatchEvent(new CustomEvent('productos:cargados'));
-  }
   try {
-    const res = await fetch(`${API_URL}/productos`);
+    const res = await fetch(`${API_URL}/productos`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Respuesta inválida');
     const nuevos = await res.json();
-    guardarCacheProductos(nuevos);
-    if (cache && JSON.stringify(cache) === JSON.stringify(nuevos)) return;   // nada cambió
+    if (!Array.isArray(nuevos)) throw new Error('Respuesta inválida');
     productos = nuevos;
     refrescarPreciosCarrito();
     if (contenedor) renderMasVendidos();
     // Avisa a las otras páginas (productos.js, producto.js) que el catálogo ya llegó
     document.dispatchEvent(new CustomEvent('productos:cargados'));
   } catch (err) {
-    if (cache) return;   // sin servidor, pero se sigue mostrando la copia guardada
+    productos = [];
+    refrescarPreciosCarrito();
     if (contenedor) contenedor.innerHTML = `<div class="w-100 text-center text-danger py-5">${MENSAJE_SIN_SERVIDOR}</div>`;
     document.dispatchEvent(new CustomEvent('productos:error'));
   }
