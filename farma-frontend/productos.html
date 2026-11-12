@@ -57,7 +57,7 @@ try {
     </form>
 
     <div class="order-4 order-lg-3 flex-grow-0 d-flex align-items-center ms-lg-3" id="navMenu">
-      <a class="nav-pedidos" href="login.html"><i class="bi bi-bag-check"></i><span>Mis pedidos</span></a>
+      <a class="nav-pedidos" href="pedidos.html"><i class="bi bi-bag-check"></i><span>Mis pedidos</span></a>
       <div class="d-flex gap-2 py-3 py-lg-0">
         <a class="btn btn-outline-primary rounded-pill px-3" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a>
       </div>
@@ -239,7 +239,7 @@ try {
           <button type="button" class="btn btn-outline-primary rounded-pill d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#panelFiltros">
             <i class="bi bi-funnel me-1"></i>Filtros
           </button>
-          <h2 id="resultadoTexto" class="resultado-texto">Cargando productos...</h2>
+          <h2 id="resultadoTexto" class="resultado-texto" aria-live="polite">Cargando productos...</h2>
           <div class="d-flex align-items-center gap-2 ms-auto">
             <label for="ordenar" class="ordenar-label text-nowrap">Ordenar por</label>
             <select id="ordenar" class="form-select form-select-sm">
@@ -252,6 +252,20 @@ try {
           </div>
         </div>
         <div id="filtrosActivos" class="filtros-activos"></div>
+
+        <!-- PAGINACIÓN: 4 filas por página, con desplazamiento horizontal -->
+        <nav id="catalogoPaginador" class="catalogo-paginador d-none" aria-label="Paginación del catálogo">
+          <button type="button" id="paginaAnterior" class="catalogo-pagina-btn">
+            <i class="bi bi-arrow-left"></i><span>Página anterior</span>
+          </button>
+          <p class="catalogo-pagina-info mb-0">
+            Página <strong id="paginaActualTexto">1</strong> de <strong id="paginaTotalTexto">1</strong>
+          </p>
+          <button type="button" id="paginaSiguiente" class="catalogo-pagina-btn catalogo-pagina-btn-siguiente">
+            <span>Siguiente Página</span><i class="bi bi-arrow-right"></i>
+          </button>
+        </nav>
+
         <div id="catalogo-grid" class="catalogo-grid">
           <div class="catalogo-vacio text-muted">Cargando productos...</div>
         </div>

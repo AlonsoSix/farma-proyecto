@@ -20,6 +20,9 @@ const filtros = {
 
 const $ = (id) => document.getElementById(id);
 let catalogoListo = false;
+let catalogoActual = [];     // productos que quedaron después de aplicar los filtros
+let paginaActual = 1;        // página visible del catálogo
+const FILAS_PAGINA = 4;      // el catálogo muestra 4 filas por página
 
 document.addEventListener('DOMContentLoaded', () => {
   // ---- Búsqueda ESTÁTICA: solo se aplica al enviar el formulario (botón o Enter) ----
@@ -65,6 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $('catalogo-grid').addEventListener('click', (e) => {
     if (e.target.closest('#btnLimpiarVacio')) limpiarTodo();
+  });
+
+  // ---- Paginación del catálogo (4 filas por página) ----
+  $('paginaAnterior').addEventListener('click', () => cambiarPagina(-1));
+  $('paginaSiguiente').addEventListener('click', () => cambiarPagina(1));
+
+  // Al cambiar el ancho (móvil/escritorio) cambia el número de columnas y, por tanto,
+  // cuántos productos entran en las 4 filas. Se vuelve a pintar la página actual.
+  let esperaResize;
+  window.addEventListener('resize', () => {
+    clearTimeout(esperaResize);
+    esperaResize = setTimeout(() => {
+      if (catalogoListo) pintarPagina(0);
+    }, 160);
   });
 
   iniciarDestacados();
@@ -199,7 +216,6 @@ function aplicarFiltros() {
   if (!catalogoListo) return;   // todavía no llegan los productos del backend
   const tEstatica = palabras(filtros.estatica);
   const tDinamica = palabras(filtros.dinamica);
-  const todos = [...tEstatica, ...tDinamica];
 
   let lista = productos.filter(p =>
     coincide(p, tEstatica) &&
@@ -219,14 +235,52 @@ function aplicarFiltros() {
   else if (filtros.orden === 'nombre') lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   // "relevancia": se respeta el orden del backend (los más vendidos van primero)
 
-  $('resultadoTexto').innerHTML = lista.length === 1
-    ? 'Encontramos <strong>1</strong> producto'
-    : `Encontramos <strong>${lista.length}</strong> productos`;
+  catalogoActual = lista;
+  paginaActual = 1;
   pintarChips();
+  pintarPagina(0);
+}
 
-  $('catalogo-grid').innerHTML = lista.length
-    ? lista.map(p => htmlTarjeta(p, {
-        nombreHtml: resaltar(p.nombre, todos),
+/* ---------- Paginación del catálogo ---------- */
+
+// Columnas reales de la cuadrícula según el ancho de pantalla (4, 3, 2 o 1).
+function columnasCatalogo() {
+  const columnas = getComputedStyle($('catalogo-grid')).gridTemplateColumns;
+  return Math.max(1, columnas && columnas !== 'none' ? columnas.split(' ').filter(Boolean).length : 1);
+}
+
+function productosPorPagina() {
+  return columnasCatalogo() * FILAS_PAGINA;
+}
+
+function totalPaginas() {
+  return Math.max(1, Math.ceil(catalogoActual.length / productosPorPagina()));
+}
+
+function cambiarPagina(delta) {
+  const nueva = paginaActual + delta;
+  if (nueva < 1 || nueva > totalPaginas()) return;
+  paginaActual = nueva;
+  pintarPagina(delta);
+}
+
+function pintarPagina(direccion) {
+  const grid = $('catalogo-grid');
+  const porPagina = productosPorPagina();
+  const total = totalPaginas();
+  paginaActual = Math.min(Math.max(1, paginaActual), total);
+
+  const inicio = (paginaActual - 1) * porPagina;
+  const visibles = catalogoActual.slice(inicio, inicio + porPagina);
+  const terminos = [...palabras(filtros.estatica), ...palabras(filtros.dinamica)];
+
+  $('resultadoTexto').innerHTML = catalogoActual.length
+    ? `Mostrando <strong>${inicio + 1}–${inicio + visibles.length}</strong> de <strong>${catalogoActual.length}</strong> producto${catalogoActual.length === 1 ? '' : 's'}`
+    : 'No encontramos productos';
+
+  grid.innerHTML = visibles.length
+    ? visibles.map(p => htmlTarjeta(p, {
+        nombreHtml: resaltar(p.nombre, terminos),
         etiqueta: esMasVendido(p) ? 'Más vendido' : ''
       })).join('')
     : `<div class="catalogo-vacio">
@@ -235,6 +289,21 @@ function aplicarFiltros() {
          <p class="text-muted">Prueba con otras palabras o quita algunos filtros.</p>
          <button type="button" class="btn btn-primary rounded-pill px-4" id="btnLimpiarVacio">Limpiar búsqueda y filtros</button>
        </div>`;
+
+  // La página siguiente entra desde la derecha y la anterior desde la izquierda.
+  grid.classList.remove('catalogo-slide-izq', 'catalogo-slide-der');
+  if (direccion) {
+    void grid.offsetWidth;   // reinicia la animación
+    grid.classList.add(direccion > 0 ? 'catalogo-slide-izq' : 'catalogo-slide-der');
+  }
+
+  const hayPaginas = catalogoActual.length > 0 && total > 1;
+  $('catalogoPaginador').classList.toggle('d-none', !hayPaginas);
+  $('paginaActualTexto').textContent = paginaActual;
+  $('paginaTotalTexto').textContent = total;
+  $('paginaAnterior').disabled = paginaActual <= 1;
+  $('paginaSiguiente').disabled = paginaActual >= total;
+
   sincronizarTarjetas();
 }
 
