@@ -1212,6 +1212,12 @@ INSERT INTO `detalle_venta` (`id_detalle`,`id_venta`,`id_producto`,`codigo`,`nom
   (384,182,6,'FAR-0006','Mascarillas KN95 (x10 unidades)','Cuidado Personal',2,22.00,0,22.00,44.00);
 
 -- ---------------------------------------------------------------------
+-- Asignación de imágenes por código de producto (FAR-0001 a FAR-0500)
+-- Cada producto tiene su propia imagen física asociada a su código único
+-- ---------------------------------------------------------------------
+UPDATE `productos` SET `imagen_url` = CONCAT('img/productos/', `codigo`, '.jpg');
+
+-- ---------------------------------------------------------------------
 -- Verificación
 -- ---------------------------------------------------------------------
 SELECT COUNT(*) AS total_productos FROM `productos`;                 -- debe ser 500

@@ -92,7 +92,11 @@
     if (u.indexOf('http://') === 0 || u.indexOf('https://') === 0 || u.indexOf('data:') === 0) {
       return u;
     }
-    return u.replace(/^\/+/, '');
+    u = u.replace(/^\/+/, '');
+    if (!u.startsWith('img/') && !u.startsWith('docs/')) {
+      u = 'img/productos/' + u;
+    }
+    return u;
   }
 
   /* ---------- Validaciones de Formularios ---------- */

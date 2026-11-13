@@ -318,6 +318,10 @@
   font-size: .78rem;
 }
 
+.login-card .was-validated .login-input:has(.form-control:invalid) ~ .invalid-feedback {
+  display: block;
+}
+
 .login-card .was-validated .form-control:invalid,
 .login-card .form-control.is-invalid {
   border-color: #dc3545;

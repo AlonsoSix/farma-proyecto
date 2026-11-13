@@ -44,10 +44,30 @@ document.addEventListener('DOMContentLoaded', () => {
     mostrarAviso('Credenciales de administrador cargadas. Pulsa "Ingresar".', 'info');
   });
 
-  // Al escribir de nuevo, se oculta el aviso anterior.
+  // Al escribir de nuevo, se oculta el aviso anterior y se validan contraseñas.
   document.querySelectorAll('#formLogin input, #formRegistro input').forEach((input) => {
     input.addEventListener('input', ocultarAviso);
   });
+
+  const validarContrasenas = () => {
+    const c1 = $('regContrasena');
+    const c2 = $('regContrasena2');
+    const f2 = $('feedbackContrasena2');
+    if (!c1 || !c2) return;
+
+    if (c2.value && c1.value !== c2.value) {
+      c2.setCustomValidity('Las contraseñas no coinciden.');
+      if (f2) f2.textContent = 'Las contraseñas deben coincidir.';
+    } else if (c2.value && c2.value.length < 8) {
+      c2.setCustomValidity('Usa al menos 8 caracteres.');
+      if (f2) f2.textContent = 'Usa al menos 8 caracteres.';
+    } else {
+      c2.setCustomValidity('');
+    }
+  };
+
+  $('regContrasena')?.addEventListener('input', validarContrasenas);
+  $('regContrasena2')?.addEventListener('input', validarContrasenas);
 });
 
 /* ---------- Iniciar sesión ---------- */
@@ -111,14 +131,20 @@ async function manejarRegistro(e) {
   const form = $('formRegistro');
   const contrasena = $('regContrasena').value;
   const repetida = $('regContrasena2').value;
+  const f2 = $('feedbackContrasena2');
 
   if (contrasena !== repetida) {
     $('regContrasena2').setCustomValidity('Las contraseñas no coinciden.');
+    if (f2) f2.textContent = 'Las contraseñas deben coincidir.';
     form.classList.add('was-validated');
     $('regContrasena2').focus();
     return;
+  } else if (repetida.length < 8) {
+    $('regContrasena2').setCustomValidity('Usa al menos 8 caracteres.');
+    if (f2) f2.textContent = 'Usa al menos 8 caracteres.';
+  } else {
+    $('regContrasena2').setCustomValidity('');
   }
-  $('regContrasena2').setCustomValidity('');
 
   if (!form.checkValidity()) {
     form.classList.add('was-validated');
