@@ -4,7 +4,7 @@ Sistema web para una farmacia: catálogo de productos con búsqueda y filtros, c
 inicio de sesión obligatorio, panel de administración con CRUD de productos, reportes,
 pago en línea con **Culqi sandbox** (tarjeta y Yape) y boleta descargable en **PDF**.
 
-Proyecto académico — **Avance 2**.
+Proyecto académico — **Avance de Proyecto Final (I - II - III) - Proyecto Final**.
 
 ---
 
