@@ -4563,6 +4563,162 @@ a.cto-rapido-item:hover {
   font-size: .9rem;
 }
 
+.cto-opinion-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-height: 1.6rem;
+  padding-right: 2.2rem; /* deja libre la comilla decorativa de la esquina */
+}
+
+.cto-opinion-fecha {
+  color: #7b8798;
+  font-size: .75rem;
+  white-space: nowrap;
+}
+
+/* Navegación entre páginas de opiniones */
+.cto-opiniones-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .9rem;
+  margin-top: 1.5rem;
+}
+
+.cto-opiniones-nav .btn:disabled {
+  opacity: .45;
+}
+
+/* Formulario para publicar una opinión */
+.cto-opinion-form-card {
+  background: #fff;
+  border: 1px solid #e6ebf1;
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow: 0 14px 34px rgba(11, 42, 69, .07);
+  scroll-margin-top: 6rem;
+}
+
+.cto-opinion-form-card .form-label {
+  color: var(--farma-dark);
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.cto-opinion-form-card .form-control {
+  border-color: #d7e2ec;
+  border-radius: 12px;
+  padding: .7rem .9rem;
+}
+
+.cto-opinion-form-card .form-control:focus {
+  border-color: var(--farma-primary);
+  box-shadow: 0 0 0 .2rem rgba(11, 114, 179, .15);
+}
+
+.cto-opinion-form-card textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.cto-opinion-form-card .invalid-feedback {
+  font-size: .8rem;
+}
+
+.cto-rating-field {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.cto-rating-field legend {
+  float: none;
+  width: auto;
+  margin-bottom: .35rem;
+}
+
+.cto-rating {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: .15rem;
+}
+
+.cto-rating input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cto-rating label {
+  color: #d5dee8;
+  cursor: pointer;
+  font-size: 1.55rem;
+  line-height: 1;
+  transition: color .15s ease, transform .15s ease;
+}
+
+.cto-rating label:hover,
+.cto-rating label:hover ~ label,
+.cto-rating input:checked ~ label {
+  color: #f5a623;
+}
+
+.cto-rating label:active {
+  transform: scale(.92);
+}
+
+.cto-rating input:focus-visible + label {
+  border-radius: 4px;
+  outline: 2px solid var(--farma-primary);
+  outline-offset: 3px;
+}
+
+.cto-rating-error {
+  color: #b42318;
+  font-size: .8rem;
+  margin: .35rem 0 0;
+}
+
+.cto-contador {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: .35rem;
+  color: #7b8798;
+  font-size: .78rem;
+}
+
+@media (max-width: 575.98px) {
+  .cto-opinion-form-card {
+    border-radius: 18px;
+    padding: 1.25rem;
+  }
+
+  .cto-opiniones-nav .btn {
+    flex: 1 1 auto;
+  }
+
+  .cto-opiniones-nav #opPagina {
+    flex-basis: 100%;
+    order: -1;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cto-opinion,
+  .cto-rating label {
+    transition: none;
+  }
+}
+
 @media (max-width: 767.98px) {
   .cto-slide-texto {
     background: linear-gradient(90deg, rgba(4, 30, 60, .85) 0%, rgba(4, 30, 60, .6) 70%, rgba(4, 30, 60, .3) 100%);
@@ -5262,17 +5418,18 @@ a.cto-rapido-item:hover {
   background: #f6f9fc;
   border-left: 4px solid var(--farma-primary);
   border-radius: 10px;
-  padding: .85rem 1rem;
-  font-size: .9rem;
+  padding: .75rem .9rem;
+  font-size: .86rem;
+  line-height: 1.5;
   color: #334155;
   margin-top: auto;
 }
 
 .rep-resultados h3 {
-  font-size: .85rem;
+  font-size: .82rem;
   font-weight: 700;
   color: var(--farma-dark);
-  margin-bottom: .35rem;
+  margin-bottom: .3rem;
 }
 
 .rep-detalle summary {

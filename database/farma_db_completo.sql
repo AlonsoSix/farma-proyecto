@@ -591,6 +591,29 @@ INSERT INTO `usuarios` (`nombre`,`apellido`,`correo`,`contrasena`,`telefono`,`ro
   ('Administrador','Farma','admin@farma.com','$2a$10$f4t6BwyVgqZSq4UwbaUY9e0ET/5aL6CfXudxZd.oP2dhv9XD59QEm',NULL,'ADMIN');
 
 -- ---------------------------------------------------------------------
+-- Tabla COMENTARIOS (opiniones de clientes en la página de Contacto)
+--   calificacion: 1 a 5 estrellas.
+--   Se incluyen 6 opiniones de ejemplo; las nuevas se guardan desde la web.
+-- ---------------------------------------------------------------------
+CREATE TABLE `comentarios` (
+  `id_comentario` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `calificacion` int NOT NULL,
+  `comentario` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_comentario`),
+  KEY `idx_comentarios_fecha` (`fecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `comentarios` (`id_comentario`,`nombre`,`calificacion`,`comentario`,`fecha`) VALUES
+  (1,'María Rodríguez',5,'Pedí por WhatsApp y en menos de una hora tenía mis medicinas en casa. Muy buena atención.','2026-11-18 10:20:00'),
+  (2,'Jorge Quispe',5,'El químico farmacéutico me explicó con paciencia cómo tomar mi tratamiento. Volveré siempre.','2026-11-15 16:45:00'),
+  (3,'Lucía Torres',4,'Buenos precios y siempre tienen stock. Me gustaría que abran una sucursal más cerca de mi casa.','2026-11-11 09:30:00'),
+  (4,'Carlos Flores',5,'Encontré un medicamento que no había en otras farmacias. Me lo separaron por teléfono.','2026-11-06 18:10:00'),
+  (5,'Clínica San Gabriel',5,'Como clínica trabajamos con ellos por convenio. Siempre cumplen con los pedidos a tiempo.','2026-10-29 12:00:00'),
+  (6,'Andrea Vargas',4,'La página es fácil de usar y el carrito funciona bien. Recomiendo el delivery de los domingos.','2026-10-21 20:15:00');
+
+-- ---------------------------------------------------------------------
 -- Tablas VENTAS y DETALLE_VENTA (Avance Final: carrito con boleta)
 --   Cada compra del carrito es una venta con su boleta B001-00000001.
 --   Los precios incluyen IGV: total = op_gravada + igv.
@@ -1218,3 +1241,4 @@ SELECT COUNT(*) AS total_productos FROM `productos`;                 -- debe ser
 SELECT `categoria`, COUNT(*) AS productos FROM `productos` GROUP BY `categoria` ORDER BY productos DESC;
 SELECT `id_usuario`,`nombre`,`correo`,`rol` FROM `usuarios`;         -- debe mostrar solo el admin
 SELECT COUNT(*) AS total_ventas FROM `ventas`;                       -- ventas de ejemplo para los reportes
+SELECT COUNT(*) AS total_comentarios FROM `comentarios`;             -- 6 opiniones de ejemplo

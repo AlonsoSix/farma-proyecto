@@ -198,9 +198,7 @@ function reporteTopProductos() {
     const top3 = lista.slice(0, 3).reduce((s, p) => s + p.unidades, 0);
     const masIngreso = lista.reduce((a, b) => Number(b.total) > Number(a.total) ? b : a);
     descripcion = `El producto más vendido ${textoPeriodo()} fue ${lista[0].nombre} con ${lista[0].unidades} unidades (${soles(lista[0].total)}). ` +
-      `Los 3 primeros suman ${top3} unidades, el ${pct(top3, unidades)} de las unidades de este top ${lista.length}. ` +
-      `El producto que más dinero generó fue ${masIngreso.nombre} (${soles(masIngreso.total)}). ` +
-      'Conviene mantener buen stock de estos productos.';
+      `Los 3 primeros suman ${top3} unidades (${pct(top3, unidades)} del top) y el que más dinero generó fue ${masIngreso.nombre} (${soles(masIngreso.total)}).`;
   }
   return {
     id: 'topProductos', numero: 2, titulo: `Top ${lista.length || 10} productos más vendidos`, icono: 'bi-trophy', ancho: 'col-lg-4',
@@ -258,10 +256,9 @@ function reporteMetodosPago() {
     const boletas = lista.reduce((s, m) => s + m.ventas, 0);
     const primero = lista[0];
     const mayorMonto = lista.reduce((a, b) => Number(b.total) > Number(a.total) ? b : a);
-    descripcion = `El método de pago más usado ${textoPeriodo()} fue ${METODOS[primero.metodo] || primero.metodo}, ` +
+    descripcion = `El método más usado ${textoPeriodo()} fue ${METODOS[primero.metodo] || primero.metodo}, ` +
       `con ${primero.ventas} de ${boletas} compras (${pct(primero.ventas, boletas)}). ` +
-      `El método con mayor monto cobrado fue ${METODOS[mayorMonto.metodo] || mayorMonto.metodo} (${soles(mayorMonto.total)}). ` +
-      lista.map(m => `${METODOS[m.metodo] || m.metodo}: ${pct(m.ventas, boletas)}`).join(', ') + '.';
+      `El de mayor monto cobrado fue ${METODOS[mayorMonto.metodo] || mayorMonto.metodo} (${soles(mayorMonto.total)}).`;
   }
   return {
     id: 'metodos', numero: 4, titulo: 'Ventas por método de pago', icono: 'bi-wallet2', ancho: 'col-lg-6',
@@ -288,13 +285,19 @@ function reporteInventario() {
   const deBaja = Number(inv.deBaja || 0);
   const criticos = Array.isArray(inv.criticos) ? inv.criticos : (Array.isArray(inv.alertas) ? inv.alertas : []);
   const activos = disponibles + stockBajo + agotados;
-  const reponer = criticos.map(c => `${c.nombre} (${c.stock === 0 ? 'agotado' : c.stock + ' u.'})`);
-  const descripcion = `De ${activos} productos activos, ${disponibles} tienen stock suficiente (${pct(disponibles, activos)}), ` +
-    `${stockBajo} tienen stock bajo (5 unidades o menos) y ${agotados} ${agotados === 1 ? 'está agotado' : 'están agotados'}. ` +
-    `Además hay ${deBaja} producto(s) dados de baja. El inventario activo vale ${soles(inv.valorInventario || inv.valorizado || 0)} a precio de venta.` +
-    (reponer.length ? ` Se recomienda reponer pronto: ${reponer.join(', ')}.` : ' No hay productos que necesiten reposición.');
+  // Los más urgentes se resumen en la descripción; la lista completa queda en "Ver datos del reporte".
+  const urgentes = criticos.slice(0, 3).map(c => `${c.nombre} (${c.stock === 0 ? 'agotado' : c.stock + ' u.'})`);
+  let descripcion = `De ${activos} productos activos, ${disponibles} tienen stock suficiente (${pct(disponibles, activos)}), ` +
+    `${stockBajo} están por agotarse (5 unidades o menos) y ${agotados} ${agotados === 1 ? 'está agotado' : 'están agotados'}. ` +
+    `El inventario activo vale ${soles(inv.valorInventario || inv.valorizado || 0)} a precio de venta` +
+    (deBaja ? ` y hay ${deBaja} producto(s) dados de baja.` : '.');
+  descripcion += criticos.length
+    ? ` Requieren reposición ${criticos.length} producto(s); los más urgentes: ${urgentes.join(', ')}` +
+      (criticos.length > urgentes.length ? ` y ${criticos.length - urgentes.length} más.` : '.') +
+      ' La lista completa está en «Ver datos del reporte».'
+    : ' No hay productos que necesiten reposición.';
   return {
-    id: 'inventario', numero: 5, titulo: 'Estado del inventario', icono: 'bi-box-seam', ancho: 'col-lg-6',
+    id: 'inventario', numero: 5, titulo: 'Estado del inventario', icono: 'bi-box-seam', ancho: 'col-lg-6', alto: 260,
     descripcion,
     columnas: ['Estado', 'Productos'],
     filas: [['Stock suficiente (más de 5)', disponibles], ['Stock bajo (1 a 5)', stockBajo], ['Agotados', agotados], ['Dados de baja', deBaja]],
@@ -318,14 +321,15 @@ function reporteVencimientos() {
   const etiquetas = Array.isArray(v.etiquetas) ? v.etiquetas : ['Vencidos', 'Hasta 3 meses', '3 a 6 meses', '6 a 12 meses', 'Más de 12 meses', 'No vence'];
   const proximos = Array.isArray(v.proximos) ? v.proximos : (Array.isArray(v.porVencer) ? v.porVencer : []);
   const prox = proximos[0];
-  let descripcion = `Hay ${vencidos} producto(s) vencido(s) y ${tres} que vencen en los próximos 3 meses. ` +
-    `${seis} vencen en 3 a 6 meses, ${doce} en 6 a 12 meses y ${mas} en más de un año. ${noVence} producto(s) no vencen (equipos médicos).`;
-  if (prox) descripcion += ` El más próximo a vencer es ${prox.nombre} (${fechaCorta(prox.fechaVencimiento)}, ${prox.dias < 0 ? 'vencido hace ' + Math.abs(prox.dias) : 'en ' + prox.dias} días).`;
+  let descripcion = `${vencidos} producto(s) vencido(s) y ${tres} por vencer en los próximos 3 meses; ` +
+    `${seis} vencen entre 3 y 6 meses, ${doce} entre 6 y 12 meses y ${mas} en más de un año. ` +
+    `${noVence} producto(s) no vencen (equipos médicos).`;
+  if (prox) descripcion += ` El más próximo es ${prox.nombre} (${fechaCorta(prox.fechaVencimiento)}, ${prox.dias < 0 ? 'vencido hace ' + Math.abs(prox.dias) : 'en ' + prox.dias} días).`;
   descripcion += (vencidos + tres > 0)
-    ? ' Se recomienda retirar los vencidos y poner en oferta los que vencen pronto.'
+    ? ' Retira los vencidos y ofrece los que vencen pronto.'
     : ' No hay productos que requieran acción inmediata.';
   return {
-    id: 'vencimientos', numero: 6, titulo: 'Productos por vencer', icono: 'bi-calendar-x', ancho: 'col-lg-6',
+    id: 'vencimientos', numero: 6, titulo: 'Productos por vencer', icono: 'bi-calendar-x', ancho: 'col-lg-6', alto: 260,
     descripcion,
     columnas: ['Rango', 'Productos'],
     filas: etiquetas.map((e, i) => [e, cantidades[i] || 0]),

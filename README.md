@@ -2,7 +2,8 @@
 
 Sistema web para una farmacia: catálogo de productos con búsqueda y filtros, carrito,
 inicio de sesión obligatorio, panel de administración con CRUD de productos, reportes,
-pago en línea con **Culqi sandbox** (tarjeta y Yape) y boleta descargable en **PDF**.
+opiniones de clientes con calificación, pago en línea con **Culqi sandbox**
+(tarjeta y Yape) y boleta descargable en **PDF**.
 
 Proyecto académico — **Avance de Proyecto Final (I - II - III) - Proyecto Final**.
 
@@ -41,11 +42,14 @@ cd farma-proyecto
 1. Abre **MySQL Workbench** y conéctate a tu servidor local.
 2. Abre **`database/farma_db_completo.sql`** (File → Open SQL Script).
 3. Ejecútalo completo con el **rayo ⚡** (o Ctrl+Shift+Enter), sin seleccionar nada.
-4. Al final debe mostrar **20 productos** y **1 usuario (el administrador)**.
+4. Al final debe mostrar **500 productos**, **1 usuario (el administrador)** y
+   **6 opiniones de ejemplo**.
 
 > Si ya tenías la base creada con una versión anterior del proyecto, ejecuta
-> **`database/migracion_pagos_culqi.sql`**. Agrega las columnas de pago que exige
-> `spring.jpa.hibernate.ddl-auto=validate` (estado, pasarela, referencia y tarjeta).
+> **`database/migracion_pagos_culqi.sql`** (columnas de pago) y
+> **`database/migracion_comentarios.sql`** (tabla de opiniones). La segunda es
+> necesaria porque `spring.jpa.hibernate.ddl-auto=validate` exige que la tabla
+> `comentarios` exista antes de iniciar el backend.
 
 ---
 
@@ -177,6 +181,8 @@ para los reportes.
 | POST | `/api/ventas` | Cobra (si aplica), descuenta stock y genera la boleta |
 | GET | `/api/ventas/{numero}` | Consulta una boleta por su número |
 | GET | `/api/reportes` | Reportes (requiere cabecera `X-Usuario-Id` de un ADMIN) |
+| GET | `/api/comentarios` | Opiniones publicadas, de la más reciente a la más antigua |
+| POST | `/api/comentarios` | Registra una opinión con nombre, 1-5 estrellas y comentario |
 
 ---
 
@@ -185,8 +191,9 @@ para los reportes.
 ```
 farma-proyecto/
 ├── database/
-│   ├── farma_db_completo.sql        # Base completa (incluye columnas de pago)
+│   ├── farma_db_completo.sql        # Base completa (incluye pagos y opiniones)
 │   ├── migracion_pagos_culqi.sql    # Migración para bases ya creadas
+│   ├── migracion_comentarios.sql    # Tabla de opiniones para bases ya creadas
 │   └── cambiar_contrasena_admin.sql
 ├── farma-backend/                   # API REST con Spring Boot (puerto 8081)
 │   └── src/main/java/com/farma/backend/
