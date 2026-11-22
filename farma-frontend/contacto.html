@@ -551,146 +551,196 @@
     </section>
 
     <!-- ===== 4. OPINIONES DE CLIENTES ===== -->
-    <!-- Para cambiar una opinión: edita el nombre, las iniciales, las estrellas (bi-star-fill = llena, bi-star = vacía) y el texto -->
+    <!-- Las opiniones se cargan desde GET /api/comentarios y se envían con POST /api/comentarios (ver js/opiniones.js) -->
     <section class="py-5 cto-opiniones" id="opiniones">
       <div class="container">
         <div class="text-center mb-4 mb-lg-5">
           <span class="badge-label">Opiniones de clientes</span>
           <h2 class="mb-2">Lo que dicen nuestros clientes</h2>
           <div class="cto-promedio">
-            <strong>4.8</strong>
-            <span class="cto-estrellas" aria-label="4.8 de 5 estrellas"
-              ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-              ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-              ><i class="bi bi-star-half"></i
+            <strong id="opPromedio">—</strong>
+            <span
+              class="cto-estrellas"
+              id="opPromedioEstrellas"
+              role="img"
+              aria-label="Sin calificaciones todavía"
             ></span>
-            <span class="text-muted small">de 5 · 120 opiniones</span>
+            <span class="text-muted small" id="opTotal">Cargando opiniones…</span>
           </div>
         </div>
 
-        <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="5 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i
-              ></span>
-              <p>
-                "Pedí por WhatsApp y en menos de una hora tenía mis medicinas en
-                casa. Muy buena atención."
-              </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">MR</span>
-                <div>
-                  <strong>María Rodríguez</strong
-                  ><span>Cliente · Cercado de Lima</span>
-                </div>
-              </div>
-            </article>
+        <div id="opAviso" class="alert alert-warning d-none" role="alert"></div>
+
+        <div class="row g-4" id="opLista">
+          <div class="col-12 text-center text-muted py-4" id="opCargando">
+            <span
+              class="spinner-border spinner-border-sm me-2"
+              aria-hidden="true"
+            ></span
+            >Cargando opiniones…
           </div>
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="5 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i
-              ></span>
-              <p>
-                "El químico farmacéutico me explicó con paciencia cómo tomar mi
-                tratamiento. Volveré siempre."
+        </div>
+
+        <div class="cto-opiniones-nav d-none" id="opNav">
+          <button
+            type="button"
+            class="btn btn-outline-primary rounded-pill px-3"
+            id="opPrev"
+          >
+            <i class="bi bi-chevron-left me-1"></i>Anterior
+          </button>
+          <span
+            class="small fw-semibold text-muted"
+            id="opPagina"
+            aria-live="polite"
+          ></span>
+          <button
+            type="button"
+            class="btn btn-outline-primary rounded-pill px-3"
+            id="opNext"
+          >
+            Siguiente<i class="bi bi-chevron-right ms-1"></i>
+          </button>
+        </div>
+
+        <!-- Formulario para publicar una opinión -->
+        <div class="cto-opinion-form-card mt-4 mt-lg-5">
+          <div class="row g-4 align-items-start">
+            <div class="col-lg-5">
+              <span class="badge-label">Tu opinión</span>
+              <h3 class="h4 fw-bold mb-2">Comparte tu experiencia</h3>
+              <p class="text-muted mb-0">
+                Cuéntanos cómo fue tu compra y califica nuestro servicio. Tu
+                opinión se publica en esta página junto a tu nombre.
               </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">JQ</span>
-                <div>
-                  <strong>Jorge Quispe</strong><span>Cliente · Miraflores</span>
+            </div>
+            <div class="col-lg-7">
+              <form id="formOpinion" novalidate>
+                <div class="row g-3">
+                  <div class="col-md-7">
+                    <label class="form-label" for="opNombre">Nombre *</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="opNombre"
+                      name="nombre"
+                      maxlength="100"
+                      autocomplete="name"
+                      required
+                    />
+                    <div class="invalid-feedback">
+                      Escribe tu nombre (2 a 100 caracteres).
+                    </div>
+                  </div>
+                  <div class="col-md-5">
+                    <fieldset class="cto-rating-field">
+                      <legend class="form-label">Calificación *</legend>
+                      <div
+                        class="cto-rating"
+                        id="opEstrellas"
+                        role="radiogroup"
+                        aria-label="Calificación de 1 a 5 estrellas"
+                        aria-describedby="opCalificacionError"
+                      >
+                        <input
+                          type="radio"
+                          name="opCalificacion"
+                          id="opEstrella5"
+                          value="5"
+                          aria-label="5 estrellas"
+                        />
+                        <label for="opEstrella5" title="5 estrellas"
+                          ><i class="bi bi-star-fill" aria-hidden="true"></i
+                        ></label>
+                        <input
+                          type="radio"
+                          name="opCalificacion"
+                          id="opEstrella4"
+                          value="4"
+                          aria-label="4 estrellas"
+                        />
+                        <label for="opEstrella4" title="4 estrellas"
+                          ><i class="bi bi-star-fill" aria-hidden="true"></i
+                        ></label>
+                        <input
+                          type="radio"
+                          name="opCalificacion"
+                          id="opEstrella3"
+                          value="3"
+                          aria-label="3 estrellas"
+                        />
+                        <label for="opEstrella3" title="3 estrellas"
+                          ><i class="bi bi-star-fill" aria-hidden="true"></i
+                        ></label>
+                        <input
+                          type="radio"
+                          name="opCalificacion"
+                          id="opEstrella2"
+                          value="2"
+                          aria-label="2 estrellas"
+                        />
+                        <label for="opEstrella2" title="2 estrellas"
+                          ><i class="bi bi-star-fill" aria-hidden="true"></i
+                        ></label>
+                        <input
+                          type="radio"
+                          name="opCalificacion"
+                          id="opEstrella1"
+                          value="1"
+                          aria-label="1 estrella"
+                        />
+                        <label for="opEstrella1" title="1 estrella"
+                          ><i class="bi bi-star-fill" aria-hidden="true"></i
+                        ></label>
+                      </div>
+                      <p
+                        class="cto-rating-error"
+                        id="opCalificacionError"
+                        hidden
+                      >
+                        Elige una calificación de 1 a 5 estrellas.
+                      </p>
+                    </fieldset>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label" for="opComentario"
+                      >Comentario *</label
+                    >
+                    <textarea
+                      class="form-control"
+                      id="opComentario"
+                      name="comentario"
+                      rows="3"
+                      minlength="10"
+                      maxlength="500"
+                      placeholder="Ejemplo: me atendieron rápido y encontré todo lo que necesitaba."
+                      required
+                    ></textarea>
+                    <div class="invalid-feedback">
+                      Escribe un comentario de 10 a 500 caracteres.
+                    </div>
+                    <div class="cto-contador">
+                      <span>Mínimo 10 caracteres.</span>
+                      <span><span id="opContador">0</span>/500</span>
+                    </div>
+                  </div>
+                  <div
+                    class="col-12 d-flex flex-wrap align-items-center gap-3"
+                  >
+                    <button
+                      type="submit"
+                      class="btn btn-primary rounded-pill px-4"
+                      id="opEnviar"
+                    >
+                      <i class="bi bi-send me-2"></i>Publicar opinión
+                    </button>
+                    <span class="small text-muted"
+                      >Tu opinión se muestra con tu nombre.</span
+                    >
+                  </div>
                 </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="4 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star"></i
-              ></span>
-              <p>
-                "Buenos precios y siempre tienen stock. Me gustaría que abran
-                una sucursal más cerca de mi casa."
-              </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">LT</span>
-                <div>
-                  <strong>Lucía Torres</strong><span>Cliente · Los Olivos</span>
-                </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="5 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i
-              ></span>
-              <p>
-                "Encontré un medicamento que no había en otras farmacias. Me lo
-                separaron por teléfono."
-              </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">CF</span>
-                <div>
-                  <strong>Carlos Flores</strong
-                  ><span>Cliente · San Miguel</span>
-                </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="5 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i
-              ></span>
-              <p>
-                "Como clínica trabajamos con ellos por convenio. Siempre cumplen
-                con los pedidos a tiempo."
-              </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">CS</span>
-                <div>
-                  <strong>Clínica San Gabriel</strong
-                  ><span>Cliente corporativo</span>
-                </div>
-              </div>
-            </article>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <article class="cto-opinion">
-              <i class="bi bi-quote cto-opinion-comillas"></i>
-              <span class="cto-estrellas" aria-label="4 de 5 estrellas"
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-                ><i class="bi bi-star"></i
-              ></span>
-              <p>
-                "La página es fácil de usar y el carrito funciona bien.
-                Recomiendo el delivery de los domingos."
-              </p>
-              <div class="cto-opinion-autor">
-                <span class="cto-avatar">AV</span>
-                <div>
-                  <strong>Andrea Vargas</strong><span>Cliente · Surco</span>
-                </div>
-              </div>
-            </article>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -864,6 +914,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/opiniones.js"></script>
     <script>
       // Mapa de sucursales: al hacer clic en una sucursal se cambia el mapa y sus datos
       document.querySelectorAll(".cto-sede").forEach(function (boton) {
