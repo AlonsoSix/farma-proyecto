@@ -55,13 +55,20 @@ cd farma-proyecto
 
 ## ⚙️ 3. Configurar el backend
 
-1. Ve a `farma-backend/src/main/resources/`.
-2. Copia **`application.properties.example`** y renómbralo a **`application.properties`**.
-3. Cambia la contraseña de MySQL por la tuya:
+Hay **un solo archivo** de configuración:
+`farma-backend/src/main/resources/application.properties`. Ya no existe
+`application.properties.example`.
 
-   ```properties
-   spring.datasource.password=TU_CONTRASEÑA_DE_MYSQL
-   ```
+Todos los valores sensibles se leen de variables de entorno. Para trabajo local,
+copia `.env.example` a `.env` en la raíz y ajusta tu contraseña:
+
+```bash
+cp .env.example .env
+# edita DB_PASSWORD en .env
+```
+
+`.env` está ignorado por Git y Spring Boot lo carga automáticamente. En Docker,
+Render o cualquier plataforma, esas mismas variables se inyectan desde fuera.
 
 ### Configurar Culqi sandbox (opcional, pero recomendado)
 
@@ -82,12 +89,11 @@ $env:CULQI_PUBLIC_KEY="pk_test_xxxxxxxxxxxxxxxx"
 $env:CULQI_SECRET_KEY="sk_test_xxxxxxxxxxxxxxxx"
 ```
 
-O edita tu `application.properties` local (está en `.gitignore`):
+O agrégalas a tu `.env` local:
 
-```properties
-culqi.public-key=pk_test_xxxxxxxxxxxxxxxx
-culqi.secret-key=sk_test_xxxxxxxxxxxxxxxx
-culqi.api-url=https://api.culqi.com/v2
+```dotenv
+CULQI_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxx
+CULQI_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxx
 ```
 
 > **Sin llaves**, la tienda funciona en **modo simulado**: tarjeta y Yape se aprueban
@@ -132,6 +138,31 @@ El backend queda en **http://localhost:8081**. Para comprobar, abre
 
 > El backend (paso 4) debe estar corriendo para que funcionen el catálogo, el login
 > y los pagos.
+
+---
+
+## 🐳 6. Ejecutar todo con Docker (un solo comando)
+
+No necesitas MySQL Workbench ni Live Server si usas Docker Desktop:
+
+```bash
+cp .env.example .env     # solo la primera vez; ajusta DB_PASSWORD y MYSQL_ROOT_PASSWORD
+docker compose up --build
+```
+
+- **Tienda:** http://localhost:8080
+- **API directa:** http://localhost:8081/api/productos
+- MySQL corre solo dentro de la red de Docker; los datos se guardan en el volumen `db_data`.
+
+El primer arranque siembra `database/farma_db_completo.sql` (500 productos, admin y
+opiniones). Si el volumen `db_data` ya existe, **no se vuelve a ejecutar** el script:
+para reiniciar los datos usa `docker compose down -v` (¡borra la base!).
+
+Para apagar: `docker compose down`. Para ver logs: `docker compose logs -f`.
+
+> Nginx sirve el frontend y reenvía `/api` al backend, así que la web usa URL
+> relativas y no hay CORS. Con Live Server (puerto 55xx) se mantiene el modo
+> anterior: el navegador llama directo a `http://<host>:8081/api`.
 
 ---
 
@@ -190,18 +221,27 @@ para los reportes.
 
 ```
 farma-proyecto/
+├── .env.example                     # Plantilla de variables (copiar a .env)
+├── docker-compose.yml               # web + backend + MySQL en un solo comando
 ├── database/
 │   ├── farma_db_completo.sql        # Base completa (incluye pagos y opiniones)
+│   ├── docker-init/02-grants.sh     # Restaura permisos tras el script completo
 │   ├── migracion_pagos_culqi.sql    # Migración para bases ya creadas
+│   ├── migracion_imagenes.sql       # Migración de imágenes de productos
 │   ├── migracion_comentarios.sql    # Tabla de opiniones para bases ya creadas
 │   └── cambiar_contrasena_admin.sql
 ├── farma-backend/                   # API REST con Spring Boot (puerto 8081)
-│   └── src/main/java/com/farma/backend/
-│       ├── config/CulqiProperties.java
-│       ├── controller/PagoController.java
-│       ├── service/PasarelaPago.java
-│       └── service/CulqiPasarelaPago.java
+│   ├── Dockerfile                   # Build multi-etapa (Maven -> JRE)
+│   ├── .dockerignore
+│   └── src/main/
+│       ├── resources/application.properties  # ÚNICO archivo de configuración
+│       └── java/com/farma/backend/
+│           ├── config/CulqiProperties.java
+│           ├── controller/PagoController.java
+│           └── service/CulqiPasarelaPago.java
 └── farma-frontend/                  # Tienda y panel admin (HTML, CSS, JS)
+    ├── Dockerfile                   # Nginx con proxy /api -> backend
+    ├── nginx.conf
     ├── login.html                   # Entrada obligatoria
     ├── css/login.css
     └── js/auth-guard.js
@@ -209,14 +249,39 @@ farma-proyecto/
 
 ---
 
+## 🚀 Ideas de deploy (propuesta, aún no implementado)
+
+| Opción | Ventajas | Limitaciones |
+|---|---|---|
+| **Vercel / Netlify / GitHub Pages** para el frontend | URL pública rápida, HTTPS y CDN gratis; ideal para HTML/CSS/JS. | No ejecutan el backend Java. GitHub Pages es **solo estático**. |
+| **Render Web Service + MySQL administrado** para el backend | Usa el mismo `Dockerfile`; variables de entorno y HTTPS incluidos. Una sola plataforma para API y base. | El plan gratuito "duerme" el servicio (cold starts) y MySQL suele ser de pago; revisa precios vigentes. |
+| **Railway / Fly.io** | Despliegan contenedores Docker y bases administradas con poca configuración. | Modelo de cobro por uso; requiere tarjeta en muchos casos. |
+| **VPS con Docker Compose** (Hetzner, Contabo, etc.) | Levanta exactamente lo mismo de este repo con `docker compose up -d`; control total. | Hay que administrar servidor, certificados TLS y backups. |
+
+**Recomendación para este proyecto:** frontend en **Vercel** (o Netlify) y
+backend + MySQL en **Render**, usando el `Dockerfile` y las variables de
+`.env.example`. En Vercel se agregaría una rewrite de `/api` hacia la URL de
+Render para mantener el frontend con rutas relativas. Alternativa más simple
+para demo: un VPS pequeño con este `docker-compose.yml` y un proxy inverso con
+Let's Encrypt.
+
+> Antes de exponerlo públicamente hay que reforzar la autenticación: hoy la
+> sesión vive en `localStorage` y algunos endpoints confían en `X-Usuario-Id`.
+> Para producción debe validarse el usuario en el servidor (JWT o sesión) y
+> restringir CORS a orígenes explícitos.
+
+---
+
 ## 📝 Notas
 
-- `application.properties` y las llaves de Culqi **no se suben a GitHub**.
-- Orden correcto: **base de datos → backend → frontend**.
+- `application.properties` **sí se sube**, pero solo con marcadores de entorno;
+  `.env` y las llaves de Culqi **nunca** se suben a GitHub.
+- Orden correcto sin Docker: **base de datos → backend → frontend**. Con Docker,
+  basta `docker compose up --build`.
 - La autenticación de la tienda es **del lado del cliente** (localStorage) para este
   proyecto académico. En producción se recomienda sesión/JWT validado en el servidor
   y protección de todos los endpoints.
 - El cargo se crea antes de guardar la venta. Si la venta no se puede guardar, el
   backend intenta un reembolso automático del cargo en Culqi.
-- Culqi Checkout v4 sigue funcionando, pero Culqi anunció su migración a
-  **Checkout Custom**; la capa `PasarelaPago` deja preparado ese cambio.
+- La web usa **Culqi Checkout v4**; si en el futuro se migra a otro checkout,
+  solo cambia `CulqiPasarelaPago` gracias a la interfaz `PasarelaPago`.

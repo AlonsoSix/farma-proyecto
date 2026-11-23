@@ -1,5 +1,7 @@
-# Configuración local con la contraseña de MySQL (cada quien tiene la suya)
-farma-backend/src/main/resources/application.properties
+# Variables de entorno locales (contraseñas y llaves: NUNCA se suben)
+.env
+.env.*
+!.env.example
 
 # Archivos que genera Maven al compilar
 farma-backend/target/

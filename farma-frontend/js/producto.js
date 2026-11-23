@@ -88,7 +88,7 @@ function pintarDetalle(p) {
               : '<span class="detalle-marca text-muted">Marca no registrada</span>'}
             <h1 class="detalle-nombre">${esc(p.nombre)}</h1>
             <div class="detalle-meta">
-              <span>Código: <strong>${codigoProducto(p)}</strong></span>
+              <span>Código: <strong>${esc(codigoProducto(p))}</strong></span>
               <span class="chip ${est.clase}"><i class="bi ${est.icono}"></i>${est.texto}</span>
             </div>
 
