@@ -100,6 +100,19 @@ CULQI_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxx
 > sin cobrar dinero. Esto permite probar el flujo completo en cualquier computadora.
 > El endpoint `GET /api/pagos/config` indica si la pasarela está en modo `CULQI` o `SIMULADO`.
 
+### Correo de confirmación (sin configuración)
+
+La sección compacta de **Contacto** envía el correo con solo digitar la dirección:
+no hay que crear cuentas ni configurar `MAIL_USERNAME`, `MAIL_PASSWORD` ni `MAIL_FROM`.
+
+El backend resuelve los servidores MX del dominio del destinatario y entrega el mensaje
+directamente por SMTP, así que funciona con Gmail, Hotmail, Outlook o cualquier proveedor.
+
+> Si la red bloquea el puerto 25 o el proveedor rechaza la entrega, la web abre
+> automáticamente la aplicación de correo del visitante con el mensaje ya redactado
+> (`mailto:`). En ese caso el visitante solo tiene que pulsar «Enviar».
+> Según el proveedor y la reputación IP del servidor, el correo puede llegar a spam.
+
 ### Datos de prueba de Culqi sandbox
 
 | Método | Datos |
@@ -214,6 +227,7 @@ para los reportes.
 | GET | `/api/reportes` | Reportes (requiere cabecera `X-Usuario-Id` de un ADMIN) |
 | GET | `/api/comentarios` | Opiniones publicadas, de la más reciente a la más antigua |
 | POST | `/api/comentarios` | Registra una opinión con nombre, 1-5 estrellas y comentario |
+| POST | `/api/correos/confirmacion` | Envía el correo de confirmación; responde con `mailto` si no puede entregarlo |
 
 ---
 
@@ -237,14 +251,21 @@ farma-proyecto/
 │       ├── resources/application.properties  # ÚNICO archivo de configuración
 │       └── java/com/farma/backend/
 │           ├── config/CulqiProperties.java
+│           ├── config/CorreoConfig.java          # MX + SMTP directo, sin credenciales
 │           ├── controller/PagoController.java
-│           └── service/CulqiPasarelaPago.java
+│           ├── controller/CorreoController.java
+│           ├── service/CulqiPasarelaPago.java
+│           ├── service/CorreoService.java
+│           ├── service/ResolutorMx.java
+│           └── service/EnviadorSmtp.java
 └── farma-frontend/                  # Tienda y panel admin (HTML, CSS, JS)
     ├── Dockerfile                   # Nginx con proxy /api -> backend
     ├── nginx.conf
     ├── login.html                   # Entrada obligatoria
+    ├── contacto.html                # Incluye la sección de confirmación por correo
     ├── css/login.css
-    └── js/auth-guard.js
+    ├── js/auth-guard.js             # Fuerza login al abrir la app en una pestaña nueva
+    └── js/correo.js                 # Envía el correo de confirmación
 ```
 
 ---

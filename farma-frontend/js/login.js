@@ -13,13 +13,8 @@ const CLAVE_ULTIMO_CORREO = (window.Farma && Farma.config) ? Farma.config.CLAVE_
 const $ = (id) => document.getElementById(id);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Si ya hay una sesión, no tiene sentido mostrar el login otra vez.
-  const sesion = leerSesion();
-  if (sesion && sesion.id != null) {
-    location.replace(destinoSeguro(parametro('next'), sesion.rol));
-    return;
-  }
-
+  // Siempre mostramos el login al abrir la app, aunque quede una sesión
+  // antigua en localStorage. auth-guard.js ya obliga a pasar por aquí.
   if (parametro('salir') === '1') {
     mostrarAviso('Cerraste sesión correctamente. Vuelve a ingresar para continuar.', 'exito');
   }
@@ -87,6 +82,11 @@ async function manejarLogin(e) {
       rol: data.rol || 'CLIENTE'
     };
     guardarSesion(sesion);
+    if (window.Farma && typeof Farma.marcarSesionActiva === 'function') {
+      Farma.marcarSesionActiva();
+    } else {
+      try { sessionStorage.setItem('farma_sesion_activa', '1'); } catch (e) {}
+    }
     guardarTexto(CLAVE_ULTIMO_CORREO, sesion.correo);
 
     mostrarAviso(`Bienvenido${sesion.nombre ? ', ' + sesion.nombre : ''}. Redirigiendo...`, 'exito');

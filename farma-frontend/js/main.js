@@ -172,6 +172,7 @@ async function cargarProductos() {
     const nuevos = await res.json();
     if (!Array.isArray(nuevos)) throw new Error('Respuesta inválida');
     productos = nuevos;
+    validarStockCarrito();
     refrescarPreciosCarrito();
     if (contenedor) renderMasVendidos();
     // Avisa a las otras páginas (productos.js, producto.js) que el catálogo ya llegó
@@ -261,11 +262,50 @@ function sincronizarTarjetas() {
 
 /* ---------- Carrito ---------- */
 function cargarCarrito() {
-  try { carrito = JSON.parse(localStorage.getItem('farma_carrito')) || {}; }
-  catch (e) { carrito = {}; }
+  carrito = (window.Farma && typeof Farma.leerCarrito === 'function')
+    ? Farma.leerCarrito()
+    : (() => { try { return JSON.parse(localStorage.getItem('farma_carrito')) || {}; } catch (e) { return {}; } })();
 }
 function guardarCarrito() {
+  if (window.Farma && typeof Farma.guardarCarrito === 'function') {
+    Farma.guardarCarrito(carrito);
+    return;
+  }
   try { localStorage.setItem('farma_carrito', JSON.stringify(carrito)); } catch (e) { /* sin almacenamiento */ }
+}
+
+/**
+ * Al volver de una sesión anterior, conserva los productos pero ajusta el
+ * carrito al stock real: quita los agotados y recorta las cantidades que ya
+ * no se pueden comprar. No se ejecuta si el backend no responde.
+ */
+function validarStockCarrito() {
+  let cambio = false;
+  const afectados = [];
+
+  Object.keys(carrito).forEach((clave) => {
+    const item = carrito[clave];
+    const p = productos.find(x => String(x.id) === String(item.id ?? clave));
+    if (!p || Number(p.stock) <= 0) {
+      afectados.push(item.nombre || 'Un producto');
+      delete carrito[clave];
+      cambio = true;
+      return;
+    }
+    const stock = Number(p.stock);
+    if (Number(item.cantidad) > stock) {
+      item.cantidad = stock;
+      afectados.push(item.nombre || 'Un producto');
+      cambio = true;
+    }
+  });
+
+  if (cambio) {
+    guardarCarrito();
+    actualizarCarritoUI();
+    const nombres = [...new Set(afectados)].join(', ');
+    mostrarAvisoEsquina(`Ajustamos tu carrito por stock disponible: ${nombres}.`);
+  }
 }
 
 function agregarAlCarrito(id) {
@@ -382,9 +422,20 @@ function guardarSesion(sesion) {
   try { localStorage.setItem('farma_sesion', JSON.stringify(sesion)); } catch (e) { /* sin almacenamiento */ }
 }
 function cerrarSesion() {
+  if (window.Farma && typeof Farma.cerrarSesion === 'function') {
+    Farma.cerrarSesion();
+    return;
+  }
   try { localStorage.removeItem('farma_sesion'); } catch (e) { /* sin almacenamiento */ }
-  // La tienda es pública: al cerrar sesión se vuelve al inicio.
-  location.href = 'index.html';
+  location.replace('login.html?salir=1');
+}
+
+function confirmarSalida() {
+  if (window.Farma && typeof Farma.confirmarCerrarSesion === 'function') {
+    Farma.confirmarCerrarSesion();
+    return;
+  }
+  cerrarSesion();
 }
 
 // Cambia los botones de acceso por el menú del usuario
@@ -412,7 +463,7 @@ function pintarSesion() {
         <li><button class="dropdown-item" type="button" id="btnCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</button></li>
       </ul>
     </div>`;
-  document.getElementById('btnCerrarSesion').addEventListener('click', cerrarSesion);
+  document.getElementById('btnCerrarSesion').addEventListener('click', confirmarSalida);
 }
 
 /* ---------- Buscador del navbar: productos sugeridos ----------
