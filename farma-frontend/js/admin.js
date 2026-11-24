@@ -32,11 +32,11 @@ const esAdmin = (window.Farma && typeof Farma.esAdmin === 'function') ? Farma.es
 
 document.addEventListener('DOMContentLoaded', () => {
   $('btnSalir').addEventListener('click', () => {
-    if (window.Farma && typeof Farma.cerrarSesion === 'function') {
-      Farma.cerrarSesion();
+    if (window.Farma && typeof Farma.confirmarCerrarSesion === 'function') {
+      Farma.confirmarCerrarSesion();
     } else {
       try { localStorage.removeItem('farma_sesion'); } catch (e) {}
-      location.href = 'login.html?salir=1';
+      location.replace('login.html?salir=1');
     }
   });
 

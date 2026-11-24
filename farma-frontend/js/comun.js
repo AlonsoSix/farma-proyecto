@@ -29,9 +29,15 @@
     root.soles = farma.soles;
     root.esc = farma.esc;
     root.rutaImagen = farma.rutaImagen;
+    root.CLAVE_SESION_ACTIVA = farma.config.CLAVE_SESION_ACTIVA;
     root.leerSesion = farma.leerSesion;
     root.guardarSesion = farma.guardarSesion;
+    root.marcarSesionActiva = farma.marcarSesionActiva;
+    root.sesionActivaEnPestana = farma.sesionActivaEnPestana;
     root.cerrarSesion = farma.cerrarSesion;
+    root.confirmarCerrarSesion = farma.confirmarCerrarSesion;
+    root.leerCarrito = farma.leerCarrito;
+    root.guardarCarrito = farma.guardarCarrito;
     root.esAdmin = farma.esAdmin;
     root.obtenerIdUsuario = farma.obtenerIdUsuario;
     root.obtenerCabeceraAuth = farma.obtenerCabeceraAuth;
@@ -62,6 +68,7 @@
   var config = {
     API_URL: apiBase,
     CLAVE_SESION: 'farma_sesion',
+    CLAVE_SESION_ACTIVA: 'farma_sesion_activa',
     CLAVE_CARRITO: 'farma_carrito',
     CLAVE_ULTIMO_CORREO: 'farma_ultimo_correo',
     FACTOR_IGV: 1.18
@@ -215,15 +222,134 @@
     }
   }
 
-  /** Cierra la sesión activa y redirige al login con notificación. */
+  /** Marca que la sesión fue iniciada en esta pestaña (evita auto-login al recargar). */
+  function marcarSesionActiva() {
+    if (typeof sessionStorage === 'undefined') return;
+    try { sessionStorage.setItem(config.CLAVE_SESION_ACTIVA, '1'); } catch (e) {}
+  }
+
+  /** Indica si esta pestaña ya pasó por el login. */
+  function sesionActivaEnPestana() {
+    if (typeof sessionStorage === 'undefined') return false;
+    try { return sessionStorage.getItem(config.CLAVE_SESION_ACTIVA) === '1'; } catch (e) { return false; }
+  }
+
+  /**
+   * Cierra la sesión activa y vuelve SIEMPRE al login.
+   * El carrito NO se toca: debe seguir disponible al volver a entrar.
+   */
   function cerrarSesion() {
     if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.removeItem(config.CLAVE_SESION);
-      } catch (e) {}
+      try { localStorage.removeItem(config.CLAVE_SESION); } catch (e) {}
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      try { sessionStorage.removeItem(config.CLAVE_SESION_ACTIVA); } catch (e) {}
     }
     if (typeof location !== 'undefined') {
-      location.replace('index.html');
+      location.replace('login.html?salir=1');
+    }
+  }
+
+  /** Muestra el popup de confirmación antes de cerrar sesión (sin alert/confirm nativos). */
+  function confirmarCerrarSesion() {
+    if (typeof document === 'undefined') {
+      cerrarSesion();
+      return;
+    }
+
+    var idModal = 'modalConfirmarSalida';
+    var modalEl = document.getElementById(idModal);
+    if (!modalEl) {
+      var contenedor = document.createElement('div');
+      contenedor.innerHTML = ''
+        + '<div class="modal" id="' + idModal + '" tabindex="-1" aria-labelledby="tituloConfirmarSalida" aria-hidden="true">'
+        + '  <div class="modal-dialog modal-dialog-centered">'
+        + '    <div class="modal-content rounded-4 shadow">'
+        + '      <div class="modal-header border-0 pb-0">'
+        + '        <h5 class="modal-title" id="tituloConfirmarSalida"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</h5>'
+        + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>'
+        + '      </div>'
+        + '      <div class="modal-body py-3">'
+        + '        <p class="mb-0">¿Estás seguro de que deseas cerrar tu sesión actual? Los productos que tienes en el carrito, puede que no estén disponibles cuando regreses.</p>'
+        + '      </div>'
+        + '      <div class="modal-footer border-0 justify-content-center gap-2 pb-4">'
+        + '        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="btnCancelarSalida" data-bs-dismiss="modal">No, quedarme</button>'
+        + '        <button type="button" class="btn btn-danger rounded-pill px-4" id="btnConfirmarSalida">Sí, salir</button>'
+        + '      </div>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>';
+      document.body.appendChild(contenedor.firstElementChild);
+      modalEl = document.getElementById(idModal);
+    }
+
+    var instancia = null;
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      instancia = bootstrap.Modal.getOrCreateInstance(modalEl);
+      instancia.show();
+    } else {
+      // Fallback sin Bootstrap: nunca usamos confirm() nativo.
+      modalEl.classList.add('show');
+      modalEl.style.display = 'block';
+      modalEl.removeAttribute('aria-hidden');
+    }
+
+    var btnCancelar = document.getElementById('btnCancelarSalida');
+    if (btnCancelar && !instancia) {
+      btnCancelar.onclick = function () {
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+      };
+    }
+
+    var btnConfirmar = document.getElementById('btnConfirmarSalida');
+    if (btnConfirmar) {
+      btnConfirmar.onclick = function () {
+        if (instancia) instancia.hide();
+        cerrarSesion();
+      };
+    }
+  }
+
+  /* ---------- Carrito por usuario ---------- */
+
+  /** Clave del carrito: por usuario cuando hay sesión, genérica cuando no la hay. */
+  function claveCarrito() {
+    var sesion = leerSesion();
+    var id = sesion && sesion.id != null ? sesion.id : null;
+    return id != null
+      ? config.CLAVE_CARRITO + '_' + encodeURIComponent(String(id))
+      : config.CLAVE_CARRITO;
+  }
+
+  /** Lee el carrito del usuario actual; migra el carrito genérico de versiones anteriores. */
+  function leerCarrito() {
+    if (typeof localStorage === 'undefined') return {};
+    try {
+      var clave = claveCarrito();
+      var raw = localStorage.getItem(clave);
+      var datos = raw ? JSON.parse(raw) : null;
+      if ((!datos || !Object.keys(datos).length) && clave !== config.CLAVE_CARRITO) {
+        var anterior = localStorage.getItem(config.CLAVE_CARRITO);
+        if (anterior) {
+          datos = JSON.parse(anterior);
+          localStorage.setItem(clave, JSON.stringify(datos));
+          localStorage.removeItem(config.CLAVE_CARRITO);
+        }
+      }
+      return datos && typeof datos === 'object' ? datos : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /** Guarda el carrito del usuario actual sin borrar el de otros usuarios. */
+  function guardarCarrito(carrito) {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(claveCarrito(), JSON.stringify(carrito || {}));
+    } catch (e) {
+      console.error('Error al guardar carrito:', e);
     }
   }
 
@@ -287,7 +413,13 @@
     calcularTotalesCarrito: calcularTotalesCarrito,
     leerSesion: leerSesion,
     guardarSesion: guardarSesion,
+    marcarSesionActiva: marcarSesionActiva,
+    sesionActivaEnPestana: sesionActivaEnPestana,
     cerrarSesion: cerrarSesion,
+    confirmarCerrarSesion: confirmarCerrarSesion,
+    claveCarrito: claveCarrito,
+    leerCarrito: leerCarrito,
+    guardarCarrito: guardarCarrito,
     esAdmin: esAdmin,
     obtenerIdUsuario: obtenerIdUsuario,
     obtenerCabeceraAuth: obtenerCabeceraAuth,
