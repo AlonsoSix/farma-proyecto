@@ -41,15 +41,26 @@
   'use strict';
 
   /* ---------- Configuración Global ---------- */
-  // El backend se sirve siempre en el puerto 8081 del mismo host que abre la web.
-  // Así funciona en localhost y también al probar desde el móvil por la red local.
+  // Dos formas de trabajar:
+  //  - Live Server (puerto 55xx): el backend se sirve en el puerto 8081 del mismo host.
+  //  - Docker / deploy: se usa "/api" relativo y Nginx (o la plataforma) hace de proxy.
+  //  También se puede forzar con window.FARMA_API_URL antes de cargar este archivo.
   var hostAPI = 'localhost';
+  var puerto = '';
   try {
     if (typeof location !== 'undefined' && location.hostname) hostAPI = location.hostname;
+    if (typeof location !== 'undefined' && location.port) puerto = String(location.port);
   } catch (e) { /* entorno Node.js para pruebas */ }
 
+  var apiBase = /^55\d{2}$/.test(puerto)
+    ? 'http://' + hostAPI + ':8081/api'
+    : '/api';
+  if (typeof window !== 'undefined' && window.FARMA_API_URL) {
+    apiBase = String(window.FARMA_API_URL).replace(/\/$/, '');
+  }
+
   var config = {
-    API_URL: 'http://' + hostAPI + ':8081/api',
+    API_URL: apiBase,
     CLAVE_SESION: 'farma_sesion',
     CLAVE_CARRITO: 'farma_carrito',
     CLAVE_ULTIMO_CORREO: 'farma_ultimo_correo',

@@ -1,6 +1,8 @@
 package com.farma.backend.exception;
 
 import com.farma.backend.service.PagoRechazadoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +18,8 @@ import java.util.NoSuchElementException;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> datosInvalidos(IllegalArgumentException ex) {
@@ -44,7 +48,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> errorGeneral(Exception ex) {
+        // El detalle se guarda en los logs del servidor; al cliente solo se le
+        // devuelve un mensaje genérico para no filtrar SQL, rutas ni stack traces.
+        log.error("Error no controlado al atender la petición", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error interno en el servidor."));
+                .body(Map.of("error", "Ocurrió un error interno en el servidor."));
     }
 }

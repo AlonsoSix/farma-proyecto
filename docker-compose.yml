@@ -1,0 +1,66 @@
+# =====================================================================
+#  Farma - entorno completo con un solo comando
+#
+#    cp .env.example .env      (solo la primera vez)
+#    docker compose up --build
+#
+#  Web:     http://localhost:8080
+#  API:     http://localhost:8081/api  (expuesta para depurar)
+#  MySQL:   solo dentro de la red de Docker (no se expone al host)
+# =====================================================================
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: farma-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-farma_db}
+      MYSQL_USER: ${MYSQL_USER:-farma}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en .env}
+    volumes:
+      - db_data:/var/lib/mysql
+      # El script completo se ejecuta solo cuando el volumen está vacío.
+      - ./database/farma_db_completo.sql:/docker-entrypoint-initdb.d/01-farma_db_completo.sql:ro
+      # farma_db_completo.sql hace DROP/CREATE de la base: devolvemos los permisos.
+      - ./database/docker-init/02-grants.sh:/docker-entrypoint-initdb.d/02-grants.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  backend:
+    build: ./farma-backend
+    container_name: farma-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-farma_db}?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${MYSQL_USER:-farma}
+      DB_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en .env}
+      JPA_DDL_AUTO: validate
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      SERVER_PORT: 8081
+      CULQI_PUBLIC_KEY: ${CULQI_PUBLIC_KEY:-}
+      CULQI_SECRET_KEY: ${CULQI_SECRET_KEY:-}
+      CULQI_API_URL: ${CULQI_API_URL:-https://api.culqi.com/v2}
+      CULQI_MODO: ${CULQI_MODO:-}
+    ports:
+      - "${BACKEND_PORT:-8081}:8081"
+
+  web:
+    build: ./farma-frontend
+    container_name: farma-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  db_data:

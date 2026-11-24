@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Configuración de Culqi. Las llaves NUNCA se escriben en el código ni se suben al repositorio:
- * se leen de variables de entorno o de application.properties (que está en .gitignore).
+ * se leen de variables de entorno (o de un .env local ignorado por Git).
  *
  * Si no hay llaves, la pasarela trabaja en modo simulado y la tienda sigue funcionando.
  */
